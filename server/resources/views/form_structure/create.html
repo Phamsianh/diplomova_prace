@@ -1,0 +1,34 @@
+{% include ../layouts/header.html %}
+{% include ../layouts/navbar.html %}
+<div class="container flex-center height-100 mg_4">
+    <form action="/formstructures/create" method="POST"
+          class="flex-center flex-direction-column width-60 height-60 bg-grey box-shadow bd-round">
+        <label class="flex-center flex-direction-column width-80 pd_2 ">
+            Form name
+            <input required
+                   type="text"
+                   placeholder="Form name"
+                   name="name"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+        <label class="flex-center flex-direction-column width-80 pd_2 ">
+            Structure
+            <input required
+                   type="text"
+                   placeholder="Structure"
+                   name="structure"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+        <label class="flex-center flex-direction-column width-80 pd_2 ">
+            Digital signature
+            <input required
+                   type="text"
+                   placeholder="Digital signature"
+                   name="admin_digital_signature"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+
+        <input type="submit" value="Submit" class="btn bd-round">
+    </form>
+</div>
+{% include ../layouts/footer.html %}
