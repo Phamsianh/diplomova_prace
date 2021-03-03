@@ -1,0 +1,45 @@
+{% include ../layouts/header.html %}
+<div class="container flex-center height-100 mg_4">
+    <form action="/register" method="POST"
+          class="flex-center flex-direction-column width-60 height-60 bg-grey box-shadow bd-round">
+        <label class="flex-center flex-direction-column width-80 pd_1">
+            First name
+            <input type="text" name="first_name" placeholder="First name"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+         <label class="flex-center flex-direction-column width-80 pd_1">
+            Last name
+            <input type="text" name="last_name" placeholder="Last name"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+         <label class="flex-center flex-direction-column width-80 pd_1">
+            User name
+            <input type="text" name="user_name" placeholder="User name"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+         <label class="flex-center flex-direction-column width-80 pd_1">
+            Email
+            <input type="text" name="email" placeholder="Email"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+         <label class="flex-center flex-direction-column width-80 pd_1">
+            Password
+            <input type="password" name="password" placeholder="Password"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+         <label class="flex-center flex-direction-column width-80 pd_1">
+            Confirm password
+            <input type="password" name="confirm_password" placeholder="Confirm password"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+         <label class="flex-center flex-direction-column width-80 pd_1">
+            Phone
+            <input type="text" name="phone" placeholder="Phone"
+                   class="display-block width-100 pd_2 bd-round">
+        </label>
+        <input type="submit" value="Submit" class="btn bd-round">
+    </form>
+</div>
+
+
+{% include ../layouts/footer.html %}
