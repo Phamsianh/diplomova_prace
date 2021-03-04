@@ -30,7 +30,6 @@ user3 = User(
 )
 
 structure = [
-    "APPLICATION FOR ISSUE OF AN ISIC / ISIC SCHOLAR / ITIC LICENSE",
     {
         "section_name": "data on the applicant",
         "permission": ['client', 'staff'],

@@ -1,11 +1,10 @@
+from ORM.ModelConstructor.FormTemplate import FormTemplateModelConstructor
+from ORM.Model.FormStructure import FormStructure
 from ORM.session import session
-from ORM.Model.User import User
-from ORM.Model.Role import Role
+import json
 
-user = session.query(User).filter_by(id=1).first()
+form_structure = session.query(FormStructure).first()
+# print(type(json.loads(structure)))
 
-
-# print(user.form_structures)
-print(user.user_roles[0].role.permission[0])
-# print(user)
-
+constructor = FormTemplateModelConstructor(form_structure)
+constructor.create_table()

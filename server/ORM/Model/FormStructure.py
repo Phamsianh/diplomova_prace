@@ -1,5 +1,5 @@
-from sqlalchemy.orm import relationship
 from ORM.Model.FormTemplate1 import FormTemplate1
+from sqlalchemy.orm import relationship
 from ORM.Base import Base
 from sqlalchemy import Column, String, TIMESTAMP, BigInteger, text, JSON, ForeignKey
 
@@ -27,5 +27,7 @@ structure: {self.structure}
 admin_digital_signature: {self.admin_digital_signature}
 )
 '''
+
+
     
     form_template_1 = relationship("FormTemplate1", backref='form_structure')
