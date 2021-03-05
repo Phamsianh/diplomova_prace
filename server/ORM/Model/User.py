@@ -1,3 +1,4 @@
+from ORM.Model.UserFormTemplate1 import UserFormTemplate1
 from ORM.Base import Base
 from sqlalchemy import Column, String, TIMESTAMP, BigInteger, text
 from sqlalchemy.orm import relationship
@@ -37,3 +38,5 @@ phone: {self.phone}
 public_key: {self.public_key}
 )
 '''
+
+    users_form_template_1 = relationship("UserFormTemplate1", backref="users")

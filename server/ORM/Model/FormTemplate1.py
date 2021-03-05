@@ -1,6 +1,7 @@
-from sqlalchemy import Column, String, TIMESTAMP, BigInteger, Integer, text, JSON, ForeignKey
+from sqlalchemy.orm import relationship
+from ORM.Model.UserFormTemplate1 import UserFormTemplate1
+from sqlalchemy import Column, String, TIMESTAMP, BigInteger, text, JSON, ForeignKey
 from ORM.Base import Base
-from ORM.engine import engine
 
 
 class FormTemplate1(Base):
@@ -24,3 +25,6 @@ state: {self.state}
 data: {self.data}
 '''
 
+
+
+    users_form_template_1 = relationship("UserFormTemplate1", backref="form_template_1")

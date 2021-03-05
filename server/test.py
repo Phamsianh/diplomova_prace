@@ -1,10 +1,13 @@
 from ORM.ModelConstructor.FormTemplate import FormTemplateModelConstructor
+from ORM.ModelConstructor.UserFormTemplate import UserFormTemplateModelConstructor
 from ORM.Model.FormStructure import FormStructure
 from ORM.session import session
-import json
 
 form_structure = session.query(FormStructure).first()
-# print(type(json.loads(structure)))
+# print((json.loads(form_structure.structure)))
 
-constructor = FormTemplateModelConstructor(form_structure)
-constructor.create_table()
+constructor = FormTemplateModelConstructor(form_structure.id)
+constructor.create_model()
+
+constructor = UserFormTemplateModelConstructor(form_structure.id)
+constructor.create_model()

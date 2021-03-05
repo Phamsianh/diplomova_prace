@@ -28,6 +28,4 @@ admin_digital_signature: {self.admin_digital_signature}
 )
 '''
 
-
-    
     form_template_1 = relationship("FormTemplate1", backref='form_structure')

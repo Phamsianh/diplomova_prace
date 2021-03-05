@@ -1,25 +1,28 @@
-import json
 import os
 
 
 class FormTemplateModelConstructor:
-    def __init__(self, form_structure):
-        self.form_structure = form_structure
-        self.structure = json.loads(form_structure.structure)
-        self.form_structure_id = form_structure.id
-        self.file_name = "FormTemplate" + str(self.form_structure_id) + ".py"
-        self.file_path = "ORM/Model/" + self.file_name
+    def __init__(self, form_structure_id):
+        # self.form_structure = form_structure
+        # self.structure = json.loads(form_structure.structure)
+        self.form_structure_id = form_structure_id
+        # self.file_name = "FormTemplate" + str(self.form_structure_id) + ".py"
+        self.file_path = f"ORM/Model/FormTemplate{form_structure_id}.py"
         self.string = ''
 
-    def create_table(self):
+    def create_model(self):
+        print('-'*10 + f'CREATE {self.file_path}' + '-'*10)
         self.create_file()
+        print('-'*10 + f'EXECUTE {self.file_path}' + '-'*10)
         if self.execute_file():
-            print('Model created')
-            self.add_rel_to_FormStructure()
-            self.clean_up()
-            print('Model is created sucessfully')
+            print('-' * 10 + f'EXECUTED {self.file_path}' + '-' * 10)
         else:
-            print('Fail to create model')
+            print('-' * 10 + f'FAILED TO CREATE MODEL FormTemplate{self.form_structure_id}' + '-' * 10)
+            # print(f'MODEL FormTemplate{self.form_structure_id} CREATED')
+        print('-' * 10 + f'ADD relationship to model FormStructure' + '-' * 10)
+        self.add_rel_to_FormStructure()
+        print('-' * 10 + 'CLEAN UP' + '-' * 10)
+        self.clean_up()
 
     def create_file(self):
         self.add_import()
@@ -33,9 +36,8 @@ class FormTemplateModelConstructor:
         print(self.string)
 
     def add_import(self):
-        self.string = '''from sqlalchemy import Column, String, TIMESTAMP, BigInteger, Integer, text, JSON, ForeignKey
-from ORM.Base import Base
-from ORM.engine import engine\n
+        self.string = '''from sqlalchemy import Column, String, TIMESTAMP, BigInteger, text, JSON, ForeignKey
+from ORM.Base import Base\n
 '''
 
     def add_class(self):
@@ -87,6 +89,7 @@ data: {self.data}'''
         self.string += '''
 if __name__ == "__main__":
     from ORM.Model.FormStructure import FormStructure
+    from ORM.engine import engine
     Base.metadata.create_all(engine)'''
 
     def execute_file(self):
@@ -95,21 +98,27 @@ if __name__ == "__main__":
         return not(os.system(command))
 
     def add_rel_to_FormStructure(self):
-        f = open('ORM/Model/FormStructure.py', 'r')
+        file_path = 'ORM/Model/FormStructure.py'
+        f = open(file_path, 'r')
         string = f.read()
+        f.close()
 
         add_import = f'from ORM.Model.FormTemplate{self.form_structure_id} import FormTemplate{self.form_structure_id}\n'
-        string = string[:0] + add_import + string[0:]
+        if add_import not in string:
+            string = string[:0] + add_import + string[0:]
+        else: print(f'FormTemplate{self.form_structure_id} already imported in {file_path}')
 
         if 'from sqlalchemy.orm import relationship' not in string:
             add_import = 'from sqlalchemy.orm import relationship\n'
             string = string[:0] + add_import + string[0:]
+        else: print(f'relationship from sqlalchemy already imported in {file_path}')
 
         add_relationship = f'''
     
     form_template_{self.form_structure_id} = relationship("FormTemplate{self.form_structure_id}", backref='form_structure')'''
-
-        string += add_relationship
+        if add_relationship not in string:
+            string += add_relationship
+        else: print(f'relationship form_template_{self.form_structure_id} already existed in {file_path}')
 
         f = open('ORM/Model/FormStructure.py', 'w')
         f.write(string)
@@ -121,10 +130,7 @@ if __name__ == "__main__":
         string = f.read()
         f.close()
 
-        index = string.index('''
-if __name__ == "__main__":
-    from ORM.Model.FormStructure import FormStructure
-    Base.metadata.create_all(engine)''')
+        index = string.index('if __name__ == "__main__":')
 
         string = string[0:index]
         f = open(self.file_path, 'w')

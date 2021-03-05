@@ -125,7 +125,7 @@ class CreateFormStructure(AuthBase):
             self.error[f"section_{i}"]["description"] = "description is required"
         if "digital_signature" not in section or len(section["digital_signature"]) == 0:
             self.valid = False
-            self[f"section_{i}"]["digital_signature"] = "digital signature is required"
+            self.error[f"section_{i}"]["digital_signature"] = "digital signature is required"
 
         if self.valid:
             self.error.pop(f"section_{i}")
