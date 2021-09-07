@@ -153,6 +153,10 @@ alexandrstefek_leading_teacher = UserGroupRole()
 alexandrstefek_leading_teacher.user = alexandrstefek
 alexandrstefek_leading_teacher.group_role = leading_teacher
 
+alexandrstefek_consultant = UserGroupRole()
+alexandrstefek_consultant.user = alexandrstefek
+alexandrstefek_consultant.group_role = consultant
+
 petrfrantis_consultant = UserGroupRole()
 petrfrantis_consultant.user = petrfrantis
 petrfrantis_consultant.group_role = consultant

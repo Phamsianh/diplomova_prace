@@ -102,7 +102,8 @@ id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
 name: {self.name}
-phase_group_role_id: {self.phase_group_role_id}
+phase_id: {self.phase_id}
+group_role_id: {self.group_role_id}
 order: {self.order}
 )
 '''
