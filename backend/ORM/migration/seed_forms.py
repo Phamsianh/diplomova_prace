@@ -1,7 +1,7 @@
 from ORM.migration.seed_data.form1_structure import form1_structure
 from utils.form_utils import create_form_structure
 
-create_form_structure(form1_structure)
+print(create_form_structure(form1_structure))
 
 # from ORM.session import session
 # from ORM.Model1 import User, Form, Phase, Transition,\

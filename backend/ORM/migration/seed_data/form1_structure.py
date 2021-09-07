@@ -21,107 +21,90 @@ form1_structure = {
                 "name": "phase1",
                 "group_role_id": student_of_CIT.id,
                 "phase_type": "begin",
-                "phases_groups_roles": [{
-                    "group_role_id": student_of_CIT.id,
-                    "sections": [
-                        {
-                            "name": "Section for student of 2-CIT-C",
-                            "phase_group_role_id": 1,
-                            "fields": [
-                                {
-                                    "name": "Field for student of 2-CIT-C"
-                                }
-                            ]
-                        }
-                    ]
-                }]
+                "sections": [
+                    {
+                        "name": "Section for student of 2-CIT-C",
+                        "group_role_id": student_of_CIT.id,
+                        "fields": [
+                            {
+                                "name": "Field for student of 2-CIT-C"
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 "name": "phase2",
                 "group_role_id": leading_teacher.id,
                 "phase_type": "transit",
-                "phases_groups_roles": [
+                "sections": [
                     {
+                        "name": "Section for Leading Teacher",
                         "group_role_id": leading_teacher.id,
-                        "sections": [
+                        "fields": [
                             {
-                                "name": "Section for Leading Teacher",
-                                "fields": [
-                                    {
-                                        "name": "Field for Leading Teacher"
-                                    }
-                                ]
+                                "name": "Field for Leading Teacher"
                             }
                         ]
                     },
                     {
+                        "name": "Section for Consultant",
                         "group_role_id": consultant.id,
-                        "sections": [
+                        "fields": [
                             {
-                                "name": "Section for Consultant",
-                                "fields": [
-                                    {
-                                        "name": "Field for Consultant"
-                                    }
-                                ]
+                                "name": "Field for Consultant"
                             }
                         ]
-                    },
+                    }
                 ]
             },
             {
                 "name": "phase3",
                 "group_role_id": vice_dean_FMT.id,
                 "phase_type": "transit",
-                "phases_groups_roles": [{
-                    "group_role_id": vice_dean_FMT.id,
-                    "sections": [
-                        {
-                            "name": "Section for Vice Dean of FMT",
-                            "fields": [
-                                {
-                                    "name": "Field for Vice Dean of FMT"
-                                }
-                            ]
-                        }
-                    ]
-                }]
+                "sections": [
+                    {
+                        "name": "Section for Vice Dean of FMT",
+                        "group_role_id": vice_dean_FMT.id,
+                        "fields": [
+                            {
+                                "name": "Field for Vice Dean of FMT"
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 "name": "phase4",
                 "group_role_id": head_of_DoICO.id,
                 "phase_type": "transit",
-                "phases_groups_roles": [{
-                    "group_role_id": head_of_DoICO.id,
-                    "sections": [
-                        {
-                            "name": "Section for Head of Department of ICO",
-                            "fields": [
-                                {
-                                    "name": "Field for Head of Department of ICO"
-                                }
-                            ]
-                        }
-                    ]
-                }]
+                "sections": [
+                    {
+                        "name": "Section for Head of Department of ICO",
+                        "group_role_id": head_of_DoICO.id,
+                        "fields": [
+                            {
+                                "name": "Field for Head of Department of ICO"
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 "name": "phase5",
                 "group_role_id": dean_FMT.id,
                 "phase_type": "end",
-                "phases_groups_roles": [{
-                    "group_role_id": dean_FMT.id,
-                    "sections": [
-                        {
-                            "name": "Section for Dean of FMT",
-                            "fields": [
-                                {
-                                    "name": "Field for Dean of FMT"
-                                }
-                            ]
-                        }
-                    ]
-                }]
+                "sections": [
+                    {
+                        "name": "Section for Dean of FMT",
+                        "group_role_id": dean_FMT.id,
+                        "fields": [
+                            {
+                                "name": "Field for Dean of FMT"
+                            }
+                        ]
+                    }
+                ]
             },
         ],
         "transitions": [

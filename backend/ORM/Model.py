@@ -81,12 +81,16 @@ class Section(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String, unique=True)
     # form_id = Column(BigInteger, ForeignKey("forms.id")) #For later consideration
-    phase_group_role_id = Column(BigInteger, ForeignKey("phases_groups_roles.id"))
+    # phase_group_role_id = Column(BigInteger, ForeignKey("phases_groups_roles.id"))
+    phase_id = Column(BigInteger, ForeignKey("phases.id"))
+    group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
     order = Column(Integer)
 
     # many-to-one relationship(s)
     # form = relationship("Form", back_populates="sections")  #For later consideration
-    phase_group_role = relationship("PhaseGroupRole", back_populates="sections")
+    # phase_group_role = relationship("PhaseGroupRole", back_populates="sections")
+    phase = relationship("Phase", back_populates="sections")
+    group_role = relationship("GroupRole", back_populates="sections")
 
     # one-to-many relationship(s)
     fields = relationship("Field", back_populates="section")
@@ -320,8 +324,9 @@ class Phase(Base):
     group_role = relationship("GroupRole", back_populates="phases")
 
     # one-to-many relationship(s)
-    phases_groups_roles = relationship("PhaseGroupRole", back_populates="phase")
+    # phases_groups_roles = relationship("PhaseGroupRole", back_populates="phase")
     form_instances = relationship("FormInstance", back_populates="current_phase")
+    sections = relationship("Section", back_populates="phase")
     # from_transitions = relationship("Transition", back_populates="from_phase", foreign_keys=["transitions.from_phase_id"])
     # to_transitions = relationship("Transition", back_populates="to_phase", foreign_keys=[])
 
@@ -385,7 +390,8 @@ class GroupRole(Base):
     # one-to-many relationship(s)
     phases = relationship("Phase", back_populates="group_role")
     users_groups_roles = relationship("UserGroupRole", back_populates="group_role")
-    phases_groups_roles = relationship("PhaseGroupRole", back_populates="group_role")
+    # phases_groups_roles = relationship("PhaseGroupRole", back_populates="group_role")
+    sections = relationship("Section", back_populates="group_role")
 
     def __repr__(self):
         return f'''
@@ -424,29 +430,29 @@ group_role_id: {self.group_role_id}
 '''
 
 
-class PhaseGroupRole(Base):
-    __tablename__ = "phases_groups_roles"
-
-    id = Column(BigInteger, primary_key=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    phase_id = Column(BigInteger, ForeignKey("phases.id"))
-    group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
-
-    # many-to-one relationship(s)
-    phase = relationship("Phase", back_populates="phases_groups_roles")
-    group_role = relationship("GroupRole", back_populates="phases_groups_roles")
-
-    # one-to-many relationship(s)
-    sections = relationship("Section", back_populates="phase_group_role")
-
-    def __repr__(self):
-        return f'''
-PhaseGroupRole(
-id: {self.id}
-created_at: {self.created_at}
-updated_at: {self.updated_at}
-phase_id: {self.phase_id}
-group_role_id: {self.group_role_id}
-)
-'''
+# class PhaseGroupRole(Base):
+#     __tablename__ = "phases_groups_roles"
+#
+#     id = Column(BigInteger, primary_key=True)
+#     created_at = Column(DateTime(timezone=True), server_default=func.now())
+#     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+#     phase_id = Column(BigInteger, ForeignKey("phases.id"))
+#     group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
+#
+#     # many-to-one relationship(s)
+#     phase = relationship("Phase", back_populates="phases_groups_roles")
+#     group_role = relationship("GroupRole", back_populates="phases_groups_roles")
+#
+#     # one-to-many relationship(s)
+#     sections = relationship("Section", back_populates="phase_group_role")
+#
+#     def __repr__(self):
+#         return f'''
+# PhaseGroupRole(
+# id: {self.id}
+# created_at: {self.created_at}
+# updated_at: {self.updated_at}
+# phase_id: {self.phase_id}
+# group_role_id: {self.group_role_id}
+# )
+# '''
