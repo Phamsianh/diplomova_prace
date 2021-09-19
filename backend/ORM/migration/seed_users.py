@@ -124,6 +124,20 @@ phamsianh.roles = [
     role_consultant,
     role_student
 ]
+phamsianh.groups_roles = [
+    admin_of_UoD,
+    rector_of_UoD,
+    dean_of_FMl,
+    dean_of_FMT,
+    dean_of_FMHS,
+    vice_dean_of_FMT,
+    head_of_DoICO,
+    head_of_DoWA,
+    leading_teacher,
+    consultant,
+    student_of_CIT,
+    student_of_WA
+]
 
 phamsianh_student_CIT = UserGroupRole()
 phamsianh_student_CIT.user = phamsianh
