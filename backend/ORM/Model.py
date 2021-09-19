@@ -24,10 +24,12 @@ class User(Base):
     forms = relationship("Form", back_populates="creator")
     groups = relationship("Group", back_populates="creator")
     roles = relationship("Role", back_populates="creator")
-    users_groups_roles = relationship("UserGroupRole", back_populates="user")
+    users_groups_roles = relationship("UserGroupRole", back_populates="user", foreign_keys="UserGroupRole.user_id")
     form_instances = relationship("FormInstance", back_populates="creator")
     users_form_instances = relationship("UserFormInstance", back_populates="user")
     groups_roles = relationship("GroupRole", back_populates="creator")
+    created_users_groups_roles = relationship("UserGroupRole", back_populates="assigner",
+                                              foreign_keys="UserGroupRole.assigner_id")
 
     def __repr__(self):
         return f'''
@@ -411,8 +413,8 @@ class Phase(Base):
     # phases_groups_roles = relationship("PhaseGroupRole", back_populates="phase")
     form_instances = relationship("FormInstance", back_populates="current_phase")
     sections = relationship("Section", back_populates="phase")
-    # from_transitions = relationship("Transition", back_populates="from_phase", foreign_keys=["transitions.from_phase_id"])
-    # to_transitions = relationship("Transition", back_populates="to_phase", foreign_keys=[])
+    from_transitions = relationship("Transition", back_populates="from_phase", foreign_keys="Transition.from_phase_id")
+    to_transitions = relationship("Transition", back_populates="to_phase", foreign_keys="Transition.to_phase_id")
 
     def __repr__(self):
         return f'''
@@ -440,8 +442,8 @@ class Transition(Base):
     order = Column(Integer)
 
     # many-to-one relationship(s)
-    from_phase = relationship("Phase", backref="from_transitions", foreign_keys=[from_phase_id])
-    to_phase = relationship("Phase", backref="to_transitions", foreign_keys=[to_phase_id])
+    from_phase = relationship("Phase", back_populates="from_transitions", foreign_keys=[from_phase_id])
+    to_phase = relationship("Phase", back_populates="to_transitions", foreign_keys=[to_phase_id])
 
     def __repr__(self):
         return f'''
@@ -498,11 +500,13 @@ class UserGroupRole(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    assigner_id = Column(BigInteger, ForeignKey("users.id"))
     user_id = Column(BigInteger, ForeignKey("users.id"))
     group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
 
     # many-to-one relationship(s)
-    user = relationship("User", back_populates="users_groups_roles")
+    assigner = relationship("User", back_populates="created_users_groups_roles", foreign_keys=[assigner_id])
+    user = relationship("User", back_populates="users_groups_roles", foreign_keys=[user_id])
     group_role = relationship("GroupRole", back_populates="users_groups_roles")
 
     def __repr__(self):
@@ -511,6 +515,7 @@ UserGroupRole(
 id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
+assigner_id: {self.assigner_id}
 user_id: {self.user_id}
 group_role_id: {self.group_role_id}
 )

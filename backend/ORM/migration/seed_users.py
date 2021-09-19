@@ -175,6 +175,18 @@ petrfrantis_consultant = UserGroupRole()
 petrfrantis_consultant.user = petrfrantis
 petrfrantis_consultant.group_role = consultant
 
+phamsianh.created_users_groups_roles = [
+    phamsianh_student_CIT,
+    phamsianh_admin_UoD,
+    zuzanakrocova_rector_admin_UoD,
+    vlastimilneumann_dean_gr_admin_FMT,
+    janfarlik_vice_dean_FMT,
+    petrfrantis_head_of_DoICO,
+    alexandrstefek_leading_teacher,
+    alexandrstefek_consultant,
+    petrfrantis_consultant
+]
+
 session.add_all([phamsianh, alexandrstefek, zuzanakrocova, vlastimilneumann, petrfrantis])
 session.commit()
 session.close()
