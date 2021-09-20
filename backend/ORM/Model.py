@@ -49,7 +49,7 @@ birthdate: {self.birthdate}
 '''
 
     def ga_held_gs_rs(self, session: Session) -> Optional[list['GroupRole']]:
-        """get all groups roles of a user"""
+        """get all groups roles of this user"""
 
         return session.query(GroupRole)\
             .join(GroupRole.users_groups_roles)\
@@ -86,7 +86,7 @@ birthdate: {self.birthdate}
     #     return session.query(Group).filter(Group.admin_id == self.id).all()
 
     def ga_jd_gs(self, session: Session) -> Optional[list['Group']]:
-        """get all joined groups of a user"""
+        """get all joined groups of this user"""
         return session.query(Group) \
             .join(Group.groups_roles) \
             .join(GroupRole.users_groups_roles) \
@@ -98,7 +98,7 @@ birthdate: {self.birthdate}
     #     return session.query(Role).join(Role.creator).filter(Role.creator_id == self.id).all()
 
     def ga_held_roles(self, session: Session) -> Optional[list['Role']]:
-        """get all roles held by a user"""
+        """get all roles held by this user"""
         return session.query(Role) \
             .join(Role.groups_roles) \
             .join(GroupRole.users_groups_roles) \
@@ -114,6 +114,14 @@ birthdate: {self.birthdate}
     #     return session.query(FormInstance)\
     #         .join(FormInstance.creator)\
     #         .filter(FormInstance.creator_id == self.id).all()
+
+    def ga_participated_form_instances(self, session: Session) -> Optional[list['FormInstance']]:
+        """get all participated form instances of this user"""
+        return session.query(FormInstance)\
+            .join(FormInstance.users_form_instances)\
+            .join(UserFormInstance.user)\
+            .filter(UserFormInstance.user_id == self.id)\
+            .all()
 
     def ga_av_sections(self, fi: 'FormInstance', session: Session) -> Optional[list['Section']]:
         """get all available sections of a form instance for this user"""

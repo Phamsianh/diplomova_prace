@@ -9,3 +9,4 @@ if __name__ == "__main__":
 
     os.system('python -m ORM.migration.seed_users')
     os.system('python -m ORM.migration.seed_forms')
+    os.system('python -m ORM.migration.seed_form_instances')
