@@ -1,5 +1,5 @@
 from ORM.Base import Base
-from ORM.session import session
+from ORM.session import Session
 from sqlalchemy import Column, ForeignKey, BigInteger, String, DateTime, Date, Integer, Enum, func
 from sqlalchemy.orm import relationship, backref
 from typing import Optional
@@ -21,15 +21,15 @@ class User(Base):
     birthdate = Column(Date)
 
     # one-to-many relationship(s)
-    forms = relationship("Form", back_populates="creator")
-    groups = relationship("Group", back_populates="creator")
-    roles = relationship("Role", back_populates="creator")
-    users_groups_roles = relationship("UserGroupRole", back_populates="user", foreign_keys="UserGroupRole.user_id")
-    form_instances = relationship("FormInstance", back_populates="creator")
-    users_form_instances = relationship("UserFormInstance", back_populates="user")
-    groups_roles = relationship("GroupRole", back_populates="creator")
+    created_forms = relationship("Form", back_populates="creator")
+    created_groups = relationship("Group", back_populates="creator")
+    created_roles = relationship("Role", back_populates="creator")
+    created_groups_roles = relationship("GroupRole", back_populates="creator")
     created_users_groups_roles = relationship("UserGroupRole", back_populates="assigner",
                                               foreign_keys="UserGroupRole.assigner_id")
+    users_groups_roles = relationship("UserGroupRole", back_populates="user", foreign_keys="UserGroupRole.user_id")
+    created_form_instances = relationship("FormInstance", back_populates="creator")
+    users_form_instances = relationship("UserFormInstance", back_populates="user")
 
     def __repr__(self):
         return f'''
@@ -48,7 +48,7 @@ birthdate: {self.birthdate}
 )
 '''
 
-    def ga_gs_rs(self) -> Optional[list['GroupRole']]:
+    def ga_held_gs_rs(self, session: Session) -> Optional[list['GroupRole']]:
         """get all groups roles of a user"""
 
         return session.query(GroupRole)\
@@ -57,35 +57,35 @@ birthdate: {self.birthdate}
             .filter(User.id == self.id)\
             .all()
 
-    def is_admin(self) -> bool:
-        for g_r in self.ga_gs_rs():
+    def is_admin(self, session: Session) -> bool:
+        for g_r in self.ga_held_gs_rs(session):
             if g_r.role.role == 'admin':
                 return True
         return False
 
-    def is_gr_admin(self) -> bool:
-        for g_r in self.ga_gs_rs():
+    def is_gr_admin(self, session: Session) -> bool:
+        for g_r in self.ga_held_gs_rs(session):
             if g_r.role.role == 'group_admin':
                 return True
         return False
 
-    def is_handler(self) -> bool:
-        for g_r in self.ga_gs_rs():
+    def is_handler(self, session: Session) -> bool:
+        for g_r in self.ga_held_gs_rs(session):
             if g_r.role.role == 'handler':
                 return True
         return False
 
-    def is_applicant(self) -> bool:
-        for g_r in self.ga_gs_rs():
+    def is_applicant(self, session: Session) -> bool:
+        for g_r in self.ga_held_gs_rs(session):
             if g_r.role.role == 'applicant':
                 return True
         return False
 
-    def ga_cr_gs(self) -> Optional[list['Group']]:
-        """get all groups created by user with role admin"""
-        return session.query(Group).filter(Group.admin_id == self.id).all()
+    # def ga_cr_gs(self, session: Session) -> Optional[list['Group']]:
+    #     """get all groups created by user with role admin"""
+    #     return session.query(Group).filter(Group.admin_id == self.id).all()
 
-    def ga_jd_gs(self) -> Optional[list['Group']]:
+    def ga_jd_gs(self, session: Session) -> Optional[list['Group']]:
         """get all joined groups of a user"""
         return session.query(Group) \
             .join(Group.groups_roles) \
@@ -93,11 +93,11 @@ birthdate: {self.birthdate}
             .filter(UserGroupRole.user_id == self.id) \
             .all()
 
-    def ga_cr_rs(self) -> Optional[list['Role']]:
-        """get all created roles of a user with role admin"""
-        return session.query(Role).join(Role.creator).filter(Role.creator_id == self.id).all()
+    # def ga_cr_rs(self, session: Session) -> Optional[list['Role']]:
+    #     """get all created roles of a user with role admin"""
+    #     return session.query(Role).join(Role.creator).filter(Role.creator_id == self.id).all()
 
-    def ga_held_roles(self) -> Optional[list['Role']]:
+    def ga_held_roles(self, session: Session) -> Optional[list['Role']]:
         """get all roles held by a user"""
         return session.query(Role) \
             .join(Role.groups_roles) \
@@ -105,25 +105,25 @@ birthdate: {self.birthdate}
             .filter(UserGroupRole.user_id == self.id) \
             .all()
 
-    def ga_cr_forms(self) -> Optional[list['Form']]:
-        """get all created form of this user with role admin or group admin"""
-        return session.query(Form).join(Form.creator).filter(Form.creator_id == self.id).all()
+    # def ga_cr_forms(self, session: Session) -> Optional[list['Form']]:
+    #     """get all created form of this user with role admin or group admin"""
+    #     return session.query(Form).join(Form.creator).filter(Form.creator_id == self.id).all()
 
-    def ga_cr_form_instances(self) -> Optional[list['FormInstance']]:
-        """get all form instances created by this user"""
-        return session.query(FormInstance)\
-            .join(FormInstance.creator)\
-            .filter(FormInstance.creator_id == self.id).all()
+    # def ga_cr_form_instances(self, session: Session) -> Optional[list['FormInstance']]:
+    #     """get all form instances created by this user"""
+    #     return session.query(FormInstance)\
+    #         .join(FormInstance.creator)\
+    #         .filter(FormInstance.creator_id == self.id).all()
 
-    def ga_av_sections(self, fi: 'FormInstance') -> Optional[list['Section']]:
+    def ga_av_sections(self, fi: 'FormInstance', session: Session) -> Optional[list['Section']]:
         """get all available sections of a form instance for this user"""
         pass
 
-    def ga_av_phases(self, fi: 'FormInstance') -> Optional[list['Phase']]:
+    def ga_av_phases(self, fi: 'FormInstance', session: Session) -> Optional[list['Phase']]:
         """get all available phases of a form instance for this user"""
         pass
 
-    def ga_av_fields(self, fi: 'FormInstance') -> Optional[list['Field']]:
+    def ga_av_fields(self, fi: 'FormInstance', session: Session) -> Optional[list['Field']]:
         pass
 
     # def create_role(self, 'Role'):
@@ -139,7 +139,7 @@ class Form(Base):
     creator_id = Column(BigInteger, ForeignKey('users.id'))
 
     # many-to-one relationship(s)
-    creator = relationship("User", back_populates="forms")
+    creator = relationship("User", back_populates="created_forms")
 
     # one-to-many relationship(s)
     phases = relationship("Phase", back_populates="form")
@@ -247,7 +247,7 @@ class FormInstance(Base):
     # many-to-one relationship(s)
     form = relationship("Form", back_populates="form_instances")
     current_phase = relationship("Phase", back_populates="form_instances")
-    creator = relationship("User", back_populates="form_instances")
+    creator = relationship("User", back_populates="created_form_instances")
 
     # one-to-many relationship(s)
     form_instances_fields = relationship("FormInstanceField", back_populates="form_instance")
@@ -343,7 +343,7 @@ class Group(Base):
     superior_group_id = Column(BigInteger, ForeignKey("groups.id"))
 
     # many-to-one relationship(s)
-    creator = relationship("User", back_populates="groups")
+    creator = relationship("User", back_populates="created_groups")
     # one-to-many relationship(s)
     groups_roles = relationship("GroupRole", back_populates="group")
     subordinate_groups = relationship("Group", backref=backref("superior_group", remote_side=[id]))
@@ -374,7 +374,7 @@ class Role(Base):
     creator_id = Column(BigInteger, ForeignKey("users.id"))
 
     # many-to-one relationship(s)
-    creator = relationship("User", back_populates="roles")
+    creator = relationship("User", back_populates="created_roles")
 
     # one-to-many relationship(s)
     groups_roles = relationship("GroupRole", back_populates="role")
@@ -473,7 +473,7 @@ class GroupRole(Base):
     # many-to-one relationship(s)
     group = relationship("Group", back_populates="groups_roles")
     role = relationship("Role", back_populates="groups_roles")
-    creator = relationship("User", back_populates="groups_roles")
+    creator = relationship("User", back_populates="created_groups_roles")
 
     # one-to-many relationship(s)
     phases = relationship("Phase", back_populates="group_role")

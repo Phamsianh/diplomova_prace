@@ -59,6 +59,7 @@ role_head_of_department = Role(name="Head of Department", role="handler")
 role_leading_teacher = Role(name="Leading Teacher", role="handler")
 role_consultant = Role(name="Consultant", role="handler")
 role_student = Role(name="Student", role="applicant")
+role_exchange_student = Role(name="Exchange Student", role="applicant")
 
 group_UoD = Group(name="Universty of Defence")
 group_FMT = Group(name="Faculty of Military Technology")
@@ -85,6 +86,7 @@ leading_teacher = GroupRole(name="Leading Teacher")
 consultant = GroupRole(name="Consultant")
 student_of_CIT = GroupRole(name="Student of 2-CIT-C")
 student_of_WA = GroupRole(name="Student of 2-WA-C")
+exchange_student_of_CIT = GroupRole(name="Exchange Student of 2-CIT-C")
 
 group_UoD.groups_roles = [admin_of_UoD, rector_of_UoD]
 group_FMT.groups_roles = [dean_of_FMT, vice_dean_of_FMT]
@@ -92,7 +94,7 @@ group_FML.groups_roles = [dean_of_FMl]
 group_FMHS.groups_roles = [dean_of_FMHS]
 group_DoICO.groups_roles = [head_of_DoICO]
 group_DoWA.groups_roles = [head_of_DoWA]
-group_2_CIT_C.groups_roles = [student_of_CIT]
+group_2_CIT_C.groups_roles = [student_of_CIT, exchange_student_of_CIT]
 group_2_WA_C.groups_roles = [student_of_WA]
 
 role_system_admin.groups_roles = [admin_of_UoD]
@@ -103,8 +105,9 @@ role_head_of_department.groups_roles = [head_of_DoICO, head_of_DoWA]
 role_leading_teacher.groups_roles = [leading_teacher]
 role_consultant.groups_roles = [consultant]
 role_student.groups_roles = [student_of_CIT, student_of_WA]
+role_exchange_student.groups_roles = [exchange_student_of_CIT]
 
-phamsianh.groups = [
+phamsianh.created_groups = [
     group_UoD,
     group_FMT,
     group_FML,
@@ -114,7 +117,7 @@ phamsianh.groups = [
     group_2_CIT_C,
     group_2_WA_C
 ]
-phamsianh.roles = [
+phamsianh.created_roles = [
     role_system_admin,
     role_rector,
     role_dean,
@@ -122,9 +125,10 @@ phamsianh.roles = [
     role_head_of_department,
     role_leading_teacher,
     role_consultant,
-    role_student
+    role_student,
+    role_exchange_student
 ]
-phamsianh.groups_roles = [
+phamsianh.created_groups_roles = [
     admin_of_UoD,
     rector_of_UoD,
     dean_of_FMl,
@@ -136,12 +140,17 @@ phamsianh.groups_roles = [
     leading_teacher,
     consultant,
     student_of_CIT,
+    exchange_student_of_CIT,
     student_of_WA
 ]
 
 phamsianh_student_CIT = UserGroupRole()
 phamsianh_student_CIT.user = phamsianh
 phamsianh_student_CIT.group_role = student_of_CIT
+
+phamsianh_exchange_student_CIT = UserGroupRole()
+phamsianh_exchange_student_CIT.user = phamsianh
+phamsianh_exchange_student_CIT.group_role = exchange_student_of_CIT
 
 phamsianh_admin_UoD = UserGroupRole()
 phamsianh_admin_UoD.user = phamsianh
