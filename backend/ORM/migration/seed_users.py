@@ -6,7 +6,7 @@ phamsianh = User(
     first_name='Si Anh',
     last_name='Pham',
     user_name='phamsianh97',
-    password=hashlib.sha256(('strongpassword').encode()).hexdigest(),
+    password='strongpassword',
     email='phamsianh97@gmail.com',
     phone='739875282',
 )
@@ -14,7 +14,7 @@ alexandrstefek = User(
     first_name='Alexandr',
     last_name='Stefek',
     user_name='alexandrstefek',
-    password=hashlib.sha256(('strongpassword').encode()).hexdigest(),
+    password='strongpassword',
     email='alexandr.stefek@unob.cz',
     phone='973442256'
 )
@@ -22,7 +22,7 @@ zuzanakrocova = User(
     first_name='Zuzana',
     last_name='Kročová',
     user_name='zuzanakrocova',
-    password=hashlib.sha256(('strongpassword').encode()).hexdigest(),
+    password='strongpassword',
     email='zuzana.krocova@unob.cz',
     phone='973442281'
 )
@@ -30,7 +30,7 @@ vlastimilneumann = User(
     first_name='Vlastimil',
     last_name='Neumann',
     user_name='vlastimilneumann',
-    password=hashlib.sha256(('strongpassword').encode()).hexdigest(),
+    password='strongpassword',
     email='vlastimil.neumann@unob.cz',
     phone='973442296'
 )
@@ -38,7 +38,7 @@ janfarlik = User(
     first_name='Jan',
     last_name='Farlík',
     user_name='janfarlik',
-    password=hashlib.sha256(('strongpassword').encode()).hexdigest(),
+    password='strongpassword',
     email='jan.farlik@unob.cz',
     phone='973442511'
 )
@@ -46,7 +46,7 @@ petrfrantis = User(
     first_name='Petr',
     last_name='Františ',
     user_name='petrfrantis',
-    password=hashlib.sha256(('strongpassword').encode()).hexdigest(),
+    password='strongpassword',
     email='petr.frantis@unob.cz',
     phone='973442348'
 )
@@ -74,38 +74,40 @@ group_2_CIT_C.superior_group = group_DoICO
 group_2_WA_C = Group(name="2-WA-C")
 group_2_WA_C.superior_group = group_DoWA
 
-admin_of_UoD = GroupRole(name="Admin of University of Defence")
-rector_of_UoD = GroupRole(name="Rector of University of Defence")
-dean_of_FMT = GroupRole(name="Dean of FMT (GrAdmin)")
-dean_of_FMl = GroupRole(name="Dean of FMl (GrAdmin)")
-dean_of_FMHS = GroupRole(name="Dean of FMHS (GrAdmin)")
-vice_dean_of_FMT = GroupRole(name="Vice Dean of FMT")
-head_of_DoICO = GroupRole(name="Head of Department of Informatics and Cyber Operations")
-head_of_DoWA = GroupRole(name="Head of Department of Weapons and Ammunition")
-leading_teacher = GroupRole(name="Leading Teacher")
-consultant = GroupRole(name="Consultant")
-student_of_CIT = GroupRole(name="Student of 2-CIT-C")
-student_of_WA = GroupRole(name="Student of 2-WA-C")
-exchange_student_of_CIT = GroupRole(name="Exchange Student of 2-CIT-C")
+admin_of_UoD = GroupRole(name="Admin of University of Defence", role=role_system_admin, group=group_UoD)
+rector_of_UoD = GroupRole(name="Rector of University of Defence", role=role_rector, group=group_UoD)
+dean_of_FMT = GroupRole(name="Dean of FMT (GrAdmin)", role=role_dean, group=group_FMT)
+dean_of_FMl = GroupRole(name="Dean of FMl (GrAdmin)", role=role_dean, group=group_FML)
+dean_of_FMHS = GroupRole(name="Dean of FMHS (GrAdmin)", role=role_dean, group=group_FMHS)
+vice_dean_of_FMT = GroupRole(name="Vice Dean of FMT", role=role_vice_dean, group=group_FMT)
+head_of_DoICO = GroupRole(name="Head of Department of Informatics and Cyber Operations", role=role_head_of_department,
+                          group=group_DoICO)
+head_of_DoWA = GroupRole(name="Head of Department of Weapons and Ammunition", role=role_head_of_department,
+                         group=group_DoWA)
+leading_teacher = GroupRole(name="Leading Teacher", role=role_leading_teacher)
+consultant = GroupRole(name="Consultant", role=role_consultant)
+student_of_CIT = GroupRole(name="Student of 2-CIT-C", role=role_student, group=group_2_CIT_C)
+student_of_WA = GroupRole(name="Student of 2-WA-C", role=role_student, group=group_2_WA_C)
+exchange_student_of_CIT = GroupRole(name="Exchange Student of 2-CIT-C", role=role_student, group=group_2_CIT_C)
 
-group_UoD.groups_roles = [admin_of_UoD, rector_of_UoD]
-group_FMT.groups_roles = [dean_of_FMT, vice_dean_of_FMT]
-group_FML.groups_roles = [dean_of_FMl]
-group_FMHS.groups_roles = [dean_of_FMHS]
-group_DoICO.groups_roles = [head_of_DoICO]
-group_DoWA.groups_roles = [head_of_DoWA]
-group_2_CIT_C.groups_roles = [student_of_CIT, exchange_student_of_CIT]
-group_2_WA_C.groups_roles = [student_of_WA]
-
-role_system_admin.groups_roles = [admin_of_UoD]
-role_rector.groups_roles = [rector_of_UoD]
-role_dean.groups_roles = [dean_of_FMT, dean_of_FMl, dean_of_FMHS]
-role_vice_dean.groups_roles = [vice_dean_of_FMT]
-role_head_of_department.groups_roles = [head_of_DoICO, head_of_DoWA]
-role_leading_teacher.groups_roles = [leading_teacher]
-role_consultant.groups_roles = [consultant]
-role_student.groups_roles = [student_of_CIT, student_of_WA]
-role_exchange_student.groups_roles = [exchange_student_of_CIT]
+# group_UoD.groups_roles = [admin_of_UoD, rector_of_UoD]
+# group_FMT.groups_roles = [dean_of_FMT, vice_dean_of_FMT]
+# group_FML.groups_roles = [dean_of_FMl]
+# group_FMHS.groups_roles = [dean_of_FMHS]
+# group_DoICO.groups_roles = [head_of_DoICO]
+# group_DoWA.groups_roles = [head_of_DoWA]
+# group_2_CIT_C.groups_roles = [student_of_CIT, exchange_student_of_CIT]
+# group_2_WA_C.groups_roles = [student_of_WA]
+#
+# role_system_admin.groups_roles = [admin_of_UoD]
+# role_rector.groups_roles = [rector_of_UoD]
+# role_dean.groups_roles = [dean_of_FMT, dean_of_FMl, dean_of_FMHS]
+# role_vice_dean.groups_roles = [vice_dean_of_FMT]
+# role_head_of_department.groups_roles = [head_of_DoICO, head_of_DoWA]
+# role_leading_teacher.groups_roles = [leading_teacher]
+# role_consultant.groups_roles = [consultant]
+# role_student.groups_roles = [student_of_CIT, student_of_WA]
+# role_exchange_student.groups_roles = [exchange_student_of_CIT]
 
 phamsianh.created_groups = [
     group_UoD,
@@ -144,45 +146,45 @@ phamsianh.created_groups_roles = [
     student_of_WA
 ]
 
-phamsianh_student_CIT = UserGroupRole()
-phamsianh_student_CIT.user = phamsianh
-phamsianh_student_CIT.group_role = student_of_CIT
+phamsianh_student_CIT = UserGroupRole(user=phamsianh, group_role=student_of_CIT)
+# phamsianh_student_CIT.user = phamsianh
+# phamsianh_student_CIT.group_role = student_of_CIT
 
-phamsianh_exchange_student_CIT = UserGroupRole()
-phamsianh_exchange_student_CIT.user = phamsianh
-phamsianh_exchange_student_CIT.group_role = exchange_student_of_CIT
+phamsianh_exchange_student_CIT = UserGroupRole(user=phamsianh, group_role=exchange_student_of_CIT)
+# phamsianh_exchange_student_CIT.user = phamsianh
+# phamsianh_exchange_student_CIT.group_role = exchange_student_of_CIT
 
-phamsianh_admin_UoD = UserGroupRole()
-phamsianh_admin_UoD.user = phamsianh
-phamsianh_admin_UoD.group_role = admin_of_UoD
+phamsianh_admin_UoD = UserGroupRole(user=phamsianh, group_role=admin_of_UoD)
+# phamsianh_admin_UoD.user = phamsianh
+# phamsianh_admin_UoD.group_role = admin_of_UoD
 
-zuzanakrocova_rector_admin_UoD = UserGroupRole()
-zuzanakrocova_rector_admin_UoD.user = zuzanakrocova
-zuzanakrocova_rector_admin_UoD.group_role = rector_of_UoD
+zuzanakrocova_rector_admin_UoD = UserGroupRole(user=zuzanakrocova, group_role=rector_of_UoD)
+# zuzanakrocova_rector_admin_UoD.user = zuzanakrocova
+# zuzanakrocova_rector_admin_UoD.group_role = rector_of_UoD
 
-vlastimilneumann_dean_gr_admin_FMT = UserGroupRole()
-vlastimilneumann_dean_gr_admin_FMT.user = vlastimilneumann
-vlastimilneumann_dean_gr_admin_FMT.group_role = dean_of_FMT
+vlastimilneumann_dean_gr_admin_FMT = UserGroupRole(user=vlastimilneumann, group_role=dean_of_FMT)
+# vlastimilneumann_dean_gr_admin_FMT.user = vlastimilneumann
+# vlastimilneumann_dean_gr_admin_FMT.group_role = dean_of_FMT
 
-janfarlik_vice_dean_FMT = UserGroupRole()
-janfarlik_vice_dean_FMT.user = janfarlik
-janfarlik_vice_dean_FMT.group_role = vice_dean_of_FMT
+janfarlik_vice_dean_FMT = UserGroupRole(user=janfarlik, group_role=vice_dean_of_FMT)
+# janfarlik_vice_dean_FMT.user = janfarlik
+# janfarlik_vice_dean_FMT.group_role = vice_dean_of_FMT
 
-petrfrantis_head_of_DoICO = UserGroupRole()
-petrfrantis_head_of_DoICO.user = petrfrantis
-petrfrantis_head_of_DoICO.group_role = head_of_DoICO
+petrfrantis_head_of_DoICO = UserGroupRole(user=petrfrantis, group_role=head_of_DoICO)
+# petrfrantis_head_of_DoICO.user = petrfrantis
+# petrfrantis_head_of_DoICO.group_role = head_of_DoICO
 
-alexandrstefek_leading_teacher = UserGroupRole()
-alexandrstefek_leading_teacher.user = alexandrstefek
-alexandrstefek_leading_teacher.group_role = leading_teacher
+alexandrstefek_leading_teacher = UserGroupRole(user=alexandrstefek, group_role=leading_teacher)
+# alexandrstefek_leading_teacher.user = alexandrstefek
+# alexandrstefek_leading_teacher.group_role = leading_teacher
 
-alexandrstefek_consultant = UserGroupRole()
-alexandrstefek_consultant.user = alexandrstefek
-alexandrstefek_consultant.group_role = consultant
+alexandrstefek_consultant = UserGroupRole(user=alexandrstefek, group_role=consultant)
+# alexandrstefek_consultant.user = alexandrstefek
+# alexandrstefek_consultant.group_role = consultant
 
-petrfrantis_consultant = UserGroupRole()
-petrfrantis_consultant.user = petrfrantis
-petrfrantis_consultant.group_role = consultant
+petrfrantis_consultant = UserGroupRole(user=petrfrantis, group_role=consultant)
+# petrfrantis_consultant.user = petrfrantis
+# petrfrantis_consultant.group_role = consultant
 
 phamsianh.created_users_groups_roles = [
     phamsianh_student_CIT,

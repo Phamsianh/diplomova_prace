@@ -1,8 +1,9 @@
 from ORM.Base import Base
 from ORM.session import Session
-from sqlalchemy import Column, ForeignKey, BigInteger, String, DateTime, Date, Integer, Enum, func
+from sqlalchemy import Column, ForeignKey, BigInteger, String, DateTime, Date, Integer, Enum, Boolean, func, inspect
 from sqlalchemy.orm import relationship, backref
 from typing import Optional
+import hashlib
 
 
 class User(Base):
@@ -14,11 +15,12 @@ class User(Base):
     first_name = Column(String(50))
     last_name = Column(String(50))
     user_name = Column(String(50), unique=True)
-    password = Column(String)
+    _password = Column('password', String)
     email = Column(String(50), unique=True)
     phone = Column(String(20))
     public_key = Column(String)
     birthdate = Column(Date)
+    disabled = Column(Boolean, server_default="false")
 
     # one-to-many relationship(s)
     created_forms = relationship("Form", back_populates="creator")
@@ -48,35 +50,51 @@ birthdate: {self.birthdate}
 )
 '''
 
-    def ga_held_gs_rs(self, session: Session) -> Optional[list['GroupRole']]:
+    @property
+    def password(self):
+        return self._password
+
+    @password.setter
+    def password(self, value):
+        """
+        :param value: For later implementation: This value must be validated
+        """
+        self._password = hashlib.sha256(value.encode()).hexdigest()
+
+    @property
+    def held_groups_roles(self) -> Optional[list['GroupRole']]:
         """get all groups roles of this user"""
 
-        return session.query(GroupRole)\
+        return inspect(self).session.query(GroupRole)\
             .join(GroupRole.users_groups_roles)\
             .join(UserGroupRole.user)\
             .filter(User.id == self.id)\
             .all()
 
-    def is_admin(self, session: Session) -> bool:
-        for g_r in self.ga_held_gs_rs(session):
+    @property
+    def is_admin(self) -> bool:
+        for g_r in self.held_groups_roles:
             if g_r.role.role == 'admin':
                 return True
         return False
 
-    def is_gr_admin(self, session: Session) -> bool:
-        for g_r in self.ga_held_gs_rs(session):
+    @property
+    def is_gr_admin(self) -> bool:
+        for g_r in self.held_groups_roles:
             if g_r.role.role == 'group_admin':
                 return True
         return False
 
-    def is_handler(self, session: Session) -> bool:
-        for g_r in self.ga_held_gs_rs(session):
+    @property
+    def is_handler(self) -> bool:
+        for g_r in self.held_groups_roles:
             if g_r.role.role == 'handler':
                 return True
         return False
 
-    def is_applicant(self, session: Session) -> bool:
-        for g_r in self.ga_held_gs_rs(session):
+    @property
+    def is_applicant(self) -> bool:
+        for g_r in self.held_groups_roles:
             if g_r.role.role == 'applicant':
                 return True
         return False
@@ -85,9 +103,10 @@ birthdate: {self.birthdate}
     #     """get all groups created by user with role admin"""
     #     return session.query(Group).filter(Group.admin_id == self.id).all()
 
-    def ga_jd_gs(self, session: Session) -> Optional[list['Group']]:
+    @property
+    def joined_groups(self) -> Optional[list['Group']]:
         """get all joined groups of this user"""
-        return session.query(Group) \
+        return inspect(self).session.query(Group) \
             .join(Group.groups_roles) \
             .join(GroupRole.users_groups_roles) \
             .filter(UserGroupRole.user_id == self.id) \
@@ -97,9 +116,10 @@ birthdate: {self.birthdate}
     #     """get all created roles of a user with role admin"""
     #     return session.query(Role).join(Role.creator).filter(Role.creator_id == self.id).all()
 
-    def ga_held_roles(self, session: Session) -> Optional[list['Role']]:
+    @property
+    def held_roles(self) -> Optional[list['Role']]:
         """get all roles held by this user"""
-        return session.query(Role) \
+        return inspect(self).session.query(Role) \
             .join(Role.groups_roles) \
             .join(GroupRole.users_groups_roles) \
             .filter(UserGroupRole.user_id == self.id) \
@@ -115,9 +135,10 @@ birthdate: {self.birthdate}
     #         .join(FormInstance.creator)\
     #         .filter(FormInstance.creator_id == self.id).all()
 
-    def ga_participated_form_instances(self, session: Session) -> Optional[list['FormInstance']]:
+    @property
+    def participated_form_instances(self) -> Optional[list['FormInstance']]:
         """get all participated form instances of this user"""
-        return session.query(FormInstance)\
+        return inspect(self).session.query(FormInstance)\
             .join(FormInstance.users_form_instances)\
             .join(UserFormInstance.user)\
             .filter(UserFormInstance.user_id == self.id)\
