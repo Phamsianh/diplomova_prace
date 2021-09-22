@@ -77,7 +77,7 @@ group_2_WA_C.superior_group = group_DoWA
 admin_of_UoD = GroupRole(name="Admin of University of Defence", role=role_system_admin, group=group_UoD)
 rector_of_UoD = GroupRole(name="Rector of University of Defence", role=role_rector, group=group_UoD)
 dean_of_FMT = GroupRole(name="Dean of FMT (GrAdmin)", role=role_dean, group=group_FMT)
-dean_of_FMl = GroupRole(name="Dean of FMl (GrAdmin)", role=role_dean, group=group_FML)
+dean_of_FMl = GroupRole(name="Dean of FML (GrAdmin)", role=role_dean, group=group_FML)
 dean_of_FMHS = GroupRole(name="Dean of FMHS (GrAdmin)", role=role_dean, group=group_FMHS)
 vice_dean_of_FMT = GroupRole(name="Vice Dean of FMT", role=role_vice_dean, group=group_FMT)
 head_of_DoICO = GroupRole(name="Head of Department of Informatics and Cyber Operations", role=role_head_of_department,
@@ -189,6 +189,7 @@ petrfrantis_consultant = UserGroupRole(user=petrfrantis, group_role=consultant)
 phamsianh.created_users_groups_roles = [
     phamsianh_student_CIT,
     phamsianh_admin_UoD,
+    phamsianh_exchange_student_CIT,
     zuzanakrocova_rector_admin_UoD,
     vlastimilneumann_dean_gr_admin_FMT,
     janfarlik_vice_dean_FMT,

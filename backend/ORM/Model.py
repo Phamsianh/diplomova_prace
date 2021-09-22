@@ -73,29 +73,39 @@ birthdate: {self.birthdate}
 
     @property
     def is_admin(self) -> bool:
-        for g_r in self.held_groups_roles:
-            if g_r.role.role == 'admin':
+        for r in self.held_roles:
+            if r.role == 'admin':
                 return True
         return False
 
     @property
     def is_gr_admin(self) -> bool:
-        for g_r in self.held_groups_roles:
-            if g_r.role.role == 'group_admin':
+        for r in self.held_roles:
+            if r.role == 'group_admin':
+                return True
+        return False
+
+    @property
+    def is_admin_or_gr_admin(self) -> bool:
+        """
+        check if this user is admin or group admin in one query
+        """
+        for r in self.held_roles:
+            if r.role == 'admin' or r.role == 'group_admin':
                 return True
         return False
 
     @property
     def is_handler(self) -> bool:
-        for g_r in self.held_groups_roles:
-            if g_r.role.role == 'handler':
+        for r in self.held_roles:
+            if r.role == 'handler':
                 return True
         return False
 
     @property
     def is_applicant(self) -> bool:
-        for g_r in self.held_groups_roles:
-            if g_r.role.role == 'applicant':
+        for r in self.held_roles:
+            if r.role == 'applicant':
                 return True
         return False
 
