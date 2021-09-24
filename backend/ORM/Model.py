@@ -175,7 +175,7 @@ class Form(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String, unique=True)
-    creator_id = Column(BigInteger, ForeignKey('users.id'))
+    creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
 
     # many-to-one relationship(s)
     creator = relationship("User", back_populates="created_forms")
@@ -270,7 +270,7 @@ class FormInstance(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     form_id = Column(BigInteger, ForeignKey("forms.id"))
     current_phase_id = Column(BigInteger, ForeignKey("phases.id"))
-    creator_id = Column(BigInteger, ForeignKey("users.id"))
+    creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     current_state = Column(Enum(
         "initialized",
         "pending",
@@ -378,7 +378,7 @@ class Group(Base):
     name = Column(String(100))
     address = Column(String(100))
     phone = Column(Integer)
-    admin_id = Column(BigInteger, ForeignKey("users.id"))
+    creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     superior_group_id = Column(BigInteger, ForeignKey("groups.id"))
 
     # many-to-one relationship(s)
@@ -396,7 +396,7 @@ updated_at: {self.updated_at}
 name: {self.name}
 address: {self.name}
 phone: {self.phone}
-admin_id: {self.admin_id},
+admin_id: {self.creator_id},
 superior_group_id: {self.superior_group_id}
 )
 '''
@@ -410,7 +410,7 @@ class Role(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String(50), unique=True)
     role = Column(Enum("admin", "group_admin", "handler", "applicant", name="role_enum"))
-    creator_id = Column(BigInteger, ForeignKey("users.id"))
+    creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
 
     # many-to-one relationship(s)
     creator = relationship("User", back_populates="created_roles")

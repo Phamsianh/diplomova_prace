@@ -1,3 +1,5 @@
-__pycache__/
-*.pyc
+**/__pycache__/
+**/*.pyc
+**/test.py
+**/test[0-9].py
 backend/.idea
