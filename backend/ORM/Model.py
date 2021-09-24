@@ -31,7 +31,7 @@ class User(Base):
                                               foreign_keys="UserGroupRole.assigner_id")
     users_groups_roles = relationship("UserGroupRole", back_populates="user", foreign_keys="UserGroupRole.user_id")
     created_form_instances = relationship("FormInstance", back_populates="creator")
-    users_form_instances = relationship("UserFormInstance", back_populates="user")
+    form_instances_fields = relationship("FormInstanceField", back_populates="creator")
 
     def __repr__(self):
         return f'''
@@ -149,9 +149,9 @@ birthdate: {self.birthdate}
     def participated_form_instances(self) -> Optional[list['FormInstance']]:
         """get all participated form instances of this user"""
         return inspect(self).session.query(FormInstance)\
-            .join(FormInstance.users_form_instances)\
-            .join(UserFormInstance.user)\
-            .filter(UserFormInstance.user_id == self.id)\
+            .join(FormInstance.form_instances_fields)\
+            .join(FormInstanceField.creator)\
+            .filter(FormInstanceField.creator_id == self.id)\
             .all()
 
     def ga_av_sections(self, fi: 'FormInstance', session: Session) -> Optional[list['Section']]:
@@ -293,7 +293,7 @@ class FormInstance(Base):
 
     # one-to-many relationship(s)
     form_instances_fields = relationship("FormInstanceField", back_populates="form_instance")
-    users_form_instances = relationship("UserFormInstance", back_populates="form_instance")
+    # users_form_instances = relationship("UserFormInstance", back_populates="form_instance")
 
     # histories = relationship("History", back_populates="form_instance")
 
@@ -311,31 +311,31 @@ current_state: {self.current_state}
 '''
 
 
-class UserFormInstance(Base):
-    __tablename__ = "users_form_instances"
-
-    id = Column(BigInteger, primary_key=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    user_id = Column(BigInteger, ForeignKey("users.id"))
-    form_instance_id = Column(BigInteger, ForeignKey("form_instances.id"))
-
-    # many-to-one relationship(s)
-    user = relationship("User", back_populates="users_form_instances")
-    form_instance = relationship("FormInstance", back_populates="users_form_instances")
-    # one-to-many relationship(s)
-    form_instances_fields = relationship("FormInstanceField", back_populates="participant")
-
-    def __repr__(self):
-        return f'''
-UserFormInstance(
-id: {self.id}
-created_at: {self.created_at}
-updated_at: {self.updated_at}
-user_id: {self.user_id}
-form_instance_id: {self.form_instance_id}
-)
-'''
+# class UserFormInstance(Base):
+#     __tablename__ = "users_form_instances"
+#
+#     id = Column(BigInteger, primary_key=True)
+#     created_at = Column(DateTime(timezone=True), server_default=func.now())
+#     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+#     user_id = Column(BigInteger, ForeignKey("users.id"))
+#     form_instance_id = Column(BigInteger, ForeignKey("form_instances.id"))
+#
+#     # many-to-one relationship(s)
+#     user = relationship("User", back_populates="users_form_instances")
+#     form_instance = relationship("FormInstance", back_populates="users_form_instances")
+#     # one-to-many relationship(s)
+#     form_instances_fields = relationship("FormInstanceField", back_populates="participant")
+#
+#     def __repr__(self):
+#         return f'''
+# UserFormInstance(
+# id: {self.id}
+# created_at: {self.created_at}
+# updated_at: {self.updated_at}
+# user_id: {self.user_id}
+# form_instance_id: {self.form_instance_id}
+# )
+# '''
 
 
 class FormInstanceField(Base):
@@ -346,13 +346,13 @@ class FormInstanceField(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     form_instance_id = Column(BigInteger, ForeignKey("form_instances.id"))
     field_id = Column(BigInteger, ForeignKey("fields.id"))
+    creator_id = Column(BigInteger, ForeignKey("users.id"))
     value = Column(String)
-    participant_id = Column(BigInteger, ForeignKey("users_form_instances.id"))
 
     # many-to-one relationship(s)
     form_instance = relationship("FormInstance", back_populates="form_instances_fields")
     field = relationship("Field", back_populates="form_instances_fields")
-    participant = relationship("UserFormInstance", back_populates="form_instances_fields")
+    creator = relationship("User", back_populates="form_instances_fields")
 
     # one-to-many relationship(s)
     # form_instances_fields = relationship("FormInstanceField", back_populates="form_instance")
@@ -367,7 +367,7 @@ updated_at: {self.updated_at}
 form_instance_id: {self.form_instance_id}
 field_id: {self.field_id}
 value: {self.value}
-editor_id: {self.editor_id}
+creator_id: {self.creator_id}
 )
 '''
 
