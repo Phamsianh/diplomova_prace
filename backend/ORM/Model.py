@@ -182,7 +182,7 @@ class Form(Base):
 
     # one-to-many relationship(s)
     phases = relationship("Phase", back_populates="form")
-    # sections = relationship("Section", back_populates="form") #For later consideration
+    sections = relationship("Section", back_populates="form")
     form_instances = relationship("FormInstance", back_populates="form")
 
     def __repr__(self):
@@ -206,6 +206,7 @@ class Section(Base):
     name = Column(String, unique=True)
     # form_id = Column(BigInteger, ForeignKey("forms.id")) #For later consideration
     # phase_group_role_id = Column(BigInteger, ForeignKey("phases_groups_roles.id"))
+    form_id = Column(BigInteger, ForeignKey("forms.id"))
     phase_id = Column(BigInteger, ForeignKey("phases.id"))
     group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
     order = Column(Integer)
@@ -213,6 +214,7 @@ class Section(Base):
     # many-to-one relationship(s)
     # form = relationship("Form", back_populates="sections")  #For later consideration
     # phase_group_role = relationship("PhaseGroupRole", back_populates="sections")
+    form = relationship("Form", back_populates="sections")
     phase = relationship("Phase", back_populates="sections")
     group_role = relationship("GroupRole", back_populates="sections")
 
@@ -226,6 +228,7 @@ id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
 name: {self.name}
+form_id: {self.form_id}
 phase_id: {self.phase_id}
 group_role_id: {self.group_role_id}
 order: {self.order}
