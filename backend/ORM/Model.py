@@ -27,8 +27,8 @@ class User(Base):
     created_groups = relationship("Group", back_populates="creator")
     created_roles = relationship("Role", back_populates="creator")
     created_groups_roles = relationship("GroupRole", back_populates="creator")
-    created_users_groups_roles = relationship("UserGroupRole", back_populates="assigner",
-                                              foreign_keys="UserGroupRole.assigner_id")
+    created_users_groups_roles = relationship("UserGroupRole", back_populates="creator",
+                                              foreign_keys="UserGroupRole.creator_id")
     users_groups_roles = relationship("UserGroupRole", back_populates="user", foreign_keys="UserGroupRole.user_id")
     created_form_instances = relationship("FormInstance", back_populates="creator")
     form_instances_fields = relationship("FormInstanceField", back_populates="creator")
@@ -542,12 +542,12 @@ class UserGroupRole(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    assigner_id = Column(BigInteger, ForeignKey("users.id"))
+    creator_id = Column(BigInteger, ForeignKey("users.id"))
     user_id = Column(BigInteger, ForeignKey("users.id"))
     group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
 
     # many-to-one relationship(s)
-    assigner = relationship("User", back_populates="created_users_groups_roles", foreign_keys=[assigner_id])
+    creator = relationship("User", back_populates="created_users_groups_roles", foreign_keys=[creator_id])
     user = relationship("User", back_populates="users_groups_roles", foreign_keys=[user_id])
     group_role = relationship("GroupRole", back_populates="users_groups_roles")
 
@@ -557,7 +557,7 @@ UserGroupRole(
 id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
-assigner_id: {self.assigner_id}
+creator_id: {self.creator_id}
 user_id: {self.user_id}
 group_role_id: {self.group_role_id}
 )
