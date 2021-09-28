@@ -2,7 +2,7 @@ from ORM.Base import Base
 from ORM.session import Session
 from sqlalchemy import Column, ForeignKey, BigInteger, String, DateTime, Date, Integer, Enum, Boolean, func, inspect
 from sqlalchemy.orm import relationship, backref
-from typing import Optional
+from typing import Optional, List
 import hashlib
 
 
@@ -62,7 +62,7 @@ birthdate: {self.birthdate}
         self._password = hashlib.sha256(value.encode()).hexdigest()
 
     @property
-    def held_groups_roles(self) -> Optional[list['GroupRole']]:
+    def held_groups_roles(self) -> Optional[List['GroupRole']]:
         """get all groups roles of this user"""
 
         return inspect(self).session.query(GroupRole)\
@@ -109,12 +109,12 @@ birthdate: {self.birthdate}
                 return True
         return False
 
-    # def ga_cr_gs(self, session: Session) -> Optional[list['Group']]:
+    # def ga_cr_gs(self, session: Session) -> Optional[List['Group']]:
     #     """get all groups created by user with role admin"""
     #     return session.query(Group).filter(Group.admin_id == self.id).all()
 
     @property
-    def joined_groups(self) -> Optional[list['Group']]:
+    def joined_groups(self) -> Optional[List['Group']]:
         """get all joined groups of this user"""
         return inspect(self).session.query(Group) \
             .join(Group.groups_roles) \
@@ -122,12 +122,12 @@ birthdate: {self.birthdate}
             .filter(UserGroupRole.user_id == self.id) \
             .all()
 
-    # def ga_cr_rs(self, session: Session) -> Optional[list['Role']]:
+    # def ga_cr_rs(self, session: Session) -> Optional[List['Role']]:
     #     """get all created roles of a user with role admin"""
     #     return session.query(Role).join(Role.creator).filter(Role.creator_id == self.id).all()
 
     @property
-    def held_roles(self) -> Optional[list['Role']]:
+    def held_roles(self) -> Optional[List['Role']]:
         """get all roles held by this user"""
         return inspect(self).session.query(Role) \
             .join(Role.groups_roles) \
@@ -135,18 +135,18 @@ birthdate: {self.birthdate}
             .filter(UserGroupRole.user_id == self.id) \
             .all()
 
-    # def ga_cr_forms(self, session: Session) -> Optional[list['Form']]:
+    # def ga_cr_forms(self, session: Session) -> Optional[List['Form']]:
     #     """get all created form of this user with role admin or group admin"""
     #     return session.query(Form).join(Form.creator).filter(Form.creator_id == self.id).all()
 
-    # def ga_cr_form_instances(self, session: Session) -> Optional[list['FormInstance']]:
+    # def ga_cr_form_instances(self, session: Session) -> Optional[List['FormInstance']]:
     #     """get all form instances created by this user"""
     #     return session.query(FormInstance)\
     #         .join(FormInstance.creator)\
     #         .filter(FormInstance.creator_id == self.id).all()
 
     @property
-    def participated_form_instances(self) -> Optional[list['FormInstance']]:
+    def participated_form_instances(self) -> Optional[List['FormInstance']]:
         """get all participated form instances of this user"""
         return inspect(self).session.query(FormInstance)\
             .join(FormInstance.form_instances_fields)\
@@ -154,15 +154,15 @@ birthdate: {self.birthdate}
             .filter(FormInstanceField.creator_id == self.id)\
             .all()
 
-    def ga_av_sections(self, fi: 'FormInstance', session: Session) -> Optional[list['Section']]:
+    def ga_av_sections(self, fi: 'FormInstance', session: Session) -> Optional[List['Section']]:
         """get all available sections of a form instance for this user"""
         pass
 
-    def ga_av_phases(self, fi: 'FormInstance', session: Session) -> Optional[list['Phase']]:
+    def ga_av_phases(self, fi: 'FormInstance', session: Session) -> Optional[List['Phase']]:
         """get all available phases of a form instance for this user"""
         pass
 
-    def ga_av_fields(self, fi: 'FormInstance', session: Session) -> Optional[list['Field']]:
+    def ga_av_fields(self, fi: 'FormInstance', session: Session) -> Optional[List['Field']]:
         pass
 
     # def create_role(self, 'Role'):
@@ -195,6 +195,39 @@ name: {self.name}
 creator_id: {self.creator_id}
 )
 '''
+
+    @property
+    def fields(self) -> Optional[List['Field']]:
+        return inspect(self).session.query(Field)\
+            .join(Field.section)\
+            .join(Section.phase)\
+            .join(Phase.form)\
+            .filter(Form.id == self.id).all()
+
+    @property
+    def begin_phase(self) -> Optional['Phase']:
+        return inspect(self).session.query(Phase).join(Phase.form)\
+            .filter(Form.id == self.id).\
+            filter(Phase.phase_type == 'begin').first()
+
+    @property
+    def end_phase(self) -> Optional['Phase']:
+        return inspect(self).session.query(Phase).join(Phase.form)\
+            .filter(Form.id == self.id).\
+            filter(Phase.phase_type == 'end').first()
+
+    @property
+    def transitions(self) -> Optional[List['Transition']]:
+        q1 = inspect(self).session.query(Transition).join(Transition.from_phase).join(Phase.form).\
+            filter(Form.id == self.id)
+        q2 = inspect(self).session.query(Transition).join(Transition.to_phase).join(Phase.form).\
+            filter(Form.id == self.id)
+        return q1.union(q2).all()
+
+    @property
+    def available_groups_roles(self) -> Optional[List['GroupRole']]:
+        return inspect(self).session.query(GroupRole).join(GroupRole.sections).join(Section.phase).join(Phase.form).\
+            filter(Form.id == self.id).all()
 
 
 class Section(Base):
@@ -235,6 +268,11 @@ order: {self.order}
 )
 '''
 
+    @property
+    def creator(self) -> Optional['User']:
+        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).join(Phase.sections).\
+                filter(Section.id == self.id).first()
+
 
 class Field(Base):
     __tablename__ = "fields"
@@ -263,6 +301,26 @@ section_id: {self.section_id}
 order: {self.order}
 )
 '''
+
+    @property
+    def creator(self) -> Optional['User']:
+        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).join(Phase.sections)\
+            .join(Section.fields).filter(Field.id == self.id).first()
+
+    @property
+    def phase(self) -> Optional['Phase']:
+        return inspect(self).session.query(Phase).join(Phase.sections).join(Section.fields).\
+                filter(Field.id == self.id)
+
+    @property
+    def form(self) -> Optional['Form']:
+        return inspect(self).session.query(Form).join(Form.phases).join(Phase.sections).join(Section.fields).\
+                filter(Field.id == self.id).first()
+
+    @property
+    def group_role(self) -> Optional['GroupRole']:
+        return inspect(self).session.query(GroupRole).join(GroupRole.sections).join(Section.fields).\
+                filter(Field.id == self.id).first()
 
 
 class FormInstance(Base):
@@ -310,6 +368,25 @@ current_state: {self.current_state}
 )
 '''
 
+    @property
+    def phases(self) -> Optional[List['Phase']]:
+        return inspect(self).session.query(Phase).join(Phase.form).join(Form.form_instances).\
+                filter(FormInstance.id == self.id).all()
+
+    @property
+    def sections(self) -> Optional[List['Section']]:
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).join(Form.form_instances).\
+            filter(FormInstance.id == self.id).all()
+
+    @property
+    def fields(self) -> Optional[List['Field']]:
+        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form)\
+                .join(Form.form_instances).filter(FormInstance.id == self.id).all()
+
+    @property
+    def filled_fields(self) -> Optional[List['Field']]:
+        return inspect(self).session.query(Field).join(Field.form_instances_fields).\
+            join(FormInstanceField.field_id == self.id).all()
 
 # class UserFormInstance(Base):
 #     __tablename__ = "users_form_instances"
@@ -404,6 +481,15 @@ superior_group_id: {self.superior_group_id}
 )
 '''
 
+    @property
+    def roles(self) -> Optional[List['Role']]:
+        return inspect(self).session.query(Role).join(Role.groups_roles).filter(GroupRole.group_id == self.id).all()
+
+    @property
+    def joiners(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.users_groups_roles).join(UserGroupRole.group_role).\
+                filter(GroupRole.group_id == self.id).all()
+
 
 class Role(Base):
     __tablename__ = 'roles'
@@ -432,6 +518,14 @@ role: {self.role}
 creator_id: {self.creator_id}
 )
 '''
+
+    @property
+    def groups(self) -> Optional[List['Group']]:
+        return inspect(self).session.query(Group).join(Group.groups_roles).filter(GroupRole.role_id == self.id).all()
+
+    @property
+    def roles_without_group(self) -> Optional[List['Role']]:
+        return inspect(self).session.query(Role).join(Role.groups_roles).filter_by(group_id=None).all()
 
 
 class Phase(Base):
@@ -471,6 +565,34 @@ phase_type: {self.phase_type}
 )
 '''
 
+    @property
+    def creator(self) -> Optional['User']:
+        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).\
+                filter(Phase.id == self.id).first()
+
+    @property
+    def next_phases(self) -> Optional[List['Phase']]:
+        return inspect(self).session.query(Phase).join(Phase.to_transitions).\
+            filter(Transition.from_phase_id == self.id).all()
+
+    @property
+    def prev_phases(self) -> Optional[List['Phase']]:
+        return inspect(self).session.query(Phase).join(Phase.from_transitions). \
+            filter(Transition.to_phase_id == self.id).all()
+
+    @property
+    def groups_roles(self) -> Optional[List['GroupRole']]:
+        return inspect(self).session.query(GroupRole).join(GroupRole.sections).filter(Section.phase_id == self.id).all()
+
+    @property
+    def fields(self) -> Optional[List['Field']]:
+        return inspect(self).session.query(Field).join(Field.section).filter(Section.phase_id == self.id).all()
+
+    @property
+    def available_users(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.users_groups_roles).join(UserGroupRole.group_role).\
+                join(GroupRole.sections).filter(Section.phase_id == self.id).all()
+
 
 class Transition(Base):
     __tablename__ = "transitions"
@@ -499,6 +621,11 @@ order: {self.order}
 name: {self.name}
 )
 '''
+
+    @property
+    def creator(self) -> Optional['User']:
+        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).\
+            join(Phase.from_transitions).filter(Transition.id == self.id).first()
 
 
 class GroupRole(Base):
@@ -534,6 +661,20 @@ role_id: {self.role_id}
 creator_id: {self.creator_id}
 )
 '''
+
+    @property
+    def holders(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.users_groups_roles).\
+            filter(UserGroupRole.group_role_id == self.id).all()
+
+    @property
+    def available_fields(self) -> Optional[List['Field']]:
+        return inspect(self).session.query(Field).join(Field.section).filter(Section.group_role_id == self.id).all()
+
+    @property
+    def available_form_instances(self) -> Optional[List['FormInstance']]:
+        return inspect(self).session.query(FormInstance).join(FormInstance.current_phase).join(Phase.sections).\
+                filter(Section.group_role_id == self.id).filter(FormInstance.current_state == 'pending').all()
 
 
 class UserGroupRole(Base):
