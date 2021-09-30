@@ -139,12 +139,14 @@ def get_rsc_ins(rsc: str, rsc_id: Union[int, str], session: Session, usr_dep: u.
             return rsc_ins
 
 
-def get_rel_rsc(rsc_ins: Any, rel_rsc: str) -> Any:
+def get_rel_rsc(rsc_ins: Any, rel_rsc: str, query: Optional[dict] = None) -> Any:
     """
     Get related resource(s) of resource instance.
     :param rsc_ins: Resource instance
     :param rel_rsc: Related resource(s) can be a collection of resource instances, a single resource instance
     or an attribute of resource instance.
+    :param query: An optional dict of query parameters. If related resource have type method and requires arguments
+    query must be presented.
     :return: Related resource
     """
     # all available related resources of resource instance
@@ -153,7 +155,22 @@ def get_rel_rsc(rsc_ins: Any, rel_rsc: str) -> Any:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"resource {type(rsc_ins).__tablename__} doesn't have related resource {rel_rsc}. "
                                    f"related resource of {type(rsc_ins).__tablename__} are {', '.join(all_rel_rscs)}")
-    return getattr(rsc_ins, rel_rsc)
+    rr = getattr(rsc_ins, rel_rsc)
+    if type(rr).__name__ == 'method':
+        from inspect import getfullargspec
+        method_args = getfullargspec(rr)[0][1:]
+        if method_args and not query:
+            raise HTTPException(status_code=400,
+                                detail=f"This endpoint require query parameters {', '.join(method_args)}")
+        try:
+            from pydantic import validate_arguments
+            rr = validate_arguments(rr)
+            return rr(**query)
+        except ValidationError as e:
+            raise HTTPException(status_code=400,
+                                detail=json.loads(e.json()))
+    else:
+        return rr
 
 
 def check_ownership(rsc_ins, current_user):
