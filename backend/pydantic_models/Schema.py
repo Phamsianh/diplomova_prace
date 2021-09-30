@@ -341,9 +341,9 @@ class TransitionResponse(BaseModel):
 
 class SectionPostRequest(BaseModel):
     name: str
-    form_id: int
-    phase_id: Optional[int]
-    group_role_id: Optional[int]
+    form_id: Optional[int]
+    phase_id: int
+    group_role_id: int
     order: Optional[int]
 
     class Config:
