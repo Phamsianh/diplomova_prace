@@ -374,9 +374,39 @@ current_state: {self.current_state}
                 filter(FormInstance.id == self.id).all()
 
     @property
+    def groups_roles_current_phase(self) -> Optional[List['GroupRole']]:
+        return inspect(self).session.query(GroupRole).\
+            join(GroupRole.sections).join(Section.phase).join(Phase.form_instances).\
+            filter(FormInstance.id == self.id).all()
+
+    @property
+    def remain_groups_roles_current_phase(self) -> Optional[List['GroupRole']]:
+        g_r_ = inspect(self).session.query(FormInstance).join(FormInstance.form_instances_fields).\
+            join(FormInstanceField.field).join(Field.section).filter(Section.group_role_id == GroupRole.id)
+        return inspect(self).session.query(GroupRole).join(GroupRole.sections).join(Section.phase).\
+            join(Phase.form_instances).filter(FormInstance.id == self.id).filter(~g_r_.exists()).all()
+
+    @property
+    def closing_phase_group_role(self) -> Optional['GroupRole']:
+        return inspect(self).session.query(GroupRole).join(GroupRole.phases).join(Phase.form_instances).\
+            filter(FormInstance.id == self.id).first()
+
+    @property
     def sections(self) -> Optional[List['Section']]:
         return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).join(Form.form_instances).\
             filter(FormInstance.id == self.id).all()
+
+    @property
+    def filled_sections(self) -> Optional[List['Section']]:
+        return inspect(self).session.query(Section).join(Section.fields).join(Field.form_instances_fields).\
+                filter(FormInstanceField.form_instance_id == self.id).all()
+
+    @property
+    def unfilled_sections(self) -> Optional[List['Section']]:
+        filled_sections = inspect(self).session.query(FormInstance).join(FormInstance.form_instances_fields).\
+            join(FormInstanceField.field).filter(Field.section_id == Section.id)
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).\
+            filter(Form.id == self.form_id).filter(~filled_sections.exists()).all()
 
     @property
     def fields(self) -> Optional[List['Field']]:
@@ -386,7 +416,36 @@ current_state: {self.current_state}
     @property
     def filled_fields(self) -> Optional[List['Field']]:
         return inspect(self).session.query(Field).join(Field.form_instances_fields).\
-            join(FormInstanceField.field_id == self.id).all()
+            filter(FormInstanceField.form_instance_id == self.id).all()
+
+    @property
+    def unfilled_fields(self) -> Optional[List['Field']]:
+        filled_fields = inspect(self).session.query(FormInstance).join(FormInstance.form_instances_fields).\
+            filter(FormInstanceField.field_id == Field.id)
+
+        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form).\
+            filter(Form.id == self.form_id).filter(~filled_fields.exists()).all()
+
+    @property
+    def avai_next_phases(self) -> Optional[List['Phase']]:
+        if self.current_state in ['initialized', 'full resolved']:
+            return inspect(self).session.query(Phase).join(Phase.to_transitions).\
+                filter(Transition.from_phase_id == self.current_phase_id).all()
+        else:
+            return None
+
+    @property
+    def avai_next_sections(self) -> Optional[List['Phase']]:
+        return
+
+    @property
+    def curr_resp_users(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.form_instances_fields).join(FormInstanceField.field).\
+            join(Field.section).join(Section.phase).join(Phase.form_instances).filter(FormInstance.id == self.id).all()
+
+    def resp_usr_section(self, section_id: int) -> Optional['User']:
+        return inspect(self).session.query(User).join(User.form_instances_fields).join(FormInstanceField.field).\
+            filter(FormInstanceField.form_instance_id == self.id, Field.section_id == section_id).first()
 
 # class UserFormInstance(Base):
 #     __tablename__ = "users_form_instances"
