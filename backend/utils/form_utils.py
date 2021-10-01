@@ -28,7 +28,7 @@ def create_phase(p):
     phase = Phase(
         name=p["name"] if "name" in p else None,
         description=p["description"] if "description" in p else None,
-        group_role_id=p["group_role_id"],
+        position_id=p["position_id"],
         phase_type=p["phase_type"]
     )
 
@@ -38,24 +38,24 @@ def create_phase(p):
     return phase
 
 
-# def create_phase_group_role(p_g_r: PhaseGroupRole, p_id: int):
-#     phase_group_role = PhaseGroupRole(
+# def create_phase_position(p_g_r: PhaseGroupRole, p_id: int):
+#     phase_position = PhaseGroupRole(
 #         phase_id=p_id,
-#         group_role_id=p_g_r["group_role_id"]
+#         position_id=p_g_r["position_id"]
 #     )
-#     session.add(phase_group_role)
+#     session.add(phase_position)
 #     session.commit()
 #
 #     for s in p_g_r["sections"]:
-#         create_section(s, phase_group_role.id)
+#         create_section(s, phase_position.id)
 #
-#     return phase_group_role
+#     return phase_position
 
 
 def create_section(s):
     section = Section(
         name=s["name"],
-        group_role_id=s["group_role_id"]
+        position_id=s["position_id"]
     )
     for f in s["fields"]:
         section.fields.append(create_field(f))

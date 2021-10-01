@@ -26,12 +26,12 @@ class User(Base):
     created_forms = relationship("Form", back_populates="creator")
     created_groups = relationship("Group", back_populates="creator")
     created_roles = relationship("Role", back_populates="creator")
-    created_groups_roles = relationship("GroupRole", back_populates="creator")
-    created_users_groups_roles = relationship("UserGroupRole", back_populates="creator",
-                                              foreign_keys="UserGroupRole.creator_id")
-    users_groups_roles = relationship("UserGroupRole", back_populates="user", foreign_keys="UserGroupRole.user_id")
-    created_form_instances = relationship("FormInstance", back_populates="creator")
-    form_instances_fields = relationship("FormInstanceField", back_populates="creator")
+    created_positions = relationship("Position", back_populates="creator")
+    created_users_positions = relationship("UserPosition", back_populates="creator",
+                                           foreign_keys="UserPosition.creator_id")
+    users_positions = relationship("UserPosition", back_populates="user", foreign_keys="UserPosition.user_id")
+    created_instances = relationship("Instance", back_populates="creator")
+    instances_fields = relationship("InstanceField", back_populates="creator")
 
     def __repr__(self):
         return f'''
@@ -62,12 +62,12 @@ birthdate: {self.birthdate}
         self._password = hashlib.sha256(value.encode()).hexdigest()
 
     @property
-    def held_groups_roles(self) -> Optional[List['GroupRole']]:
+    def held_positions(self) -> Optional[List['Position']]:
         """get all groups roles of this user"""
 
-        return inspect(self).session.query(GroupRole)\
-            .join(GroupRole.users_groups_roles)\
-            .join(UserGroupRole.user)\
+        return inspect(self).session.query(Position)\
+            .join(Position.users_positions)\
+            .join(UserPosition.user)\
             .filter(User.id == self.id)\
             .all()
 
@@ -117,9 +117,9 @@ birthdate: {self.birthdate}
     def joined_groups(self) -> Optional[List['Group']]:
         """get all joined groups of this user"""
         return inspect(self).session.query(Group) \
-            .join(Group.groups_roles) \
-            .join(GroupRole.users_groups_roles) \
-            .filter(UserGroupRole.user_id == self.id) \
+            .join(Group.positions) \
+            .join(Position.users_positions) \
+            .filter(UserPosition.user_id == self.id) \
             .all()
 
     # def ga_cr_rs(self, session: Session) -> Optional[List['Role']]:
@@ -130,39 +130,39 @@ birthdate: {self.birthdate}
     def held_roles(self) -> Optional[List['Role']]:
         """get all roles held by this user"""
         return inspect(self).session.query(Role) \
-            .join(Role.groups_roles) \
-            .join(GroupRole.users_groups_roles) \
-            .filter(UserGroupRole.user_id == self.id) \
+            .join(Role.positions) \
+            .join(Position.users_positions) \
+            .filter(UserPosition.user_id == self.id) \
             .all()
 
     # def ga_cr_forms(self, session: Session) -> Optional[List['Form']]:
     #     """get all created form of this user with role admin or group admin"""
     #     return session.query(Form).join(Form.creator).filter(Form.creator_id == self.id).all()
 
-    # def ga_cr_form_instances(self, session: Session) -> Optional[List['FormInstance']]:
+    # def ga_cr_instances(self, session: Session) -> Optional[List['Instance']]:
     #     """get all form instances created by this user"""
-    #     return session.query(FormInstance)\
-    #         .join(FormInstance.creator)\
-    #         .filter(FormInstance.creator_id == self.id).all()
+    #     return session.query(Instance)\
+    #         .join(Instance.creator)\
+    #         .filter(Instance.creator_id == self.id).all()
 
     @property
-    def participated_form_instances(self) -> Optional[List['FormInstance']]:
+    def participated_instances(self) -> Optional[List['Instance']]:
         """get all participated form instances of this user"""
-        return inspect(self).session.query(FormInstance)\
-            .join(FormInstance.form_instances_fields)\
-            .join(FormInstanceField.creator)\
-            .filter(FormInstanceField.creator_id == self.id)\
+        return inspect(self).session.query(Instance)\
+            .join(Instance.instances_fields)\
+            .join(InstanceField.creator)\
+            .filter(InstanceField.creator_id == self.id)\
             .all()
 
-    def ga_av_sections(self, fi: 'FormInstance', session: Session) -> Optional[List['Section']]:
+    def ga_av_sections(self, fi: 'Instance', session: Session) -> Optional[List['Section']]:
         """get all available sections of a form instance for this user"""
         pass
 
-    def ga_av_phases(self, fi: 'FormInstance', session: Session) -> Optional[List['Phase']]:
+    def ga_av_phases(self, fi: 'Instance', session: Session) -> Optional[List['Phase']]:
         """get all available phases of a form instance for this user"""
         pass
 
-    def ga_av_fields(self, fi: 'FormInstance', session: Session) -> Optional[List['Field']]:
+    def ga_av_fields(self, fi: 'Instance', session: Session) -> Optional[List['Field']]:
         pass
 
     # def create_role(self, 'Role'):
@@ -183,7 +183,7 @@ class Form(Base):
     # one-to-many relationship(s)
     phases = relationship("Phase", back_populates="form")
     sections = relationship("Section", back_populates="form")
-    form_instances = relationship("FormInstance", back_populates="form")
+    instances = relationship("Instance", back_populates="form")
 
     def __repr__(self):
         return f'''
@@ -225,8 +225,8 @@ creator_id: {self.creator_id}
         return q1.union(q2).all()
 
     @property
-    def available_groups_roles(self) -> Optional[List['GroupRole']]:
-        return inspect(self).session.query(GroupRole).join(GroupRole.sections).join(Section.phase).join(Phase.form).\
+    def available_positions(self) -> Optional[List['Position']]:
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.form).\
             filter(Form.id == self.id).all()
 
 
@@ -237,19 +237,15 @@ class Section(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String, unique=True)
-    # form_id = Column(BigInteger, ForeignKey("forms.id")) #For later consideration
-    # phase_group_role_id = Column(BigInteger, ForeignKey("phases_groups_roles.id"))
     form_id = Column(BigInteger, ForeignKey("forms.id"))
     phase_id = Column(BigInteger, ForeignKey("phases.id"))
-    group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
+    position_id = Column(BigInteger, ForeignKey("positions.id"))
     order = Column(Integer)
 
     # many-to-one relationship(s)
-    # form = relationship("Form", back_populates="sections")  #For later consideration
-    # phase_group_role = relationship("PhaseGroupRole", back_populates="sections")
     form = relationship("Form", back_populates="sections")
     phase = relationship("Phase", back_populates="sections")
-    group_role = relationship("GroupRole", back_populates="sections")
+    position = relationship("Position", back_populates="sections")
 
     # one-to-many relationship(s)
     fields = relationship("Field", back_populates="section")
@@ -263,7 +259,7 @@ updated_at: {self.updated_at}
 name: {self.name}
 form_id: {self.form_id}
 phase_id: {self.phase_id}
-group_role_id: {self.group_role_id}
+position_id: {self.position_id}
 order: {self.order}
 )
 '''
@@ -288,7 +284,7 @@ class Field(Base):
     section = relationship("Section", back_populates="fields")
 
     # one-to-many relationship(s)
-    form_instances_fields = relationship("FormInstanceField", back_populates="field")
+    instances_fields = relationship("InstanceField", back_populates="field")
 
     def __repr__(self):
         return f'''
@@ -318,13 +314,13 @@ order: {self.order}
                 filter(Field.id == self.id).first()
 
     @property
-    def group_role(self) -> Optional['GroupRole']:
-        return inspect(self).session.query(GroupRole).join(GroupRole.sections).join(Section.fields).\
+    def position(self) -> Optional['Position']:
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.fields).\
                 filter(Field.id == self.id).first()
 
 
-class FormInstance(Base):
-    __tablename__ = "form_instances"
+class Instance(Base):
+    __tablename__ = "instances"
 
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -345,19 +341,16 @@ class FormInstance(Base):
     ), server_default="initialized")
 
     # many-to-one relationship(s)
-    form = relationship("Form", back_populates="form_instances")
-    current_phase = relationship("Phase", back_populates="form_instances")
-    creator = relationship("User", back_populates="created_form_instances")
+    form = relationship("Form", back_populates="instances")
+    current_phase = relationship("Phase", back_populates="instances")
+    creator = relationship("User", back_populates="created_instances")
 
     # one-to-many relationship(s)
-    form_instances_fields = relationship("FormInstanceField", back_populates="form_instance")
-    # users_form_instances = relationship("UserFormInstance", back_populates="form_instance")
-
-    # histories = relationship("History", back_populates="form_instance")
+    instances_fields = relationship("InstanceField", back_populates="instance")
 
     def __repr__(self):
         return f'''
-FormInstance(
+Instance(
 id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
@@ -370,58 +363,58 @@ current_state: {self.current_state}
 
     @property
     def phases(self) -> Optional[List['Phase']]:
-        return inspect(self).session.query(Phase).join(Phase.form).join(Form.form_instances).\
-                filter(FormInstance.id == self.id).all()
+        return inspect(self).session.query(Phase).join(Phase.form).join(Form.instances).\
+                filter(Instance.id == self.id).all()
 
     @property
-    def groups_roles_current_phase(self) -> Optional[List['GroupRole']]:
-        return inspect(self).session.query(GroupRole).\
-            join(GroupRole.sections).join(Section.phase).join(Phase.form_instances).\
-            filter(FormInstance.id == self.id).all()
+    def positions_current_phase(self) -> Optional[List['Position']]:
+        return inspect(self).session.query(Position).\
+            join(Position.sections).join(Section.phase).join(Phase.instances).\
+            filter(Instance.id == self.id).all()
 
     @property
-    def remain_groups_roles_current_phase(self) -> Optional[List['GroupRole']]:
-        g_r_ = inspect(self).session.query(FormInstance).join(FormInstance.form_instances_fields).\
-            join(FormInstanceField.field).join(Field.section).filter(Section.group_role_id == GroupRole.id)
-        return inspect(self).session.query(GroupRole).join(GroupRole.sections).join(Section.phase).\
-            join(Phase.form_instances).filter(FormInstance.id == self.id).filter(~g_r_.exists()).all()
+    def remain_positions_current_phase(self) -> Optional[List['Position']]:
+        g_r_ = inspect(self).session.query(Instance).join(Instance.instances_fields).\
+            join(InstanceField.field).join(Field.section).filter(Section.position_id == Position.id)
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).\
+            join(Phase.instances).filter(Instance.id == self.id).filter(~g_r_.exists()).all()
 
     @property
-    def closing_phase_group_role(self) -> Optional['GroupRole']:
-        return inspect(self).session.query(GroupRole).join(GroupRole.phases).join(Phase.form_instances).\
-            filter(FormInstance.id == self.id).first()
+    def closing_phase_position(self) -> Optional['Position']:
+        return inspect(self).session.query(Position).join(Position.phases).join(Phase.instances).\
+            filter(Instance.id == self.id).first()
 
     @property
     def sections(self) -> Optional[List['Section']]:
-        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).join(Form.form_instances).\
-            filter(FormInstance.id == self.id).all()
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).join(Form.instances).\
+            filter(Instance.id == self.id).all()
 
     @property
     def filled_sections(self) -> Optional[List['Section']]:
-        return inspect(self).session.query(Section).join(Section.fields).join(Field.form_instances_fields).\
-                filter(FormInstanceField.form_instance_id == self.id).all()
+        return inspect(self).session.query(Section).join(Section.fields).join(Field.instances_fields).\
+                filter(InstanceField.instance_id == self.id).all()
 
     @property
     def unfilled_sections(self) -> Optional[List['Section']]:
-        filled_sections = inspect(self).session.query(FormInstance).join(FormInstance.form_instances_fields).\
-            join(FormInstanceField.field).filter(Field.section_id == Section.id)
+        filled_sections = inspect(self).session.query(Instance).join(Instance.instances_fields).\
+            join(InstanceField.field).filter(Field.section_id == Section.id)
         return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).\
             filter(Form.id == self.form_id).filter(~filled_sections.exists()).all()
 
     @property
     def fields(self) -> Optional[List['Field']]:
         return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form)\
-                .join(Form.form_instances).filter(FormInstance.id == self.id).all()
+                .join(Form.instances).filter(Instance.id == self.id).all()
 
     @property
     def filled_fields(self) -> Optional[List['Field']]:
-        return inspect(self).session.query(Field).join(Field.form_instances_fields).\
-            filter(FormInstanceField.form_instance_id == self.id).all()
+        return inspect(self).session.query(Field).join(Field.instances_fields).\
+            filter(InstanceField.instance_id == self.id).all()
 
     @property
     def unfilled_fields(self) -> Optional[List['Field']]:
-        filled_fields = inspect(self).session.query(FormInstance).join(FormInstance.form_instances_fields).\
-            filter(FormInstanceField.field_id == Field.id)
+        filled_fields = inspect(self).session.query(Instance).join(Instance.instances_fields).\
+            filter(InstanceField.field_id == Field.id)
 
         return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form).\
             filter(Form.id == self.form_id).filter(~filled_fields.exists()).all()
@@ -440,67 +433,41 @@ current_state: {self.current_state}
 
     @property
     def curr_resp_users(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.form_instances_fields).join(FormInstanceField.field).\
-            join(Field.section).join(Section.phase).join(Phase.form_instances).filter(FormInstance.id == self.id).all()
+        return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field).\
+            join(Field.section).join(Section.phase).join(Phase.instances).filter(Instance.id == self.id).all()
 
     def resp_usr_section(self, section_id: int) -> Optional['User']:
-        return inspect(self).session.query(User).join(User.form_instances_fields).join(FormInstanceField.field).\
-            filter(FormInstanceField.form_instance_id == self.id, Field.section_id == section_id).first()
+        return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field).\
+            filter(InstanceField.instance_id == self.id, Field.section_id == section_id).first()
+    
 
-# class UserFormInstance(Base):
-#     __tablename__ = "users_form_instances"
-#
-#     id = Column(BigInteger, primary_key=True)
-#     created_at = Column(DateTime(timezone=True), server_default=func.now())
-#     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-#     user_id = Column(BigInteger, ForeignKey("users.id"))
-#     form_instance_id = Column(BigInteger, ForeignKey("form_instances.id"))
-#
-#     # many-to-one relationship(s)
-#     user = relationship("User", back_populates="users_form_instances")
-#     form_instance = relationship("FormInstance", back_populates="users_form_instances")
-#     # one-to-many relationship(s)
-#     form_instances_fields = relationship("FormInstanceField", back_populates="participant")
-#
-#     def __repr__(self):
-#         return f'''
-# UserFormInstance(
-# id: {self.id}
-# created_at: {self.created_at}
-# updated_at: {self.updated_at}
-# user_id: {self.user_id}
-# form_instance_id: {self.form_instance_id}
-# )
-# '''
-
-
-class FormInstanceField(Base):
-    __tablename__ = "form_instances_fields"
+class InstanceField(Base):
+    __tablename__ = "instances_fields"
 
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    form_instance_id = Column(BigInteger, ForeignKey("form_instances.id"))
+    instance_id = Column(BigInteger, ForeignKey("instances.id"))
     field_id = Column(BigInteger, ForeignKey("fields.id"))
     creator_id = Column(BigInteger, ForeignKey("users.id"))
     value = Column(String)
 
     # many-to-one relationship(s)
-    form_instance = relationship("FormInstance", back_populates="form_instances_fields")
-    field = relationship("Field", back_populates="form_instances_fields")
-    creator = relationship("User", back_populates="form_instances_fields")
+    instance = relationship("Instance", back_populates="instances_fields")
+    field = relationship("Field", back_populates="instances_fields")
+    creator = relationship("User", back_populates="instances_fields")
 
     # one-to-many relationship(s)
-    # form_instances_fields = relationship("FormInstanceField", back_populates="form_instance")
-    # histories = relationship("History", back_populates="form_instance")
+    # instances_fields = relationship("InstanceField", back_populates="instance")
+    # histories = relationship("History", back_populates="instance")
 
     def __repr__(self):
         return f'''
-FormInstanceField(
+InstanceField(
 id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
-form_instance_id: {self.form_instance_id}
+instance_id: {self.instance_id}
 field_id: {self.field_id}
 value: {self.value}
 creator_id: {self.creator_id}
@@ -523,7 +490,7 @@ class Group(Base):
     # many-to-one relationship(s)
     creator = relationship("User", back_populates="created_groups")
     # one-to-many relationship(s)
-    groups_roles = relationship("GroupRole", back_populates="group")
+    positions = relationship("Position", back_populates="group")
     subordinate_groups = relationship("Group", backref=backref("superior_group", remote_side=[id]))
 
     def __repr__(self):
@@ -542,12 +509,12 @@ superior_group_id: {self.superior_group_id}
 
     @property
     def roles(self) -> Optional[List['Role']]:
-        return inspect(self).session.query(Role).join(Role.groups_roles).filter(GroupRole.group_id == self.id).all()
+        return inspect(self).session.query(Role).join(Role.positions).filter(Position.group_id == self.id).all()
 
     @property
     def joiners(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.users_groups_roles).join(UserGroupRole.group_role).\
-                filter(GroupRole.group_id == self.id).all()
+        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
+                filter(Position.group_id == self.id).all()
 
 
 class Role(Base):
@@ -564,7 +531,7 @@ class Role(Base):
     creator = relationship("User", back_populates="created_roles")
 
     # one-to-many relationship(s)
-    groups_roles = relationship("GroupRole", back_populates="role")
+    positions = relationship("Position", back_populates="role")
 
     def __repr__(self):
         return f'''
@@ -580,11 +547,11 @@ creator_id: {self.creator_id}
 
     @property
     def groups(self) -> Optional[List['Group']]:
-        return inspect(self).session.query(Group).join(Group.groups_roles).filter(GroupRole.role_id == self.id).all()
+        return inspect(self).session.query(Group).join(Group.positions).filter(Position.role_id == self.id).all()
 
     @property
     def roles_without_group(self) -> Optional[List['Role']]:
-        return inspect(self).session.query(Role).join(Role.groups_roles).filter_by(group_id=None).all()
+        return inspect(self).session.query(Role).join(Role.positions).filter_by(group_id=None).all()
 
 
 class Phase(Base):
@@ -597,16 +564,15 @@ class Phase(Base):
     name = Column(String(100))
     # order = Column(Integer) #For later consideration
     description = Column(String)
-    group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
+    position_id = Column(BigInteger, ForeignKey("positions.id"))
     phase_type = Column(Enum("begin", "transit", "end", name="phase_enum"))
 
     # many-to-one relationship(s)
     form = relationship("Form", back_populates="phases")
-    group_role = relationship("GroupRole", back_populates="phases")
+    position = relationship("Position", back_populates="phases")
 
     # one-to-many relationship(s)
-    # phases_groups_roles = relationship("PhaseGroupRole", back_populates="phase")
-    form_instances = relationship("FormInstance", back_populates="current_phase")
+    instances = relationship("Instance", back_populates="current_phase")
     sections = relationship("Section", back_populates="phase")
     from_transitions = relationship("Transition", back_populates="from_phase", foreign_keys="Transition.from_phase_id")
     to_transitions = relationship("Transition", back_populates="to_phase", foreign_keys="Transition.to_phase_id")
@@ -619,7 +585,7 @@ created_at: {self.created_at}
 updated_at: {self.updated_at}
 form_id: {self.form_id}
 description: {self.description}
-group_role_id: {self.group_role_id}
+position_id: {self.position_id}
 phase_type: {self.phase_type}
 )
 '''
@@ -640,8 +606,8 @@ phase_type: {self.phase_type}
             filter(Transition.to_phase_id == self.id).all()
 
     @property
-    def groups_roles(self) -> Optional[List['GroupRole']]:
-        return inspect(self).session.query(GroupRole).join(GroupRole.sections).filter(Section.phase_id == self.id).all()
+    def positions(self) -> Optional[List['Position']]:
+        return inspect(self).session.query(Position).join(Position.sections).filter(Section.phase_id == self.id).all()
 
     @property
     def fields(self) -> Optional[List['Field']]:
@@ -649,8 +615,8 @@ phase_type: {self.phase_type}
 
     @property
     def available_users(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.users_groups_roles).join(UserGroupRole.group_role).\
-                join(GroupRole.sections).filter(Section.phase_id == self.id).all()
+        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
+                join(Position.sections).filter(Section.phase_id == self.id).all()
 
 
 class Transition(Base):
@@ -687,8 +653,8 @@ name: {self.name}
             join(Phase.from_transitions).filter(Transition.id == self.id).first()
 
 
-class GroupRole(Base):
-    __tablename__ = 'groups_roles'
+class Position(Base):
+    __tablename__ = 'positions'
 
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -699,19 +665,18 @@ class GroupRole(Base):
     creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
 
     # many-to-one relationship(s)
-    group = relationship("Group", back_populates="groups_roles")
-    role = relationship("Role", back_populates="groups_roles")
-    creator = relationship("User", back_populates="created_groups_roles")
+    group = relationship("Group", back_populates="positions")
+    role = relationship("Role", back_populates="positions")
+    creator = relationship("User", back_populates="created_positions")
 
     # one-to-many relationship(s)
-    phases = relationship("Phase", back_populates="group_role")
-    users_groups_roles = relationship("UserGroupRole", back_populates="group_role")
-    # phases_groups_roles = relationship("PhaseGroupRole", back_populates="group_role")
-    sections = relationship("Section", back_populates="group_role")
+    phases = relationship("Phase", back_populates="position")
+    users_positions = relationship("UserPosition", back_populates="position")
+    sections = relationship("Section", back_populates="position")
 
     def __repr__(self):
         return f'''
-GroupRole(
+Position(
 id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
@@ -723,70 +688,42 @@ creator_id: {self.creator_id}
 
     @property
     def holders(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.users_groups_roles).\
-            filter(UserGroupRole.group_role_id == self.id).all()
+        return inspect(self).session.query(User).join(User.users_positions).\
+            filter(UserPosition.position_id == self.id).all()
 
     @property
     def available_fields(self) -> Optional[List['Field']]:
-        return inspect(self).session.query(Field).join(Field.section).filter(Section.group_role_id == self.id).all()
+        return inspect(self).session.query(Field).join(Field.section).filter(Section.position_id == self.id).all()
 
     @property
-    def available_form_instances(self) -> Optional[List['FormInstance']]:
-        return inspect(self).session.query(FormInstance).join(FormInstance.current_phase).join(Phase.sections).\
-                filter(Section.group_role_id == self.id).filter(FormInstance.current_state == 'pending').all()
+    def available_instances(self) -> Optional[List['Instance']]:
+        return inspect(self).session.query(Instance).join(Instance.current_phase).join(Phase.sections).\
+                filter(Section.position_id == self.id).filter(Instance.current_state == 'pending').all()
 
 
-class UserGroupRole(Base):
-    __tablename__ = 'users_groups_roles'
+class UserPosition(Base):
+    __tablename__ = 'users_positions'
 
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     creator_id = Column(BigInteger, ForeignKey("users.id"))
     user_id = Column(BigInteger, ForeignKey("users.id"))
-    group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
+    position_id = Column(BigInteger, ForeignKey("positions.id"))
 
     # many-to-one relationship(s)
-    creator = relationship("User", back_populates="created_users_groups_roles", foreign_keys=[creator_id])
-    user = relationship("User", back_populates="users_groups_roles", foreign_keys=[user_id])
-    group_role = relationship("GroupRole", back_populates="users_groups_roles")
+    creator = relationship("User", back_populates="created_users_positions", foreign_keys=[creator_id])
+    user = relationship("User", back_populates="users_positions", foreign_keys=[user_id])
+    position = relationship("Position", back_populates="users_positions")
 
     def __repr__(self):
         return f'''
-UserGroupRole(
+UserPosition(
 id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
 creator_id: {self.creator_id}
 user_id: {self.user_id}
-group_role_id: {self.group_role_id}
+position_id: {self.position_id}
 )
 '''
-
-
-# class PhaseGroupRole(Base):
-#     __tablename__ = "phases_groups_roles"
-#
-#     id = Column(BigInteger, primary_key=True)
-#     created_at = Column(DateTime(timezone=True), server_default=func.now())
-#     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-#     phase_id = Column(BigInteger, ForeignKey("phases.id"))
-#     group_role_id = Column(BigInteger, ForeignKey("groups_roles.id"))
-#
-#     # many-to-one relationship(s)
-#     phase = relationship("Phase", back_populates="phases_groups_roles")
-#     group_role = relationship("GroupRole", back_populates="phases_groups_roles")
-#
-#     # one-to-many relationship(s)
-#     sections = relationship("Section", back_populates="phase_group_role")
-#
-#     def __repr__(self):
-#         return f'''
-# PhaseGroupRole(
-# id: {self.id}
-# created_at: {self.created_at}
-# updated_at: {self.updated_at}
-# phase_id: {self.phase_id}
-# group_role_id: {self.group_role_id}
-# )
-# '''

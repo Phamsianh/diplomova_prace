@@ -1,17 +1,17 @@
 from ORM.session import session
-from ORM.Model import User, GroupRole
+from ORM.Model import User, Position
 
 phamsianh = session.query(User).filter_by(user_name="phamsianh97").first()
 
-student_of_CIT = session.query(GroupRole).filter_by(name="Student of 2-CIT-C").first()
-leading_teacher = session.query(GroupRole).filter_by(name="Leading Teacher").first()
-consultant = session.query(GroupRole).filter_by(name="Consultant").first()
-head_of_DoICO = session.query(GroupRole).filter_by(name="Head of Department of \
+student_of_CIT = session.query(Position).filter_by(name="Student of 2-CIT-C").first()
+leading_teacher = session.query(Position).filter_by(name="Leading Teacher").first()
+consultant = session.query(Position).filter_by(name="Consultant").first()
+head_of_DoICO = session.query(Position).filter_by(name="Head of Department of \
 Informatics and Cyber Operations").first()
-vice_dean_FMT = session.query(GroupRole).filter_by(name="Vice Dean of FMT").first()
-dean_FMT = session.query(GroupRole).filter_by(name="Dean of FMT (GrAdmin)").first()
+vice_dean_FMT = session.query(Position).filter_by(name="Vice Dean of FMT").first()
+dean_FMT = session.query(Position).filter_by(name="Dean of FMT (GrAdmin)").first()
 
-# Example of request
+# Example of instance
 form1_structure = {
     "name": "NÁVRH TÉMATU ZÁVĚREČNÉ PRÁCE",
     "creator_id": phamsianh.id,
@@ -19,12 +19,12 @@ form1_structure = {
         "phases": [
             {
                 "name": "phase1",
-                "group_role_id": student_of_CIT.id,
+                "position_id": student_of_CIT.id,
                 "phase_type": "begin",
                 "sections": [
                     {
                         "name": "Section for student of 2-CIT-C",
-                        "group_role_id": student_of_CIT.id,
+                        "position_id": student_of_CIT.id,
                         "fields": [
                             {
                                 "name": "Field for student of 2-CIT-C"
@@ -35,12 +35,12 @@ form1_structure = {
             },
             {
                 "name": "phase2",
-                "group_role_id": leading_teacher.id,
+                "position_id": leading_teacher.id,
                 "phase_type": "transit",
                 "sections": [
                     {
                         "name": "Section for Leading Teacher",
-                        "group_role_id": leading_teacher.id,
+                        "position_id": leading_teacher.id,
                         "fields": [
                             {
                                 "name": "Field for Leading Teacher"
@@ -49,7 +49,7 @@ form1_structure = {
                     },
                     {
                         "name": "Section for Consultant",
-                        "group_role_id": consultant.id,
+                        "position_id": consultant.id,
                         "fields": [
                             {
                                 "name": "Field for Consultant"
@@ -60,12 +60,12 @@ form1_structure = {
             },
             {
                 "name": "phase3",
-                "group_role_id": vice_dean_FMT.id,
+                "position_id": vice_dean_FMT.id,
                 "phase_type": "transit",
                 "sections": [
                     {
                         "name": "Section for Vice Dean of FMT",
-                        "group_role_id": vice_dean_FMT.id,
+                        "position_id": vice_dean_FMT.id,
                         "fields": [
                             {
                                 "name": "Field for Vice Dean of FMT"
@@ -76,12 +76,12 @@ form1_structure = {
             },
             {
                 "name": "phase4",
-                "group_role_id": head_of_DoICO.id,
+                "position_id": head_of_DoICO.id,
                 "phase_type": "transit",
                 "sections": [
                     {
                         "name": "Section for Head of Department of ICO",
-                        "group_role_id": head_of_DoICO.id,
+                        "position_id": head_of_DoICO.id,
                         "fields": [
                             {
                                 "name": "Field for Head of Department of ICO"
@@ -92,12 +92,12 @@ form1_structure = {
             },
             {
                 "name": "phase5",
-                "group_role_id": dean_FMT.id,
+                "position_id": dean_FMT.id,
                 "phase_type": "end",
                 "sections": [
                     {
                         "name": "Section for Dean of FMT",
-                        "group_role_id": dean_FMT.id,
+                        "position_id": dean_FMT.id,
                         "fields": [
                             {
                                 "name": "Field for Dean of FMT"

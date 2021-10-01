@@ -138,7 +138,7 @@ class RoleResponse(BaseModel):
         orm_mode = True
 
 
-class GroupRolePostRequest(BaseModel):
+class PositionPostRequest(BaseModel):
     name: str
     group_id: Optional[int]
     role_id: int
@@ -149,7 +149,7 @@ class GroupRolePostRequest(BaseModel):
         require_admin = True
 
 
-class GroupRolePatchRequest(BaseModel):
+class PositionPatchRequest(BaseModel):
     name: Optional[str]
     group_id: Optional[int]
     role_id: Optional[int]
@@ -160,13 +160,13 @@ class GroupRolePatchRequest(BaseModel):
         require_ownership = True
 
 
-class GroupRoleDeleteRequest(BaseModel):
+class PositionDeleteRequest(BaseModel):
     class Config:
         require_admin = True
         require_ownership = True
 
 
-class GroupRoleResponse(BaseModel):
+class PositionResponse(BaseModel):
     id: int
     created_at: datetime
     name: str
@@ -178,7 +178,7 @@ class GroupRoleResponse(BaseModel):
         orm_mode = True
 
 
-class UserGroupRolePostRequest(BaseModel):
+class UserPositionPostRequest(BaseModel):
     creator_id: int
     user_id: int
     group_role_id: int
@@ -188,7 +188,7 @@ class UserGroupRolePostRequest(BaseModel):
         require_admin = True
 
 
-class UserGroupRolePatchRequest(BaseModel):
+class UserPositionPatchRequest(BaseModel):
     user_id: Optional[int]
     group_role_id: Optional[int]
 
@@ -197,13 +197,13 @@ class UserGroupRolePatchRequest(BaseModel):
         require_admin = True
 
 
-class UserGroupRoleDeleteRequest(BaseModel):
+class UserPositionDeleteRequest(BaseModel):
     class Config:
         require_admin = True
         require_ownership = True
 
 
-class UserGroupRoleResponse(BaseModel):
+class UserPositionResponse(BaseModel):
     id: int
     created_at: datetime
     creator_id: int
@@ -430,7 +430,7 @@ class FormCurrentStateEnum(str, Enum):
     done = "done"
 
 
-class FormInstancePostRequest(BaseModel):
+class InstancePostRequest(BaseModel):
     form_id: int
     current_phase_id: Optional[int]
     creator_id: int
@@ -439,7 +439,7 @@ class FormInstancePostRequest(BaseModel):
         orm_mode = True
 
 
-class FormInstancePatchRequest(BaseModel):
+class InstancePatchRequest(BaseModel):
     current_phase_id: Optional[int]
     current_state: Optional[FormCurrentStateEnum]
 
@@ -448,12 +448,12 @@ class FormInstancePatchRequest(BaseModel):
         require_ownership = True
 
 
-class FormInstanceDeleteRequest(BaseModel):
+class InstanceDeleteRequest(BaseModel):
     class Config:
         require_ownership = True
 
 
-class FormInstanceResponse(BaseModel):
+class InstanceResponse(BaseModel):
     id: int
     created_at: datetime
     form_id: int
@@ -465,7 +465,7 @@ class FormInstanceResponse(BaseModel):
         orm_mode = True
 
 
-class FormInstanceFieldPostRequest(BaseModel):
+class InstanceFieldPostRequest(BaseModel):
     form_instance_id: int
     field_id: int
     creator_id: int
@@ -476,7 +476,7 @@ class FormInstanceFieldPostRequest(BaseModel):
         require_group_role = True
 
 
-class FormInstanceFieldPatchRequest(BaseModel):
+class InstanceFieldPatchRequest(BaseModel):
     value: Optional[str]
 
     class Config:
@@ -485,12 +485,12 @@ class FormInstanceFieldPatchRequest(BaseModel):
         require_ownership = True
 
 
-class FormInstanceFieldDeleteRequest(BaseModel):
+class InstanceFieldDeleteRequest(BaseModel):
     class Config:
         require_ownership = True
 
 
-class FormInstanceFieldResponse(BaseModel):
+class InstanceFieldResponse(BaseModel):
     id: int
     created_at: datetime
     form_instance_id: int
