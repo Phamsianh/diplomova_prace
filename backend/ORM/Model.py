@@ -65,10 +65,10 @@ birthdate: {self.birthdate}
     def held_positions(self) -> Optional[List['Position']]:
         """get all groups roles of this user"""
 
-        return inspect(self).session.query(Position)\
-            .join(Position.users_positions)\
-            .join(UserPosition.user)\
-            .filter(User.id == self.id)\
+        return inspect(self).session.query(Position) \
+            .join(Position.users_positions) \
+            .join(UserPosition.user) \
+            .filter(User.id == self.id) \
             .all()
 
     @property
@@ -148,10 +148,10 @@ birthdate: {self.birthdate}
     @property
     def participated_instances(self) -> Optional[List['Instance']]:
         """get all participated form instances of this user"""
-        return inspect(self).session.query(Instance)\
-            .join(Instance.instances_fields)\
-            .join(InstanceField.creator)\
-            .filter(InstanceField.creator_id == self.id)\
+        return inspect(self).session.query(Instance) \
+            .join(Instance.instances_fields) \
+            .join(InstanceField.creator) \
+            .filter(InstanceField.creator_id == self.id) \
             .all()
 
     def ga_av_sections(self, fi: 'Instance', session: Session) -> Optional[List['Section']]:
@@ -187,7 +187,7 @@ class Form(Base):
 
     def __repr__(self):
         return f'''
-FormStructure(
+Form(
 id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
@@ -198,35 +198,40 @@ creator_id: {self.creator_id}
 
     @property
     def fields(self) -> Optional[List['Field']]:
-        return inspect(self).session.query(Field)\
-            .join(Field.section)\
-            .join(Section.phase)\
-            .join(Phase.form)\
+        return inspect(self).session.query(Field) \
+            .join(Field.section) \
+            .join(Section.phase) \
+            .join(Phase.form) \
             .filter(Form.id == self.id).all()
 
     @property
     def begin_phase(self) -> Optional['Phase']:
-        return inspect(self).session.query(Phase).join(Phase.form)\
-            .filter(Form.id == self.id).\
+        return inspect(self).session.query(Phase).join(Phase.form) \
+            .filter(Form.id == self.id). \
             filter(Phase.phase_type == 'begin').first()
 
     @property
     def end_phase(self) -> Optional['Phase']:
-        return inspect(self).session.query(Phase).join(Phase.form)\
-            .filter(Form.id == self.id).\
+        return inspect(self).session.query(Phase).join(Phase.form) \
+            .filter(Form.id == self.id). \
             filter(Phase.phase_type == 'end').first()
 
     @property
+    def begin_fields(self) -> Optional[List['Field']]:
+        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form).\
+            filter(Form.id == self.id, Phase.phase_type == 'begin').all()
+
+    @property
     def transitions(self) -> Optional[List['Transition']]:
-        q1 = inspect(self).session.query(Transition).join(Transition.from_phase).join(Phase.form).\
+        q1 = inspect(self).session.query(Transition).join(Transition.from_phase).join(Phase.form). \
             filter(Form.id == self.id)
-        q2 = inspect(self).session.query(Transition).join(Transition.to_phase).join(Phase.form).\
+        q2 = inspect(self).session.query(Transition).join(Transition.to_phase).join(Phase.form). \
             filter(Form.id == self.id)
         return q1.union(q2).all()
 
     @property
     def available_positions(self) -> Optional[List['Position']]:
-        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.form).\
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.form). \
             filter(Form.id == self.id).all()
 
 
@@ -266,8 +271,8 @@ order: {self.order}
 
     @property
     def creator(self) -> Optional['User']:
-        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).join(Phase.sections).\
-                filter(Section.id == self.id).first()
+        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).join(Phase.sections). \
+            filter(Section.id == self.id).first()
 
 
 class Field(Base):
@@ -300,23 +305,23 @@ order: {self.order}
 
     @property
     def creator(self) -> Optional['User']:
-        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).join(Phase.sections)\
+        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).join(Phase.sections) \
             .join(Section.fields).filter(Field.id == self.id).first()
 
     @property
     def phase(self) -> Optional['Phase']:
-        return inspect(self).session.query(Phase).join(Phase.sections).join(Section.fields).\
-                filter(Field.id == self.id)
+        return inspect(self).session.query(Phase).join(Phase.sections).join(Section.fields). \
+            filter(Field.id == self.id)
 
     @property
     def form(self) -> Optional['Form']:
-        return inspect(self).session.query(Form).join(Form.phases).join(Phase.sections).join(Section.fields).\
-                filter(Field.id == self.id).first()
+        return inspect(self).session.query(Form).join(Form.phases).join(Phase.sections).join(Section.fields). \
+            filter(Field.id == self.id).first()
 
     @property
     def position(self) -> Optional['Position']:
-        return inspect(self).session.query(Position).join(Position.sections).join(Section.fields).\
-                filter(Field.id == self.id).first()
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.fields). \
+            filter(Field.id == self.id).first()
 
 
 class Instance(Base):
@@ -363,66 +368,81 @@ current_state: {self.current_state}
 
     @property
     def phases(self) -> Optional[List['Phase']]:
-        return inspect(self).session.query(Phase).join(Phase.form).join(Form.instances).\
-                filter(Instance.id == self.id).all()
-
-    @property
-    def positions_current_phase(self) -> Optional[List['Position']]:
-        return inspect(self).session.query(Position).\
-            join(Position.sections).join(Section.phase).join(Phase.instances).\
+        return inspect(self).session.query(Phase).join(Phase.form).join(Form.instances). \
             filter(Instance.id == self.id).all()
 
     @property
-    def remain_positions_current_phase(self) -> Optional[List['Position']]:
-        g_r_ = inspect(self).session.query(Instance).join(Instance.instances_fields).\
-            join(InstanceField.field).join(Field.section).filter(Section.position_id == Position.id)
-        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).\
-            join(Phase.instances).filter(Instance.id == self.id).filter(~g_r_.exists()).all()
+    def begin_phase(self) -> Optional['Phase']:
+        return inspect(self).session.query(Phase).join(Phase.form).join(Form.instances).\
+            filter(Instance.id == self.id, Phase.phase_type == 'begin').first()
 
     @property
-    def closing_phase_position(self) -> Optional['Position']:
-        return inspect(self).session.query(Position).join(Position.phases).join(Phase.instances).\
+    def end_phase(self) -> Optional['Phase']:
+        return inspect(self).session.query(Phase).join(Phase.form).join(Form.instances).\
+            filter(Instance.id == self.id, Phase.phase_type == 'end').first()
+
+    @property
+    def current_appointed_positions(self) -> Optional[List['Position']]:
+        return inspect(self).session.query(Position). \
+            join(Position.sections).join(Section.phase).join(Phase.instances). \
+            filter(Instance.id == self.id).all()
+
+    @property
+    def current_remaining_positions(self) -> Optional[List['Position']]:
+        handled_positions = inspect(self).session.query(Instance).join(Instance.instances_fields). \
+            join(InstanceField.field).join(Field.section).filter(Section.position_id == Position.id)
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase). \
+            join(Phase.instances).filter(Instance.id == self.id).filter(~handled_positions.exists()).all()
+
+    @property
+    def current_designated_position(self) -> Optional['Position']:
+        return inspect(self).session.query(Position).join(Position.phases).join(Phase.instances). \
             filter(Instance.id == self.id).first()
 
     @property
     def sections(self) -> Optional[List['Section']]:
-        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).join(Form.instances).\
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).join(Form.instances). \
             filter(Instance.id == self.id).all()
 
     @property
-    def filled_sections(self) -> Optional[List['Section']]:
-        return inspect(self).session.query(Section).join(Section.fields).join(Field.instances_fields).\
-                filter(InstanceField.instance_id == self.id).all()
+    def resolved_sections(self) -> Optional[List['Section']]:
+        return inspect(self).session.query(Section).join(Section.fields).join(Field.instances_fields). \
+            filter(InstanceField.instance_id == self.id).all()
 
     @property
     def unfilled_sections(self) -> Optional[List['Section']]:
-        filled_sections = inspect(self).session.query(Instance).join(Instance.instances_fields).\
+        filled_sections = inspect(self).session.query(Instance).join(Instance.instances_fields). \
             join(InstanceField.field).filter(Field.section_id == Section.id)
-        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).\
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form). \
             filter(Form.id == self.form_id).filter(~filled_sections.exists()).all()
 
     @property
     def fields(self) -> Optional[List['Field']]:
-        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form)\
-                .join(Form.instances).filter(Instance.id == self.id).all()
+        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form) \
+            .join(Form.instances).filter(Instance.id == self.id).all()
+
+    @property
+    def begin_fields(self) -> Optional['Field']:
+        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form).\
+            join(Form.instances).filter(Instance.id == self.id, Phase.phase_type == 'begin').all()
 
     @property
     def filled_fields(self) -> Optional[List['Field']]:
-        return inspect(self).session.query(Field).join(Field.instances_fields).\
+        return inspect(self).session.query(Field).join(Field.instances_fields). \
             filter(InstanceField.instance_id == self.id).all()
 
     @property
     def unfilled_fields(self) -> Optional[List['Field']]:
-        filled_fields = inspect(self).session.query(Instance).join(Instance.instances_fields).\
+        filled_fields = inspect(self).session.query(Instance).join(Instance.instances_fields). \
             filter(InstanceField.field_id == Field.id)
 
-        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form).\
+        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form). \
             filter(Form.id == self.form_id).filter(~filled_fields.exists()).all()
 
     @property
     def avai_next_phases(self) -> Optional[List['Phase']]:
         if self.current_state in ['initialized', 'full resolved']:
-            return inspect(self).session.query(Phase).join(Phase.to_transitions).\
+            return inspect(self).session.query(Phase).join(Phase.to_transitions). \
                 filter(Transition.from_phase_id == self.current_phase_id).all()
         else:
             return None
@@ -433,13 +453,13 @@ current_state: {self.current_state}
 
     @property
     def curr_resp_users(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field).\
+        return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
             join(Field.section).join(Section.phase).join(Phase.instances).filter(Instance.id == self.id).all()
 
     def resp_usr_section(self, section_id: int) -> Optional['User']:
-        return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field).\
+        return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
             filter(InstanceField.instance_id == self.id, Field.section_id == section_id).first()
-    
+
 
 class InstanceField(Base):
     __tablename__ = "instances_fields"
@@ -451,6 +471,7 @@ class InstanceField(Base):
     field_id = Column(BigInteger, ForeignKey("fields.id"))
     creator_id = Column(BigInteger, ForeignKey("users.id"))
     value = Column(String)
+    resolved = Column(Boolean, server_default='false')
 
     # many-to-one relationship(s)
     instance = relationship("Instance", back_populates="instances_fields")
@@ -513,8 +534,8 @@ superior_group_id: {self.superior_group_id}
 
     @property
     def joiners(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
-                filter(Position.group_id == self.id).all()
+        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position). \
+            filter(Position.group_id == self.id).all()
 
 
 class Role(Base):
@@ -592,12 +613,12 @@ phase_type: {self.phase_type}
 
     @property
     def creator(self) -> Optional['User']:
-        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).\
-                filter(Phase.id == self.id).first()
+        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases). \
+            filter(Phase.id == self.id).first()
 
     @property
     def next_phases(self) -> Optional[List['Phase']]:
-        return inspect(self).session.query(Phase).join(Phase.to_transitions).\
+        return inspect(self).session.query(Phase).join(Phase.to_transitions). \
             filter(Transition.from_phase_id == self.id).all()
 
     @property
@@ -615,8 +636,8 @@ phase_type: {self.phase_type}
 
     @property
     def available_users(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
-                join(Position.sections).filter(Section.phase_id == self.id).all()
+        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position). \
+            join(Position.sections).filter(Section.phase_id == self.id).all()
 
 
 class Transition(Base):
@@ -649,7 +670,7 @@ name: {self.name}
 
     @property
     def creator(self) -> Optional['User']:
-        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).\
+        return inspect(self).session.query(User).join(User.created_forms).join(Form.phases). \
             join(Phase.from_transitions).filter(Transition.id == self.id).first()
 
 
@@ -688,7 +709,7 @@ creator_id: {self.creator_id}
 
     @property
     def holders(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.users_positions).\
+        return inspect(self).session.query(User).join(User.users_positions). \
             filter(UserPosition.position_id == self.id).all()
 
     @property
@@ -697,8 +718,8 @@ creator_id: {self.creator_id}
 
     @property
     def available_instances(self) -> Optional[List['Instance']]:
-        return inspect(self).session.query(Instance).join(Instance.current_phase).join(Phase.sections).\
-                filter(Section.position_id == self.id).filter(Instance.current_state == 'pending').all()
+        return inspect(self).session.query(Instance).join(Instance.current_phase).join(Phase.sections). \
+            filter(Section.position_id == self.id).filter(Instance.current_state == 'pending').all()
 
 
 class UserPosition(Base):
