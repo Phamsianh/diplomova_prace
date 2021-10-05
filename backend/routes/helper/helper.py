@@ -24,8 +24,8 @@ def check_auth(schema, current_user: User, rsc_ins: Optional[Any] = None):
             raise HTTPException(status_code=400, detail="require role admin")
     if hasattr(schema.Config, 'require_ownership') and schema.Config.require_ownership:
         check_ownership(rsc_ins, current_user)
-    if hasattr(schema.Config, 'require_group_role') and schema.Config.require_group_role:
-        check_group_role(rsc_ins, current_user)
+    if hasattr(schema.Config, 'require_position') and schema.Config.require_position:
+        check_position(rsc_ins, current_user)
 
 
 def check_req_body(rsc: str, req_body: dict, req_schema):
@@ -188,12 +188,12 @@ def check_ownership(rsc_ins, current_user):
                             detail=f"{rsc_ins.__tablename__} doesn't have ownership")
 
 
-def check_group_role(rsc_ins, current_user):
+def check_position(rsc_ins, current_user):
     all_rel_rscs = [a for a in type(rsc_ins).__dict__.keys() if a[:1] != '_']
-    if 'group_role' in all_rel_rscs:
-        if rsc_ins.group_role not in current_user.held_groups_roles:
+    if 'position' in all_rel_rscs:
+        if rsc_ins.position not in current_user.held_groups_roles:
             raise HTTPException(status_code=400,
-                                detail=f"you must have group role {rsc_ins.group_role.name} to do this task")
+                                detail=f"you must have group role {rsc_ins.position.name} to do this task")
     else:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"resource {rsc_ins.__tablename__} doesn't have group role")

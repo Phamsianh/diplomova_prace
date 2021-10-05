@@ -18,31 +18,36 @@ instance_fields_data = [
         "instance_id": instance1.id,
         "field_id": 1,
         "value": "Student Pham Si Anh initialized this form instance.",
-        "creator_id": 1
+        "creator_id": 1,
+        "resolved": True
     },
     {
         "instance_id": instance1.id,
         "field_id": 2,
         "value": "Leading Teacher Alexandr Stefek participated this form instance.",
-        "creator_id": 6
+        "creator_id": 6,
+        "resolved": True
     },
     {
         "instance_id": instance1.id,
         "field_id": 3,
         "value": "Consultant Alexandr Stefek participated this form instance.",
-        "creator_id": 6
+        "creator_id": 6,
+        "resolved": True
     },
     {
         "instance_id": instance1.id,
         "field_id": 5,
         "value": "HoDoICO Petr Frantis participated this form instance.",
-        "creator_id": 5
+        "creator_id": 5,
+        "resolved": True
     },
     {
         "instance_id": instance1.id,
         "field_id": 6,
         "value": "Dean of FMT Vlastimil Neumann participated this form instance.",
-        "creator_id": 3
+        "creator_id": 3,
+        "resolved": True
     }
 ]
 

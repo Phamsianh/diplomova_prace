@@ -181,7 +181,7 @@ class PositionResponse(BaseModel):
 class UserPositionPostRequest(BaseModel):
     creator_id: int
     user_id: int
-    group_role_id: int
+    position_id: int
 
     class Config:
         orm_mode = True
@@ -190,7 +190,7 @@ class UserPositionPostRequest(BaseModel):
 
 class UserPositionPatchRequest(BaseModel):
     user_id: Optional[int]
-    group_role_id: Optional[int]
+    position_id: Optional[int]
 
     class Config:
         orm_mode = True
@@ -208,7 +208,7 @@ class UserPositionResponse(BaseModel):
     created_at: datetime
     creator_id: int
     user_id: int
-    group_role_id: int
+    position_id: int
 
     class Config:
         orm_mode = True
@@ -256,7 +256,7 @@ class PhaseTypeEnum(str, Enum):
 
 class PhasePostRequest(BaseModel):
     name: str
-    group_role_id: int
+    position_id: int
     phase_type: 'PhaseTypeEnum'
 
     class Config:
@@ -266,7 +266,7 @@ class PhasePostRequest(BaseModel):
 
 class PhasePatchRequest(BaseModel):
     name: Optional[str]
-    group_role_id: Optional[int]
+    position_id: Optional[int]
     phase_type: Optional['PhaseTypeEnum']
 
     class Config:
@@ -287,7 +287,7 @@ class PhaseResponse(BaseModel):
     form_id: int
     name: str
     description: Optional[str]
-    group_role_id: int
+    position_id: int
     phase_type: 'PhaseTypeEnum'
     # sections: Optional[List['Section']]
 
@@ -343,7 +343,7 @@ class SectionPostRequest(BaseModel):
     name: str
     form_id: Optional[int]
     phase_id: int
-    group_role_id: int
+    position_id: int
     order: Optional[int]
 
     class Config:
@@ -354,7 +354,7 @@ class SectionPostRequest(BaseModel):
 class SectionPatchRequest(BaseModel):
     name: Optional[str]
     phase_id: Optional[int]
-    group_role_id: Optional[int]
+    position_id: Optional[int]
     order: Optional[int]
 
     class Config:
@@ -374,7 +374,7 @@ class SectionResponse(BaseModel):
     name: str
     form_id: Optional[int]
     phase_id: Optional[int]
-    group_role_id: Optional[int]
+    position_id: Optional[int]
     order: Optional[int]
 
     class Config:
@@ -466,14 +466,14 @@ class InstanceResponse(BaseModel):
 
 
 class InstanceFieldPostRequest(BaseModel):
-    form_instance_id: int
+    instance_id: int
     field_id: int
     creator_id: int
-    value: str
+    value: Optional[str]
 
     class Config:
         orm_mode = True
-        require_group_role = True
+        require_position = True
 
 
 class InstanceFieldPatchRequest(BaseModel):
@@ -481,7 +481,7 @@ class InstanceFieldPatchRequest(BaseModel):
 
     class Config:
         orm_mode = True
-        require_group_role = True
+        require_position = True
         require_ownership = True
 
 
@@ -493,10 +493,10 @@ class InstanceFieldDeleteRequest(BaseModel):
 class InstanceFieldResponse(BaseModel):
     id: int
     created_at: datetime
-    form_instance_id: int
+    instance_id: int
     field_id: int
     creator_id: int
-    value: str
+    value: Optional[str]
 
     class Config:
         orm_mode = True
