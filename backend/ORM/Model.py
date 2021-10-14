@@ -1,6 +1,7 @@
 from ORM.Base import Base
 from ORM.session import Session
-from sqlalchemy import Column, ForeignKey, BigInteger, String, DateTime, Date, Integer, Enum, Boolean, func, inspect
+from sqlalchemy import Column, ForeignKey, BigInteger, String, DateTime, Date, Integer, Enum, Boolean, func, inspect, \
+    text
 from sqlalchemy.orm import relationship, backref
 from typing import Optional, List
 import hashlib
@@ -333,7 +334,7 @@ class Instance(Base):
     form_id = Column(BigInteger, ForeignKey("forms.id"))
     current_phase_id = Column(BigInteger, ForeignKey("phases.id"))
     creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
-    current_state = Column(Enum(
+    _current_state = Column("current_state", Enum(
         "initialized",
         "pending",
         "partial received",
@@ -367,6 +368,43 @@ current_state: {self.current_state}
 '''
 
     @property
+    def current_state(self):
+        current_appointed_positions = self.current_appointed_positions
+        number_of_part = len(current_appointed_positions)
+        uninit = 0
+        init = 0
+        resolving = 0
+        resolved = 0
+
+        for c_a_p in current_appointed_positions:
+            part_state = self.part_state(self.current_phase_id, c_a_p.id)
+            if part_state is None:
+                uninit += 1
+                continue
+            if part_state == "init":
+                init += 1
+                continue
+            if part_state == "resolving":
+                resolving += 1
+                continue
+            if part_state == "resolved":
+                resolved += 1
+
+        if uninit == number_of_part:
+            return "pending"
+        if resolved == number_of_part:
+            return "done" if self.current_phase.phase_type == "end" else "full resolved"
+        if init == number_of_part or resolving == number_of_part or init + resolving == number_of_part:
+            return "initialized" if self.current_phase.phase_type == "begin" else "full received"
+        if uninit > 0:
+            if resolved == 0:
+                return "partial received"
+            else:
+                return "partial received & partial resolved"
+        else:
+            return "full received & partial resolved"
+
+    @property
     def phases(self) -> Optional[List['Phase']]:
         return inspect(self).session.query(Phase).join(Phase.form).join(Form.instances). \
             filter(Instance.id == self.id).all()
@@ -383,16 +421,15 @@ current_state: {self.current_state}
 
     @property
     def current_appointed_positions(self) -> Optional[List['Position']]:
-        return inspect(self).session.query(Position). \
-            join(Position.sections).join(Section.phase).join(Phase.instances). \
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.instances).\
             filter(Instance.id == self.id).all()
 
     @property
     def current_remaining_positions(self) -> Optional[List['Position']]:
-        handled_positions = inspect(self).session.query(Instance).join(Instance.instances_fields). \
-            join(InstanceField.field).join(Field.section).filter(Section.position_id == Position.id)
-        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase). \
-            join(Phase.instances).filter(Instance.id == self.id).filter(~handled_positions.exists()).all()
+        handled_sections = inspect(self).session.query(Section).join(Section.fields).join(Field.instances_fields). \
+            join(InstanceField.instance).filter(Section.position_id == Position.id, Instance.id == self.id)
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.instances).\
+            filter(Instance.id == self.id, ~handled_sections.exists()).all()
 
     @property
     def current_designated_position(self) -> Optional['Position']:
@@ -400,44 +437,126 @@ current_state: {self.current_state}
             filter(Instance.id == self.id).first()
 
     @property
+    def current_handled_position(self) -> Optional[List['Position']]:
+        handled_sections = inspect(self).session.query(Section).join(Section.fields).join(Field.instances_fields).\
+            filter(Position.id == Section.position_id, Instance.id == self.id)
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.instances).\
+            filter(Instance.id == self.id, handled_sections.exists()).all()
+
+    def part_state(self, phase_id: int, position_id: int) -> Optional[str]:
+        session = inspect(self).session
+        sections = session.query(Section).join(Section.fields).join(Field.instances_fields).\
+            filter(Section.phase_id == phase_id, Section.position_id == position_id,
+                   InstanceField.instance_id == self.id).all()
+        if not sections:
+            return None
+        else:
+            state = ''
+            for s in sections:
+                section_state = self.section_state(s.id)
+                if section_state == 'resolving':
+                    return 'resolving'
+                if section_state == 'resolved':
+                    state += 'r'
+                else:
+                    state += 'i'
+            return 'resolved' if 'i' not in state else 'init' if 'r' not in state else 'resolving'
+
+    @property
     def sections(self) -> Optional[List['Section']]:
         return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).join(Form.instances). \
             filter(Instance.id == self.id).all()
 
+    def sections_of_part(self, position_id: int) -> Optional[List['Section']]:
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).\
+            filter(Form.id == self.form_id, Section.position_id == position_id).all()
+
+    @property
+    def current_sections(self) -> Optional[List['Section']]:
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.instances). \
+            filter(Instance.id == self.id).all()
+
+    @property
+    def current_init_sections(self) -> Optional[List['Section']]:
+        init_fields = inspect(self).session.query(Instance).join(Instance.instances_fields). \
+            join(InstanceField.field).filter(Field.section_id == Section.id, Instance.id == self.id)
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.instances). \
+            filter(Instance.id == self.id, init_fields.exists(), text(f"""null = all (
+        select instances_fields.resolved from instances_fields
+        join instances on instances.id = instances_fields.instance_id
+        join fields on instances_fields.field_id = fields.id
+        where sections.id = fields.section_id and instances.id = {self.id}
+        )""")).all()
+
     @property
     def resolved_sections(self) -> Optional[List['Section']]:
         return inspect(self).session.query(Section).join(Section.fields).join(Field.instances_fields). \
-            filter(InstanceField.instance_id == self.id).all()
+            filter(InstanceField.instance_id == self.id, InstanceField.resolved == True).all()
 
     @property
-    def unfilled_sections(self) -> Optional[List['Section']]:
-        filled_sections = inspect(self).session.query(Instance).join(Instance.instances_fields). \
-            join(InstanceField.field).filter(Field.section_id == Section.id)
-        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form). \
-            filter(Form.id == self.form_id).filter(~filled_sections.exists()).all()
+    def current_resolved_sections(self) -> Optional[List['Section']]:
+        # pass
+        session = inspect(self).session
+        current_sections: List['Section'] = session.query(Section).join(Section.phase).join(Phase.instances).\
+            filter(Instance.id == self.id).all()
+        current_resolved_sections = []
+        for s in current_sections:
+            if self.is_section_resolved(s.id):
+                current_resolved_sections.append(s)
+        return None if not current_resolved_sections else current_resolved_sections
+
+    @property
+    def current_resolving_sections(self) -> Optional[List['Section']]:
+        resolving_fields = inspect(self).session.query(Instance).join(Instance.instances_fields).\
+            join(InstanceField.field).\
+            filter(
+            Field.section_id == Section.id, Instance.id == self.id, InstanceField.resolved == False
+        )
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.instances). \
+            filter(Instance.id == self.id, resolving_fields.exists()).all()
+
+    def section_state(self, section_id: int) -> Optional[str]:
+        session = inspect(self).session
+        fields = session.query(Field).join(Field.instances_fields).\
+            filter(Field.section_id == section_id, InstanceField.instance_id == self.id)
+        if not fields:
+            return None
+        else:
+            state = ''
+            for f in fields:
+                field_state = self.field_state(f.id)
+                if field_state == 'resolving':
+                    return 'resolving'
+                if field_state == 'resolved':
+                    state += 'r'
+                else:
+                    state += 'i'
+            return 'resolved' if 'i' not in state else 'init' if 'r' not in state else 'resolving'
 
     @property
     def fields(self) -> Optional[List['Field']]:
         return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form) \
             .join(Form.instances).filter(Instance.id == self.id).all()
 
+    def fields_of_part(self, position_id: int) -> Optional[List['Field']]:
+        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form).\
+            filter(Form.id == self.form_id, Section.position_id == position_id).all()
+
     @property
     def begin_fields(self) -> Optional['Field']:
         return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form).\
             join(Form.instances).filter(Instance.id == self.id, Phase.phase_type == 'begin').all()
 
-    @property
-    def filled_fields(self) -> Optional[List['Field']]:
-        return inspect(self).session.query(Field).join(Field.instances_fields). \
-            filter(InstanceField.instance_id == self.id).all()
-
-    @property
-    def unfilled_fields(self) -> Optional[List['Field']]:
-        filled_fields = inspect(self).session.query(Instance).join(Instance.instances_fields). \
-            filter(InstanceField.field_id == Field.id)
-
-        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form). \
-            filter(Form.id == self.form_id).filter(~filled_fields.exists()).all()
+    def field_state(self, field_id: int) -> Optional[str]:
+        instance_field = inspect(self).session.query(InstanceField).\
+                filter(InstanceField.instance_id == self.id, InstanceField.field_id == field_id).first()
+        if not instance_field:
+            return None
+        else:
+            if instance_field.resolved:
+                return 'resolved'
+            else:
+                return 'init' if instance_field.value is None else 'resolving'
 
     @property
     def avai_next_phases(self) -> Optional[List['Phase']]:
@@ -452,11 +571,11 @@ current_state: {self.current_state}
         return
 
     @property
-    def curr_resp_users(self) -> Optional[List['User']]:
+    def curr_handlers(self) -> Optional[List['User']]:
         return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
             join(Field.section).join(Section.phase).join(Phase.instances).filter(Instance.id == self.id).all()
 
-    def resp_usr_section(self, section_id: int) -> Optional['User']:
+    def section_handler(self, section_id: int) -> Optional['User']:
         return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
             filter(InstanceField.instance_id == self.id, Field.section_id == section_id).first()
 
