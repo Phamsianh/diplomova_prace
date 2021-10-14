@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import date, datetime
 
 
@@ -439,13 +439,18 @@ class InstancePostRequest(BaseModel):
         orm_mode = True
 
 
+class InstanceHandleRequest(BaseModel):
+    handle: bool
+    handled_positions_id: Optional[List[int]]
+
+
 class InstancePatchRequest(BaseModel):
     current_phase_id: Optional[int]
-    current_state: Optional[FormCurrentStateEnum]
+    instance_handle_request: Optional['InstanceHandleRequest']
 
     class Config:
         orm_mode = True
-        require_ownership = True
+        # require_ownership = True
 
 
 class InstanceDeleteRequest(BaseModel):
@@ -478,10 +483,11 @@ class InstanceFieldPostRequest(BaseModel):
 
 class InstanceFieldPatchRequest(BaseModel):
     value: Optional[str]
+    resolved: Optional[bool]
 
     class Config:
         orm_mode = True
-        require_position = True
+        # require_position = True
         require_ownership = True
 
 
@@ -497,6 +503,7 @@ class InstanceFieldResponse(BaseModel):
     field_id: int
     creator_id: int
     value: Optional[str]
+    resolved: bool
 
     class Config:
         orm_mode = True
