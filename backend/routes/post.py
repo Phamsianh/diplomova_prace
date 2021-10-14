@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, HTTPException
 from ORM.session import Session
+from exceptions.ORMExceptions import ORMException
 from routes.dependencies import oauth2_scheme as oa2s, db, user as u
 from ORM import Model_description
 from pydantic_models import Schema
@@ -14,17 +15,19 @@ router = APIRouter(
 @router.post("/{rsc}")
 def create_resource_instance(rsc: str, req_body: dict = Body(...), session: Session = Depends(db.get_session),
                              u_d: u.UserDependency = Depends()):
-    helper.check_rsc_exist(rsc, Model_description.all_models.keys())
-    rsc_model = Model_description.all_models[rsc]['model']
-    req_schema = getattr(Schema, rsc_model.__name__ + "PostRequest")
-    current_user = u_d.get_current_user()
-    helper.check_auth(req_schema, current_user)
-    helper.check_req_body(rsc, req_body, req_schema)
+    try:
+        helper.check_rsc_exist(rsc, Model_description.all_models.keys())
+        rsc_model = Model_description.all_models[rsc]['model']
+        req_schema = getattr(Schema, rsc_model.__name__ + "PostRequest")
+        current_user = u_d.get_current_user()
+        helper.check_auth(req_schema, current_user)
+        helper.check_req_body(rsc, req_body, req_schema)
 
-    val_data = helper.get_val_dat(req_body, req_schema, current_user)
-    new_rsc_ins = helper.create_new_rsc_ins(val_data, rsc_model, session)
-    return helper.get_res(new_rsc_ins)
-
+        val_data = helper.get_val_dat(req_body, req_schema, current_user)
+        new_rsc_ins = helper.create_new_rsc_ins(val_data, rsc_model, session)
+        return helper.get_res(new_rsc_ins)
+    except ORMException as e:
+        raise HTTPException(400, e.message)
 
 # @router.post("/{resource}/{resource_instance_id}/{sub_resource}")
 # def post_subordinate_resource(resource: str, resource_instance_id: Union[int, str], sub_resource: str,
