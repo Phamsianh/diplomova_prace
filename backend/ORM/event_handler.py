@@ -1,9 +1,7 @@
-from sqlalchemy import event
 from ORM import Model
-from ORM.session import session, Session
+from ORM.session import Session
 
 
-@event.listens_for(session, 'transient_to_pending')
 def init_instance(ss: Session, obj):
     """
     When instance is initialized by user:
