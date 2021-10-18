@@ -7,24 +7,20 @@ from sqlalchemy.exc import IntegrityError
 from ORM import Model_description
 from ORM.Model import User, Instance, Phase, InstanceField
 from ORM.session import Session
-from exceptions import ORMExceptions as Expt
+from exceptions import ORMExceptions as ORMExc, InstanceException as InsExc
 from pydantic_models import Schema
 from routes.dependencies import user as u
 
 
 def check_rsc_exist(rsc: str, all_rscs: list):
     if rsc not in all_rscs:
-        raise Expt.ResourceNotExists(rsc, all_rscs)
-        # raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-        #                     detail=f"resource {rsc} doesn't exist. "
-        #                            f"available resources are {', '.join(all_rscs)}")
+        raise ORMExc.ResourceNotExists(rsc, all_rscs)
 
 
 def check_auth(schema, current_user: User, rsc_ins: Optional[Any] = None):
     if hasattr(schema.Config, 'require_admin') and schema.Config.require_admin:
         if not current_user.is_admin:
-            # raise HTTPException(status_code=400, detail="require role admin")
-            raise Expt.RequireAdmin
+            raise ORMExc.RequireAdmin
     if hasattr(schema.Config, 'require_ownership') and schema.Config.require_ownership:
         check_ownership(rsc_ins, current_user)
     if hasattr(schema.Config, 'require_position') and schema.Config.require_position:
@@ -41,13 +37,7 @@ def check_req_body(rsc: str, req_body: dict, req_schema):
     """
     for r_b_k in req_body.keys():
         if r_b_k not in req_schema.__fields__.keys():
-            # raise HTTPException(
-            #     status_code=status.HTTP_400_BAD_REQUEST,
-            #     detail=f"resource {rsc} doesn't have attribute {r_b_k}. all attributes of {rsc} are "
-            #            f"{', '.join(req_schema.__fields__.keys())}"
-            #     # TODO: which fields is required
-            # )
-            raise Expt.ResourceAttributeNotExists(rsc, r_b_k, req_schema.__fields__.keys())
+            raise ORMExc.ResourceAttributeNotExists(rsc, r_b_k, req_schema.__fields__.keys())
 
 
 def get_val_dat(req_body: dict, req_schema, current_user: User) -> dict:
@@ -56,12 +46,7 @@ def get_val_dat(req_body: dict, req_schema, current_user: User) -> dict:
             req_body["creator_id"] = current_user.id
         return req_schema(**req_body).dict(exclude_unset=True)
     except ValidationError as e:
-        # raise HTTPException(
-        #     status_code=status.HTTP_400_BAD_REQUEST,
-        #     detail=json.loads(e.json())
-        #     # which fields is required
-        # )
-        raise Expt.ORMException(json.loads(e.json()))
+        raise ORMExc.ORMException(json.loads(e.json()))
 
 
 def create_new_rsc_ins(val_data: dict, rsc_model, session: Session) -> Any:
@@ -76,8 +61,7 @@ def create_new_rsc_ins(val_data: dict, rsc_model, session: Session) -> Any:
         # TODO: For later consideration: refine the exception with which resource, which attributes cause the exception.
         #   research Exception from psycopg2, sqlalchemy,...
         print(e)
-        # raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="resource instance already exist")
-        raise Expt.ResourceInstanceExisted
+        raise ORMExc.ResourceInstanceExisted
     else:
         session.commit()
         session.refresh(new_rsc_instance)
@@ -103,8 +87,7 @@ def get_res(rscs: Any) -> Any:
             try:
                 res.append(rsc_schema.from_orm(rsc))
             except ValidationError as e:
-                # raise HTTPException(status_code=400, detail=json.loads(e.json()))
-                raise Expt.ORMException(json.loads(e.json()))
+                raise ORMExc.ORMException(json.loads(e.json()))
         return res
     elif type(type(rscs)) == DeclarativeMeta:
         # if resources is a single resource instance
@@ -112,8 +95,7 @@ def get_res(rscs: Any) -> Any:
         try:
             return rsc_schema.from_orm(rscs)
         except ValidationError as e:
-            # raise HTTPException(status_code=400, detail=json.loads(e.json()))
-            raise Expt.ORMException(json.loads(e.json()))
+            raise ORMExc.ORMException(json.loads(e.json()))
     elif type(type(rscs)) == type:
         # if resource(s) is an attribute of resource instance with built-in data type.
         return rscs
@@ -132,23 +114,17 @@ def get_rsc_ins(rsc: str, rsc_id: Union[int, str], session: Session, usr_dep: u.
         elif 'name' in rsc_model.__table__.c.keys():
             rsc_ins = session.query(rsc_model).filter(rsc_model.name == rsc_id).first()
         else:
-            # raise HTTPException(status_code=400,
-            #                     detail=f"resource {rsc} can not be searched by name")
-            raise Expt.ResourceCantSearchByName(rsc)
+            raise ORMExc.ResourceCantSearchByName(rsc)
 
         if not rsc_ins:
-            # raise HTTPException(status_code=400,
-            #                     detail=f"instance {rsc_id} of resource {rsc} doesn't exist")
-            raise Expt.ResourceInstanceNotFound(rsc_model, rsc_id)
+            raise ORMExc.ResourceInstanceNotFound(rsc_model, rsc_id)
         else:
             return rsc_ins
     elif type(rsc_id) == int:
         rsc_model = Model_description.all_models[rsc]['model']
         rsc_ins = session.query(rsc_model).get(rsc_id)
         if not rsc_ins:
-            # raise HTTPException(status_code=400,
-            #                     detail=f"instance {rsc_id} of resource {rsc} doesn't exist")
-            raise Expt.ResourceInstanceNotFound(rsc_model, rsc_id)
+            raise ORMExc.ResourceInstanceNotFound(rsc_model, rsc_id)
         else:
             return rsc_ins
 
@@ -166,10 +142,7 @@ def get_rel_rsc(rsc_ins: Any, rel_rsc: str, query: Optional[dict] = None) -> Any
     # all available related resources of resource instance
     all_rel_rscs = [a for a in type(rsc_ins).__dict__.keys() if a[:1] != '_']
     if rel_rsc not in all_rel_rscs:
-        # raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-        #                     detail=f"resource {type(rsc_ins).__tablename__} doesn't have related resource {rel_rsc}. "
-        #                            f"related resource of {type(rsc_ins).__tablename__} are {', '.join(all_rel_rscs)}")
-        raise Expt.RelatedResourceNotFound(type(rsc_ins), rel_rsc)
+        raise ORMExc.RelatedResourceNotFound(type(rsc_ins), rel_rsc)
     rr = getattr(rsc_ins, rel_rsc)
     if type(rr).__name__ == 'method':
         from inspect import getfullargspec
@@ -182,9 +155,7 @@ def get_rel_rsc(rsc_ins: Any, rel_rsc: str, query: Optional[dict] = None) -> Any
             rr = validate_arguments(rr)
             return rr(**query)
         except ValidationError as e:
-            # raise HTTPException(status_code=400,
-            #                     detail=json.loads(e.json()))
-            raise Expt.ORMException(json.loads(e.json()))
+            raise ORMExc.ORMException(json.loads(e.json()))
     else:
         return rr
 
@@ -193,14 +164,10 @@ def check_ownership(rsc_ins, current_user):
     all_rel_rscs = [a for a in type(rsc_ins).__dict__.keys() if a[:1] != '_']
     if 'creator' in all_rel_rscs:
         if rsc_ins.creator != current_user:
-            # raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-            #                     detail=f"you don't have ownership of '{rsc_ins.__tablename__}' {rsc_ins.id}")
-            raise Expt.RequireOwnership
+            raise ORMExc.RequireOwnership
     elif type(rsc_ins) == type(current_user):
         if rsc_ins != current_user:
-            # raise HTTPException(status.HTTP_401_UNAUTHORIZED,
-            #                     detail=f"you don't own this account")
-            raise Expt.RequireOwnership
+            raise ORMExc.RequireOwnership
     else:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"{rsc_ins.__tablename__} doesn't have ownership")
@@ -218,7 +185,7 @@ def check_position(rsc_ins, current_user):
 
 
 def upd_rsc_ins(val_dat: dict, rsc_ins: Any, session: Session, current_user: User) -> Any:
-    # hanlders update fields
+    # handlers update fields
     if type(rsc_ins) == Instance:
         update_instance(val_dat, rsc_ins, session, current_user)
     else:
@@ -246,51 +213,6 @@ def del_rsc_ins(rsc_ins: Any):
         session.commit()
 
 
-def check_ins_cur_state(ins: Instance):
-    ins_cur_state = ins.current_state
-    if ins_cur_state not in ["pending", "partial received", "partial received & partial resolved"]:
-        raise HTTPException(400, f"instance currently doesn't require to be handled. "
-                                 f"current state of instance is {ins_cur_state}")
-
-
-def check_req_psts(req_psts_id: List[int], usr: User, ins: Instance):
-    """
-    User must own all request positions and all request positions must be remaining positions.
-    :param req_psts_id: positions, which user request to handle specific parts of current phase.
-    :param usr: user, who request to handle instance.
-    :param ins: instance, which is requested to be handle by user.
-    :return: None
-    """
-    usr_psts_id = [pst.id for pst in usr.held_positions]
-    cur_rmn_psts_id = [pst.id for pst in ins.current_remaining_positions]
-    for p_id in req_psts_id:
-        if p_id not in usr_psts_id:
-            raise Expt.RelatedResourceInstanceNotFound(usr, "held_positions", p_id)
-        if p_id not in cur_rmn_psts_id:
-            raise HTTPException(400, f"request position id {p_id} is not appointed position")
-
-
-def handle_instance(ins: Instance, cur_usr: User, req_psts_id: Optional[List[int]]):
-    check_ins_cur_state(ins)
-    if req_psts_id:
-        check_req_psts(req_psts_id, cur_usr, ins)
-        val_req_psts_id = req_psts_id
-    else:
-        val_req_psts_id = [pst.id for pst in ins.current_remaining_positions if pst in cur_usr.held_positions]
-    for p_id in val_req_psts_id:
-        init_part(ins, cur_usr, p_id)
-
-
-def init_part(ins: Instance, cur_usr: User, pst_id: int):
-    flds_of_prt = ins.fields_of_part(pst_id)
-    for f in flds_of_prt:
-        ins.instances_fields.append(InstanceField(
-            instance_id=ins.id,
-            field_id=f.id,
-            creator_id=cur_usr.id
-        ))
-
-
 def update_instance(val_dat: dict, ins: Instance, ses: Session, cur_usr: User):
     if "current_phase_id" in val_dat:
         transit_instance(val_dat["current_phase_id"], ins, ses, cur_usr)
@@ -309,13 +231,55 @@ def transit_instance(cur_phs_id: int, ins: Instance, ses: Session, cur_usr: User
     else:
         ins_cur_state = ins.current_state
         if ins_cur_state != "full resolved":
-            raise HTTPException(400, f"current phase has not been resolved. "
-                                     f"current state of this instance is {ins_cur_state}")
+            raise InsExc.CurrentPhaseNotResolved(ins_cur_state)
         else:
             req_next_phase = ses.query(Phase).get(cur_phs_id)
             avai_next_phases = ins.current_phase.next_phases
             if req_next_phase not in avai_next_phases:
-                raise HTTPException(400, f"instance {ins.id} can only transit to phase "
-                                         f"{', '.join([str(p.id) for p in avai_next_phases])}")
+                raise InsExc.NotAvailableNextPhases(cur_phs_id, ins.id, avai_next_phases)
             else:
                 ins.current_phase_id = req_next_phase.id
+
+
+def handle_instance(ins: Instance, cur_usr: User, req_psts_id: Optional[List[int]]):
+    check_ins_cur_state(ins)
+    if req_psts_id:
+        check_req_psts(req_psts_id, cur_usr, ins)
+        val_req_psts_id = req_psts_id
+    else:
+        val_req_psts_id = [pst.id for pst in ins.current_remaining_positions if pst in cur_usr.held_positions]
+    for p_id in val_req_psts_id:
+        init_part(ins, cur_usr, p_id)
+
+
+def check_ins_cur_state(ins: Instance):
+    ins_cur_state = ins.current_state
+    if ins_cur_state not in ["pending", "partial received", "partial received & partial resolved"]:
+        raise InsExc.CurrentlyNotRequireHandle
+
+
+def check_req_psts(req_psts_id: List[int], usr: User, ins: Instance):
+    """
+    User must own all request positions and all request positions must be remaining positions.
+    :param req_psts_id: positions, which user request to handle specific parts of current phase.
+    :param usr: user, who request to handle instance.
+    :param ins: instance, which is requested to be handle by user.
+    :return: None
+    """
+    usr_psts_id = [pst.id for pst in usr.held_positions]
+    cur_rmn_psts_id = [pst.id for pst in ins.current_remaining_positions]
+    for p_id in req_psts_id:
+        if p_id not in usr_psts_id:
+            raise ORMExc.RelatedResourceInstanceNotFound(usr, "held_positions", p_id)
+        if p_id not in cur_rmn_psts_id:
+            raise HTTPException(400, f"request position id {p_id} is not appointed position")
+
+
+def init_part(ins: Instance, cur_usr: User, pst_id: int):
+    flds_of_prt = ins.fields_of_part(pst_id)
+    for f in flds_of_prt:
+        ins.instances_fields.append(InstanceField(
+            instance_id=ins.id,
+            field_id=f.id,
+            creator_id=cur_usr.id
+        ))
