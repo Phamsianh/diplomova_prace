@@ -177,6 +177,8 @@ class Form(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String, unique=True)
     creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    public = Column(Boolean, server_default='false')
+    obsolete = Column(Boolean, server_default='false')
 
     # many-to-one relationship(s)
     creator = relationship("User", back_populates="created_forms")
@@ -194,6 +196,8 @@ created_at: {self.created_at}
 updated_at: {self.updated_at}
 name: {self.name}
 creator_id: {self.creator_id}
+public: {self.public}
+obsolete: {self.obsolete}
 )
 '''
 

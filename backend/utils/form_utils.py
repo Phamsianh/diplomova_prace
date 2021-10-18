@@ -5,7 +5,9 @@ from ORM.Model import Form, Phase, Transition, Section, Field
 def create_form_structure(form_structure):
     form = Form(
         name=form_structure["name"],
-        creator_id=form_structure["creator_id"]
+        creator_id=form_structure["creator_id"],
+        public=form_structure["public"],
+        obsolete=form_structure["obsolete"]
     )
 
     for p in form_structure["workflow"]["phases"]:

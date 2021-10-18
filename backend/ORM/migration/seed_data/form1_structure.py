@@ -15,6 +15,8 @@ dean_FMT = session.query(Position).filter_by(name="Dean of FMT (GrAdmin)").first
 form1_structure = {
     "name": "NÁVRH TÉMATU ZÁVĚREČNÉ PRÁCE",
     "creator_id": phamsianh.id,
+    "public": True,
+    "obsolete": False,
     "workflow": {
         "phases": [
             {
@@ -43,7 +45,10 @@ form1_structure = {
                         "position_id": leading_teacher.id,
                         "fields": [
                             {
-                                "name": "Field for Leading Teacher"
+                                "name": "1. Field for Leading Teacher"
+                            },
+                            {
+                                "name": "2. Field for Leading Teacher"
                             }
                         ]
                     },

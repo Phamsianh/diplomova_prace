@@ -5,9 +5,8 @@ psa = session.query(User).get(1)
 
 instance_data = {
     "form_id": 1,
-    "current_phase_id": 1,
+    "current_phase_id": 2,
     "creator_id": 1,
-    "current_state": "done",
 }
 instance1 = Instance(**instance_data)
 session.add(instance1)
@@ -30,21 +29,21 @@ instance_fields_data = [
     },
     {
         "instance_id": instance1.id,
-        "field_id": 3,
+        "field_id": 4,
         "value": "Consultant Alexandr Stefek participated this form instance.",
         "creator_id": 6,
         "resolved": True
     },
     {
         "instance_id": instance1.id,
-        "field_id": 5,
+        "field_id": 6,
         "value": "HoDoICO Petr Frantis participated this form instance.",
         "creator_id": 5,
         "resolved": True
     },
     {
         "instance_id": instance1.id,
-        "field_id": 6,
+        "field_id": 7,
         "value": "Dean of FMT Vlastimil Neumann participated this form instance.",
         "creator_id": 3,
         "resolved": True
