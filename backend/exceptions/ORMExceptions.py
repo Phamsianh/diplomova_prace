@@ -86,5 +86,11 @@ class ResourceCantSearchByName(ORMException):
         super(ResourceCantSearchByName, self).__init__(self.message)
 
 
+class IndelibleResourceInstance(ORMException):
+    def __init__(self):
+        self.message = "resource instance's indelible"
+        super(IndelibleResourceInstance, self).__init__(self.message)
+
+
 # raise NotRelatedResource(Model.User, 'abc')
 # raise RelatedResourceNotFound('abc')

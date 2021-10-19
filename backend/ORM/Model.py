@@ -697,6 +697,11 @@ creator_id: {self.creator_id}
     def roles_without_group(self) -> Optional[List['Role']]:
         return inspect(self).session.query(Role).join(Role.positions).filter_by(group_id=None).all()
 
+    @property
+    def holders(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
+            filter(Position.role_id == self.id).all()
+
 
 class Phase(Base):
     __tablename__ = "phases"
