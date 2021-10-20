@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
 from ORM import Model_description
-from ORM.Model import User, Instance, Phase, InstanceField, Form, Group, Role, Position
+from ORM.Model import User, Instance, Phase, InstanceField, Form, Group, Role, Position, Transition, Section, Field
 from ORM.session import Session
 from exceptions import ORMExceptions as ORMExc, InstanceException as InsExc
 from pydantic_models import Schema
@@ -203,10 +203,10 @@ def upd_rsc_ins(val_dat: dict, rsc_ins: Any, session: Session, current_user: Use
 
 def del_rsc_ins(rsc_ins: Any):
     session = inspect(rsc_ins).session
-    # TODO: delete user, form
+    # TODO: delete users_positions
     rsc_ins_type = type(rsc_ins)
     if rsc_ins_type == User \
-            or (rsc_ins_type == Form and rsc_ins.public) \
+            or (rsc_ins_type in [Form, Phase, Transition, Section, Field]) and rsc_ins.public \
             or (rsc_ins_type == Instance and rsc_ins.current_state != "initialized") \
             or (rsc_ins_type == Group and rsc_ins.joiners is not None) \
             or (rsc_ins_type == Role and rsc_ins.holders is not None) \

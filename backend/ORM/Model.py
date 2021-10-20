@@ -279,6 +279,10 @@ order: {self.order}
         return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).join(Phase.sections). \
             filter(Section.id == self.id).first()
 
+    @property
+    def public(self) -> bool:
+        return self.phase.public
+
 
 class Field(Base):
     __tablename__ = "fields"
@@ -327,6 +331,10 @@ order: {self.order}
     def position(self) -> Optional['Position']:
         return inspect(self).session.query(Position).join(Position.sections).join(Section.fields). \
             filter(Field.id == self.id).first()
+
+    @property
+    def public(self) -> bool:
+        return self.section.public
 
 
 class Instance(Base):
@@ -767,6 +775,10 @@ phase_type: {self.phase_type}
         return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position). \
             join(Position.sections).filter(Section.phase_id == self.id).all()
 
+    @property
+    def public(self) -> bool:
+        return self.form.public
+
 
 class Transition(Base):
     __tablename__ = "transitions"
@@ -800,6 +812,10 @@ name: {self.name}
     def creator(self) -> Optional['User']:
         return inspect(self).session.query(User).join(User.created_forms).join(Form.phases). \
             join(Phase.from_transitions).filter(Transition.id == self.id).first()
+
+    @property
+    def public(self) -> bool:
+        return self.from_phase.public
 
 
 class Position(Base):
