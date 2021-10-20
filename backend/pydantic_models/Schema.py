@@ -225,6 +225,8 @@ class FormPostRequest(BaseModel):
 
 class FormPatchRequest(BaseModel):
     name: Optional[str]
+    public: Optional[bool]
+    obsolete: Optional[bool]
 
     class Config:
         orm_mode = True
@@ -243,6 +245,8 @@ class FormResponse(BaseModel):
     created_at: datetime
     name: str
     creator_id: int
+    public: bool
+    obsolete: bool
 
     class Config:
         orm_mode = True
