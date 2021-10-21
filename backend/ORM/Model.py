@@ -815,6 +815,11 @@ name: {self.name}
             join(Phase.from_transitions).filter(Transition.id == self.id).first()
 
     @property
+    def form(self) -> Optional['Form']:
+        return inspect(self).session.query(Form).join(Form.phases).join(Phase.from_transitions).\
+            filter(Transition.id == self.id).first()
+
+    @property
     def public(self) -> bool:
         return self.from_phase.public
 
