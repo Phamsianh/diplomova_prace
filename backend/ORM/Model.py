@@ -185,7 +185,6 @@ class Form(Base):
 
     # one-to-many relationship(s)
     phases = relationship("Phase", back_populates="form")
-    sections = relationship("Section", back_populates="form")
     instances = relationship("Instance", back_populates="form")
 
     def __repr__(self):
@@ -247,13 +246,11 @@ class Section(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String, unique=True)
-    form_id = Column(BigInteger, ForeignKey("forms.id"))
     phase_id = Column(BigInteger, ForeignKey("phases.id"))
     position_id = Column(BigInteger, ForeignKey("positions.id"))
     order = Column(Integer)
 
     # many-to-one relationship(s)
-    form = relationship("Form", back_populates="sections")
     phase = relationship("Phase", back_populates="sections")
     position = relationship("Position", back_populates="sections")
 
@@ -267,7 +264,6 @@ id: {self.id}
 created_at: {self.created_at}
 updated_at: {self.updated_at}
 name: {self.name}
-form_id: {self.form_id}
 phase_id: {self.phase_id}
 position_id: {self.position_id}
 order: {self.order}
@@ -277,6 +273,11 @@ order: {self.order}
     @property
     def creator(self) -> Optional['User']:
         return inspect(self).session.query(User).join(User.created_forms).join(Form.phases).join(Phase.sections). \
+            filter(Section.id == self.id).first()
+
+    @property
+    def form(self) -> Optional['Form']:
+        return inspect(self).session.query(Form).join(Form.phases).join(Phase.sections).\
             filter(Section.id == self.id).first()
 
     @property
