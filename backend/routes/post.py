@@ -24,7 +24,7 @@ def create_resource_instance(rsc: str, req_body: dict = Body(...), session: Sess
         helper.check_req_body(rsc, req_body, req_schema)
 
         val_data = helper.get_val_dat(req_body, req_schema, current_user)
-        new_rsc_ins = helper.create_new_rsc_ins(val_data, rsc_model, session)
+        new_rsc_ins = helper.create_new_rsc_ins(val_data, rsc_model, session, current_user)
         return helper.get_res(new_rsc_ins)
     except ORMException as e:
         raise HTTPException(400, e.message)
