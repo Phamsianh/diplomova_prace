@@ -345,7 +345,6 @@ class TransitionResponse(BaseModel):
 
 class SectionPostRequest(BaseModel):
     name: str
-    form_id: Optional[int]
     phase_id: int
     position_id: int
     order: Optional[int]
@@ -376,7 +375,6 @@ class SectionDeleteRequest(BaseModel):
 class SectionResponse(BaseModel):
     id: int
     name: str
-    form_id: Optional[int]
     phase_id: Optional[int]
     position_id: Optional[int]
     order: Optional[int]
