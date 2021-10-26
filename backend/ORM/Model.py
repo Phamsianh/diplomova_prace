@@ -201,6 +201,11 @@ obsolete: {self.obsolete}
 '''
 
     @property
+    def sections(self) -> Optional[List['Section']]:
+        return inspect(self).session.query(Section).join(Section.phase).join(Phase.form).\
+            filter(Form.id == self.id).all()
+
+    @property
     def fields(self) -> Optional[List['Field']]:
         return inspect(self).session.query(Field) \
             .join(Field.section) \
