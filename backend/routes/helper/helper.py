@@ -62,9 +62,15 @@ def create_new_rsc_ins(val_data: dict, rsc_model, session: Session, cur_usr: Use
             import re
             message_detail = e.orig.diag.message_detail
             _, rsc_ins_id = re.findall(r"\((.+?)\)", message_detail)
-            rsc_name = re.search(r'"(.+?)"', message_detail).group(1)
+            rsc_name = e.orig.diag.table_name
             r_m = Model_description.all_models[rsc_name]['model']
             raise ORMExc.ResourceInstanceNotFound(r_m, rsc_ins_id)
+        elif e.orig.pgcode == '23505':  # PostgreSQL Error Codes for UNIQUE VIOLATION
+            import re
+            message_detail = e.orig.diag.message_detail
+            att, val = re.findall(r"\((.+?)\)", message_detail)
+            rsc_name = e.orig.diag.table_name
+            raise ORMExc.ResourceInstanceExisted(rsc_name, att, val)
         else:
             raise
 
