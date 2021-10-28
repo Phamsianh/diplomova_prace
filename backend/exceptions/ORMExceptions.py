@@ -21,14 +21,17 @@ class ResourceInstanceNotFound(ORMException):
 
 
 class ResourceInstanceExisted(ORMException):
-    def __init__(self):
-        self.message = "resource instance already exists"
+    def __init__(self, rsc_name: str = None, att: str = None, val: str = None):
+        if rsc_name and att and val:
+            self.message = f"resource instance '{rsc_name}' with '{att}' = '{val}' already exists"
+        else:
+            self.message = "resource instance already exists"
         super(ResourceInstanceExisted, self).__init__(self.message)
 
 
 class ResourceAttributeNotExists(ORMException):
     def __init__(self, rsc: str, att: str, all_att: list[str]):
-        self.message = f"resource {rsc} doesn't have attribute {att}. all attributes of {rsc} are {', '.join(all_att)}"
+        self.message = f"resource '{rsc}' doesn't have attribute '{att}'. all attributes of '{rsc}' are {', '.join(all_att)}"
         super(ResourceAttributeNotExists, self).__init__(self.message)
 
 
