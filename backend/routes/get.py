@@ -43,9 +43,9 @@ def get_related_resource_collection(rsc: str, rsc_id: Union[int, str], rel_rsc: 
         helper.check_rsc_exist(rsc, Model_description.all_models.keys())
         rsc_ins = helper.get_rsc_ins(rsc, rsc_id, session, u_d)
         rel_rscs = helper.get_rel_rsc(rsc_ins, rel_rsc, dict(req.query_params))
-        # if not rel_rscs:
-        #     return None
-        # else:
-        return helper.get_res(rel_rscs)
+        if not rel_rscs:
+            return None
+        else:
+            return helper.get_res(rel_rscs)
     except ORMException as e:
         raise HTTPException(400, e.message)
