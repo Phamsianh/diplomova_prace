@@ -259,7 +259,9 @@ class PhaseTypeEnum(str, Enum):
 
 
 class PhasePostRequest(BaseModel):
+    form_id: int
     name: str
+    description: Optional[str]
     position_id: int
     phase_type: 'PhaseTypeEnum'
 
@@ -270,6 +272,7 @@ class PhasePostRequest(BaseModel):
 
 class PhasePatchRequest(BaseModel):
     name: Optional[str]
+    description: Optional[str]
     position_id: Optional[int]
     phase_type: Optional['PhaseTypeEnum']
 
