@@ -184,7 +184,7 @@ class Form(Base):
     creator = relationship("User", back_populates="created_forms")
 
     # one-to-many relationship(s)
-    phases = relationship("Phase", back_populates="form")
+    phases = relationship("Phase", cascade="all, delete", back_populates="form")
     instances = relationship("Instance", back_populates="form")
 
     def __repr__(self):
@@ -251,7 +251,7 @@ class Section(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String, unique=True)
-    phase_id = Column(BigInteger, ForeignKey("phases.id"))
+    phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
     position_id = Column(BigInteger, ForeignKey("positions.id"))
     order = Column(Integer)
 
@@ -260,7 +260,7 @@ class Section(Base):
     position = relationship("Position", back_populates="sections")
 
     # one-to-many relationship(s)
-    fields = relationship("Field", back_populates="section")
+    fields = relationship("Field", cascade="all, delete", back_populates="section")
 
     def __repr__(self):
         return f'''
@@ -297,7 +297,7 @@ class Field(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String, unique=True)
-    section_id = Column(BigInteger, ForeignKey("sections.id"))
+    section_id = Column(BigInteger, ForeignKey("sections.id", ondelete="CASCADE"))
     order = Column(Integer)
 
     # many-to-one relationship(s)
@@ -370,7 +370,7 @@ class Instance(Base):
     creator = relationship("User", back_populates="created_instances")
 
     # one-to-many relationship(s)
-    instances_fields = relationship("InstanceField", back_populates="instance")
+    instances_fields = relationship("InstanceField", cascade="all,delete", back_populates="instance")
 
     def __repr__(self):
         return f'''
@@ -604,7 +604,7 @@ class InstanceField(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    instance_id = Column(BigInteger, ForeignKey("instances.id"))
+    instance_id = Column(BigInteger, ForeignKey("instances.id", ondelete="CASCADE"))
     field_id = Column(BigInteger, ForeignKey("fields.id"))
     creator_id = Column(BigInteger, ForeignKey("users.id"))
     value = Column(String)
@@ -737,8 +737,8 @@ class Phase(Base):
     # one-to-many relationship(s)
     instances = relationship("Instance", back_populates="current_phase")
     sections = relationship("Section", back_populates="phase")
-    from_transitions = relationship("Transition", back_populates="from_phase", foreign_keys="Transition.from_phase_id")
-    to_transitions = relationship("Transition", back_populates="to_phase", foreign_keys="Transition.to_phase_id")
+    from_transitions = relationship("Transition", cascade="all, delete", back_populates="from_phase", foreign_keys="Transition.from_phase_id")
+    to_transitions = relationship("Transition", cascade="all, delete", back_populates="to_phase", foreign_keys="Transition.to_phase_id")
 
     def __repr__(self):
         return f'''
@@ -793,8 +793,8 @@ class Transition(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String(50))
-    from_phase_id = Column(BigInteger, ForeignKey("phases.id"))
-    to_phase_id = Column(BigInteger, ForeignKey("phases.id"))
+    from_phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
+    to_phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
     order = Column(Integer)
 
     # many-to-one relationship(s)
