@@ -263,7 +263,7 @@ class PhasePostRequest(BaseModel):
     name: str
     description: Optional[str]
     position_id: int
-    phase_type: 'PhaseTypeEnum'
+    phase_type: Optional['PhaseTypeEnum'] = 'transit'
 
     class Config:
         orm_mode = True
@@ -348,8 +348,8 @@ class TransitionResponse(BaseModel):
 
 class SectionPostRequest(BaseModel):
     name: str
-    phase_id: int
-    position_id: int
+    phase_id: int       # TODO: may be optional. required when public form
+    position_id: int    #  may be optional. required when public form
     order: Optional[int]
 
     class Config:
@@ -424,7 +424,7 @@ class FieldResponse(BaseModel):
         orm_mode = True
 
 
-class FormCurrentStateEnum(str, Enum):
+class InstanceCurrentStateEnum(str, Enum):
     initialized = "initialized"
     pending = "pending"
     partial_received = "partial received"
@@ -437,8 +437,8 @@ class FormCurrentStateEnum(str, Enum):
 
 class InstancePostRequest(BaseModel):
     form_id: int
-    current_phase_id: Optional[int]
-    creator_id: int
+    # current_phase_id: Optional[int]
+    # creator_id: int
 
     class Config:
         orm_mode = True
@@ -469,7 +469,7 @@ class InstanceResponse(BaseModel):
     form_id: int
     current_phase_id: Optional[int]
     creator_id: int
-    current_state: FormCurrentStateEnum
+    current_state: InstanceCurrentStateEnum
 
     class Config:
         orm_mode = True
