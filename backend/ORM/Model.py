@@ -155,18 +155,13 @@ birthdate: {self.birthdate}
             .filter(InstanceField.creator_id == self.id) \
             .all()
 
-    def ga_av_sections(self, fi: 'Instance', session: Session) -> Optional[List['Section']]:
-        """get all available sections of a form instance for this user"""
-        pass
-
-    def ga_av_phases(self, fi: 'Instance', session: Session) -> Optional[List['Phase']]:
-        """get all available phases of a form instance for this user"""
-        pass
-
-    def ga_av_fields(self, fi: 'Instance', session: Session) -> Optional[List['Field']]:
-        pass
-
-    # def create_role(self, 'Role'):
+    @property
+    def potential_instances(self) -> Optional[List['Instance']]:
+        handled_sections = inspect(self).session.query(Section).join(Section.fields).join(Field.instances_fields).\
+            filter(Section.phase_id == Phase.id, InstanceField.instance_id == Instance.id)
+        return inspect(self).session.query(Instance).join(Instance.current_phase).join(Phase.sections).\
+            join(Section.position).join(Position.users_positions).join(UserPosition.user).\
+            filter(User.id == self.id, ~handled_sections.exists()).all()
 
 
 class Form(Base):
@@ -175,7 +170,7 @@ class Form(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
     creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
     public = Column(Boolean, server_default='false')
     obsolete = Column(Boolean, server_default='false')
@@ -250,7 +245,7 @@ class Section(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
     phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
     position_id = Column(BigInteger, ForeignKey("positions.id"))
     order = Column(Integer)
@@ -296,7 +291,7 @@ class Field(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
     section_id = Column(BigInteger, ForeignKey("sections.id", ondelete="CASCADE"))
     order = Column(Integer)
 
@@ -342,6 +337,11 @@ order: {self.order}
     def public(self) -> bool:
         return self.section.public
 
+    def content(self, instance_id):
+        return inspect(self).session.query(InstanceField)\
+            .filter(InstanceField.instance_id == instance_id, InstanceField.field_id == self.id)\
+            .first()
+
 
 class Instance(Base):
     __tablename__ = "instances"
@@ -371,6 +371,8 @@ class Instance(Base):
 
     # one-to-many relationship(s)
     instances_fields = relationship("InstanceField", cascade="all,delete", back_populates="instance")
+    commits = relationship("Commit", back_populates="instance")
+    head = relationship("Head", back_populates="instance", uselist=False)
 
     def __repr__(self):
         return f'''
@@ -436,6 +438,11 @@ current_state: {self.current_state}
     def end_phase(self) -> Optional['Phase']:
         return inspect(self).session.query(Phase).join(Phase.form).join(Form.instances).\
             filter(Instance.id == self.id, Phase.phase_type == 'end').first()
+
+    @property
+    def participants(self) -> Optional['User']:
+        return inspect(self).session.query(User).join(User.instances_fields).\
+            filter(InstanceField.instance_id == self.id).all()
 
     @property
     def current_appointed_positions(self) -> Optional[List['Position']]:
@@ -589,13 +596,42 @@ current_state: {self.current_state}
         return
 
     @property
+    def current_director(self) -> Optional[User]:
+        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
+            join(Position.phases).join(Phase.instances).join(Instance.instances_fields).\
+            filter(InstanceField.instance_id == self.id, InstanceField.creator_id == User.id).first()
+
+    @property
+    def current_potential_director(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
+            join(Position.phases).join(Phase.instances).\
+            filter(Instance.id == self.id).all()
+
+    @property
     def curr_handlers(self) -> Optional[List['User']]:
         return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
             join(Field.section).join(Section.phase).join(Phase.instances).filter(Instance.id == self.id).all()
 
+    @property
+    def current_potential_handlers(self) -> Optional[List['User']]:
+        handled_sections = inspect(self).session.query(Section).join(Section.fields).join(Field.instances_fields).\
+            filter(InstanceField.instance_id == self.id, Position.id == Section.position_id)
+        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
+            join(Position.sections).join(Section.phase).join(Phase.instances).\
+            filter(Instance.id == self.id, ~handled_sections.exists()).all()
+
     def section_handler(self, section_id: int) -> Optional['User']:
         return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
             filter(InstanceField.instance_id == self.id, Field.section_id == section_id).first()
+
+    @property
+    def latest_envelopes(self) -> Optional[List['Envelope']]:
+        last_hash_commit = self.head.last_hash_commit
+        return inspect(self).session.query(Envelope)\
+            .join(Envelope.trees_envelopes)\
+            .join(TreeEnvelope.tree)\
+            .join(Tree.commit)\
+            .filter(Commit.hash_commit == last_hash_commit).all()
 
 
 class InstanceField(Base):
@@ -828,6 +864,10 @@ name: {self.name}
     def public(self) -> bool:
         return self.from_phase.public
 
+    @property
+    def obsolete(self) -> bool:
+        return self.from_phase.obsolete
+
 
 class Position(Base):
     __tablename__ = 'positions'
@@ -903,3 +943,105 @@ user_id: {self.user_id}
 position_id: {self.position_id}
 )
 '''
+
+
+class Envelope(Base):
+    __tablename__ = "envelopes"
+
+    hash_envelope = Column(String, primary_key=True, unique=True)
+    encrypted_content = Column(String)
+    digital_signature = Column(String)
+    field_id = Column(BigInteger, ForeignKey('fields.id'), nullable=False)
+    creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    resolved = Column(Boolean)
+
+    # many-to-one relationship(s)
+    creator = relationship("User", backref="envelopes")
+    field = relationship("Field", backref="envelopes")
+
+    # one-to-many relationship(s)
+    trees_envelopes = relationship('TreeEnvelope', back_populates='envelope')
+
+
+class Tree(Base):
+    __tablename__ = "trees"
+
+    hash_tree = Column(String, primary_key=True)
+
+    # one-to-one relationship(s)
+    commit = relationship('Commit', back_populates="tree", uselist=False)
+    # one-to-many relationship(s)
+    trees_envelopes = relationship('TreeEnvelope', back_populates='tree')
+
+
+class TreeEnvelope(Base):
+    __tablename__ = "trees_envelopes"
+
+    id = Column(BigInteger, primary_key=True)
+    hash_tree = Column(String, ForeignKey('trees.hash_tree'))
+    hash_envelope = Column(String, ForeignKey('envelopes.hash_envelope'))
+
+    envelope = relationship('Envelope', back_populates="trees_envelopes")
+    tree = relationship('Tree', back_populates='trees_envelopes')
+
+
+class Commit(Base):
+    __tablename__ = "commits"
+
+    hash_commit = Column(String, primary_key=True)
+    prev_hash_commit = Column(String, ForeignKey('commits.hash_commit'))
+    hash_tree = Column(String, ForeignKey('trees.hash_tree'), unique=True)
+    creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    instance_id = Column(BigInteger, ForeignKey("instances.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    current_phase_id = Column(BigInteger, ForeignKey("phases.id"))
+
+    # one-to-one relationship(s)
+    tree = relationship('Tree', back_populates='commit')
+    head = relationship('Head', back_populates='last_commit', uselist=False)
+    # many-to-one relationship(s)
+    instance = relationship('Instance', back_populates='commits')
+    prev_commit = relationship('Commit', backref="next_commit", remote_side=[hash_commit])
+
+
+class Head(Base):
+    __tablename__ = "heads"
+
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String)
+    instance_id = Column(BigInteger, ForeignKey('instances.id'))
+    last_hash_commit = Column(String, ForeignKey('commits.hash_commit'))
+
+    # one-to-one relationship(s)
+    last_commit = relationship('Commit', back_populates='head')
+    instance = relationship('Instance', back_populates='head')
+
+
+class ASafe(Base):
+    __tablename__ = "asafes"
+
+    id = Column(BigInteger, primary_key=True)
+    creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    instance_id = Column(BigInteger, ForeignKey("instances.id"), nullable=False)
+    key = Column(String)
+    type = Column(String, Enum(
+        'aes',
+        name='akey_type'
+    ), server_default='aes')
+    length = Column(Integer, Enum('128', '192', '256', name='akey_length'), server_default='256')
+
+    creator = relationship("User", backref="asafes")
+    instance = relationship('Instance', backref='asafes')
+
+
+class PPSafe(Base):
+    __tablename__ = "ppsafes"
+
+    id = Column(BigInteger, primary_key=True)
+    creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    public_key = Column(String)
+    private_key = Column(String)
+    type = Column(String, Enum('ecc', name="ppkey_type"))
+    length = Column(Integer)
+
+    creator = relationship("User", backref="ppsafes")
