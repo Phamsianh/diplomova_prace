@@ -216,7 +216,7 @@ class UserPositionResponse(BaseModel):
 
 class FormPostRequest(BaseModel):
     name: str
-    creator_id: int
+    creator_id: Optional[int]
 
     class Config:
         orm_mode = True
@@ -509,6 +509,55 @@ class InstanceFieldResponse(BaseModel):
     creator_id: int
     value: Optional[str]
     resolved: bool
+
+    class Config:
+        orm_mode = True
+
+
+class CommitPostRequest(BaseModel):
+    pass
+
+
+class CommitPatchRequest(BaseModel):
+    pass
+
+
+class CommitDeleteRequest(BaseModel):
+    pass
+
+
+class CommitResponse(BaseModel):
+    hash_commit: str
+    prev_hash_commit: str = None
+    hash_tree:  str
+    creator_id:  int
+    instance_id:  int
+    created_at:  datetime
+    current_phase_id:  int
+
+    class Config:
+        orm_mode = True
+        require_ownership = True
+        require_admin = True
+
+
+class EnvelopeResponse(BaseModel):
+    hash_envelope: str
+    encrypted_content: str
+    digital_signature: str
+    field_id: str
+    creator_id: int
+    resolved: bool
+
+    class Config:
+        orm_mode = True
+
+
+class HeadResponse(BaseModel):
+    id: int
+    name: str = None
+    instance_id: int
+    last_hash_commit: str
 
     class Config:
         orm_mode = True
