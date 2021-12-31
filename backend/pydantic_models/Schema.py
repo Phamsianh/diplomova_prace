@@ -314,7 +314,8 @@ class TransitionPostRequest(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self.name = f"{self.from_phase_id}to{self.to_phase_id}"
+        if not self.name:
+            self.name = f"{self.from_phase_id}to{self.to_phase_id}"
 
 
 class TransitionPatchRequest(BaseModel):
@@ -337,6 +338,7 @@ class TransitionDeleteRequest(BaseModel):
 
 class TransitionResponse(BaseModel):
     id: int
+    created_at: datetime
     from_phase_id: int
     to_phase_id: int
     name: Optional[str]
@@ -378,6 +380,7 @@ class SectionDeleteRequest(BaseModel):
 class SectionResponse(BaseModel):
     id: int
     name: str
+    created_at: datetime
     phase_id: Optional[int]
     position_id: Optional[int]
     order: Optional[int]
@@ -415,7 +418,7 @@ class FieldDeleteRequest(BaseModel):
 
 class FieldResponse(BaseModel):
     id: int
-    created_at: Optional[datetime]
+    created_at: datetime
     name: str
     section_id: int
     order: Optional[int]
