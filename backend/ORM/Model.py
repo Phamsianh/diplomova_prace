@@ -221,6 +221,18 @@ obsolete: {self.obsolete}
             filter(Phase.phase_type == 'end').first()
 
     @property
+    def begin_phases(self) -> Optional['Phase']:
+        return inspect(self).session.query(Phase).join(Phase.form) \
+            .filter(Form.id == self.id). \
+            filter(Phase.phase_type == 'begin').all()
+
+    @property
+    def end_phases(self) -> Optional['Phase']:
+        return inspect(self).session.query(Phase).join(Phase.form) \
+            .filter(Form.id == self.id). \
+            filter(Phase.phase_type == 'end').all()
+
+    @property
     def begin_fields(self) -> Optional[List['Field']]:
         return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form).\
             filter(Form.id == self.id, Phase.phase_type == 'begin').all()
@@ -284,6 +296,10 @@ order: {self.order}
     def public(self) -> bool:
         return self.phase.public
 
+    @property
+    def obsolete(self) -> bool:
+        return self.form.obsolete
+
 
 class Field(Base):
     __tablename__ = "fields"
@@ -336,6 +352,10 @@ order: {self.order}
     @property
     def public(self) -> bool:
         return self.section.public
+
+    @property
+    def obsolete(self) -> bool:
+        return self.form.obsolete
 
     def content(self, instance_id):
         return inspect(self).session.query(InstanceField)\
@@ -821,6 +841,20 @@ phase_type: {self.phase_type}
     def public(self) -> bool:
         return self.form.public
 
+    @property
+    def obsolete(self) -> bool:
+        return self.form.obsolete
+
+    @property
+    def designated_sections(self) -> Optional[List['Section']]:
+        return inspect(self).session.query(Section).join(Section.phase).\
+            filter(Section.position_id == Phase.position_id, Phase.position_id == self.id).all()
+
+    @property
+    def designated_fields(self) -> Optional[List['Field']]:
+        return inspect(self).session.query(Field).join(Field.section).join(Section.phase). \
+            filter(Section.position_id == Phase.position_id, Phase.position_id == self.id).all()
+
 
 class Transition(Base):
     __tablename__ = "transitions"
@@ -1002,6 +1036,11 @@ class Commit(Base):
     # many-to-one relationship(s)
     instance = relationship('Instance', back_populates='commits')
     prev_commit = relationship('Commit', backref="next_commit", remote_side=[hash_commit])
+
+    @property
+    def envelopes(self):
+        return inspect(self).session.query(Envelope).join(Envelope.trees_envelopes).join(TreeEnvelope.tree).join(Tree.commit).\
+            filter(Commit.hash_commit == self.hash_commit).all()
 
 
 class Head(Base):
