@@ -468,6 +468,42 @@ current_state: {self.current_state}
             filter(Instance.id == self.id, Phase.phase_type == 'end').first()
 
     @property
+    def current_receivers_users(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.receivers).join(Receiver.section).join(Section.phase).\
+            join(Phase.instances).filter(Instance.id == self.id).all()
+
+    @property
+    def current_remaining_receivers_users(self) -> Optional[List['User']]:
+        handled_fields = inspect(self).session.query(Field).join(Field.instances_fields).\
+            filter(Field.section_id == Section.id, InstanceField.instance_id == self.id)
+        return inspect(self).session.query(User).join(User.receivers).join(Receiver.section)\
+            .filter(Section.phase_id == self.current_phase_id, Receiver.instance_id == self.id,
+                    ~handled_fields.exists()).all()
+
+    @property
+    def current_receivers(self) -> Optional[List['Receiver']]:
+        return inspect(self).session.query(Receiver).join(Receiver.section). \
+            filter(Section.phase_id == self.current_phase_id, Receiver.instance_id == self.id).all()
+
+    @property
+    def current_remaining_receivers(self) -> Optional[List['Receiver']]:
+        handled_fields = inspect(self).session.query(Field).join(Field.instances_fields).\
+            filter(Field.section_id == Section.id, InstanceField.instance_id == self.id)
+        return inspect(self).session.query(Receiver).join(Receiver.section). \
+            filter(Section.phase_id == self.current_phase_id, Receiver.instance_id == self.id,
+                   ~handled_fields.exists()).all()
+
+    @property
+    def current_potential_handlers(self) -> Optional[List['User']]:
+        current_receivers = inspect(self).session.query(Receiver).\
+            filter(Receiver.instance_id == self.id, Receiver.section_id == Section.id)
+        current_handled_fields = inspect(self).session.query(Field).join(Field.instances_fields).\
+            filter(InstanceField.instance_id == self.id, Field.section_id == Section.id)
+        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
+            join(Position.sections).join(Section.phase).join(Phase.instances).\
+            filter(Instance.id == self.id, ~current_receivers.exists(), ~current_handled_fields.exists()).all()
+
+    @property
     def participants(self) -> Optional['User']:
         return inspect(self).session.query(User).join(User.instances_fields).\
             filter(InstanceField.instance_id == self.id).all()
@@ -640,17 +676,26 @@ current_state: {self.current_state}
         return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
             join(Field.section).join(Section.phase).join(Phase.instances).filter(Instance.id == self.id).all()
 
-    @property
-    def current_potential_handlers(self) -> Optional[List['User']]:
-        handled_sections = inspect(self).session.query(Section).join(Section.fields).join(Field.instances_fields).\
-            filter(InstanceField.instance_id == self.id, Position.id == Section.position_id)
-        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
-            join(Position.sections).join(Section.phase).join(Phase.instances).\
-            filter(Instance.id == self.id, ~handled_sections.exists()).all()
-
     def section_handler(self, section_id: int) -> Optional['User']:
         return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
             filter(InstanceField.instance_id == self.id, Field.section_id == section_id).first()
+
+    @property
+    def current_remaining_specified_sections(self) -> Optional[List['Section']]:
+        handled_fields = inspect(self).session.query(Field).join(Field.instances_fields).\
+            filter(Field.section_id == Section.id, InstanceField.instance_id == self.id)
+        return inspect(self).session.query(Section).join(Receiver).\
+            filter(Receiver.instance_id == self.id, Section.phase_id == self.current_phase_id,
+                   ~handled_fields.exists()).all()
+
+    @property
+    def current_remaining_sections(self) -> Optional[List['Section']]:
+        current_receiver = inspect(self).session.query(Receiver).\
+            filter(Receiver.instance_id == self.id, Receiver.section_id == Section.id)
+        handled_fields = inspect(self).session.query(Field).join(Field.instances_fields).\
+            filter(Field.section_id == Section.id, InstanceField.instance_id == self.id)
+        return inspect(self).session.query(Section). \
+            filter(Section.phase_id == self.current_phase_id, ~current_receiver.exists(), ~handled_fields.exists()).all()
 
     @property
     def latest_envelopes(self) -> Optional[List['Envelope']]:

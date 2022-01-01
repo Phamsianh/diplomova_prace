@@ -1,7 +1,7 @@
 from typing import Optional, List
 from ORM.session import session
 from controller.BaseController import BaseController
-from ORM.Model import Form, InstanceField, Instance, Phase
+from ORM.Model import Form, InstanceField, Instance, Phase, Section, Receiver, Field, User
 from exceptions import ORMExceptions as ORMExc
 from exceptions import InstanceException as InsExc
 
@@ -59,64 +59,111 @@ class InstanceController(BaseController):
         """
         val_body = self.get_val_dat(req_body, 'patch')
 
-        if "current_phase_id" in val_body:
-            self.transit_instance(val_body["current_phase_id"], rsc_ins)
-        if "instance_handle_request" in val_body and val_body["instance_handle_request"]["handle"]:
-            self.handle_instance(
-                rsc_ins,
-                val_body["instance_handle_request"]["handled_positions_id"]
-                if "handled_positions_id" in val_body["instance_handle_request"]
-                else None)
+        if "transit" in val_body:
+            self.transit_instance(val_body["transit"], rsc_ins)
+        if "handle" in val_body:
+            self.handle_instance(rsc_ins, val_body["handle"])
         self.session.commit()
         self.session.refresh(rsc_ins)
         return rsc_ins
 
-    def transit_instance(self, nxt_phs_id: int, ins: Instance):
+    def transit_instance(self, transit_data: dict, ins: Instance):
         """
         To transit instance:
 
-        * Current user must held designated position
+        * User must be director of current phase.
         * Instance must have state 'full resolved'
         * Requested next phase must be 1 of available next phases
+        * Director can specify:
+
+            * Who can be handler of each section of next phase.
+            Each user assigned for each section must be potential handler of that section.
+            Then this section can only handled by assigned user.
+
+            * If section is not assigned for a particular user:
+             All potential handlers can handle this section and hence can view this instance.
+             **Director of current phase must especially consider of this action.**
+
+
+        Transit instance include:
+
+        * Instance of current phase is committed.
+        * Change current phase of instance to requested next phase
+        * Assigned receivers to each section.
         """
         if ins.current_designated_position not in self.cur_usr.held_positions:
             raise InsExc.InstanceException("you're not director of this phase")
-        else:
-            ins_cur_state = ins.current_state
-            if ins_cur_state != "full resolved":
-                raise InsExc.CurrentPhaseNotResolved(ins_cur_state)
-            else:
-                req_next_phase = self.session.query(Phase).get(nxt_phs_id)
-                avai_next_phases = ins.current_phase.next_phases
-                if req_next_phase not in avai_next_phases:
-                    raise InsExc.NotAvailableNextPhases(nxt_phs_id, ins.id, avai_next_phases)
-                else:
-                    from ORM.Commiter import Committer
-                    committer = Committer(self.session, self.cur_usr, ins)
-                    committer.commit()
-                    ins.current_phase_id = req_next_phase.id
 
-    def handle_instance(self, ins: Instance, hdl_psts_id: Optional[List[int]]):
+        ins_cur_state = ins.current_state
+        if ins_cur_state != "full resolved":
+            raise InsExc.CurrentPhaseNotResolved(ins_cur_state)
+
+        req_next_phase = self.session.query(Phase).get(transit_data["current_phase_id"])
+        avai_next_phases = ins.current_phase.next_phases
+        if req_next_phase not in avai_next_phases:
+            raise InsExc.NotAvailableNextPhases(transit_data["current_phase_id"], ins.id, avai_next_phases)
+
+        requested_receivers = transit_data["receivers"]
+        avai_next_sections = req_next_phase.sections
+        if len(requested_receivers) >= len(avai_next_sections) :
+            raise ORMExc.ORMException("number of receivers must be less than or "
+                                      "equal to number of next available sections")
+
+        receivers = []
+        for r in requested_receivers:
+            section = self.session.query(Section).get(r["section_id"])
+            user = self.session.query(User).get(r["receiver_id"])
+            if section not in avai_next_sections:
+                raise ORMExc.ORMException(f"section {r.section_id} doesn't belong to phase {req_next_phase.id}")
+            if user not in section.potential_handlers:
+                raise ORMExc.ORMException(f"user {r['receiver_id']} is not a potential handler "
+                                          f"of section {r['section_id']}")
+            receivers.append(Receiver(instance_id=ins.id, section_id=r["section_id"], receiver_id=r["receiver_id"]))
+
+        from ORM.Commiter import Committer
+        committer = Committer(self.session, self.cur_usr, ins)
+        committer.commit()
+        ins.current_phase_id = req_next_phase.id
+        self.session.add_all(receivers)
+
+    def handle_instance(self, ins: Instance, sections_id: List[int]):
         """
-        To handle instance, current user can specify with which position(s) (s)he handles the instance.
-        If handle positions is not specified, current user will handle all available part with all available positions,
-        which (s)he holds.
+        Instance can be handled:
+
+        * If instance has current state: "pending" or "partial received" or "partial received & partial resolved"
+        * If user is receiver of instance at current phase, initialize receiver's section.
+        * If user is not a receiver but a potential handler, init potential handler's section
 
         Handle instance include:
-        1. initialize specified or all parts
-        2. exchange key from instance's creator and handler. Thus handler can create envelopes to commit.
+
+        *  Initialize receiver's or potential handler's sections.
+        *  Exchange key from instance's creator and handler. Thus handler can create envelopes to commit.
         """
+
+        # if user is a receiver, requested sections must be 1 of remaining section specified for this user
+        # if user is a potential handler, requested sections must be remaining sections and
+        # user must hold position assigned for this section.
         if ins.current_state not in ["pending", "partial received", "partial received & partial resolved"]:
             raise InsExc.CurrentlyNotRequireHandle
-        if self.cur_usr not in ins.current_potential_handlers:
-            raise ORMExc.ORMException("you're not potential handlers of this instance")
-        if hdl_psts_id:
-            self.check_requested_positions(hdl_psts_id, ins)
-            val_req_psts_id = hdl_psts_id
+
+        # for current user:
+        held_positions = self.cur_usr.held_positions
+        # current remaining specified sections id
+        crt_rmn_scf_sct_id = [crr.section_id for crr in ins.current_remaining_receivers if crr.receiver_id == self.cur_usr.id]
+        # current remaining sections id
+        crt_rmn_sct_id = [crs.id for crs in ins.current_remaining_sections if crs.position in held_positions]
+        if sections_id:
+            for rsid in sections_id:
+                if rsid not in crt_rmn_scf_sct_id and rsid not in crt_rmn_sct_id:
+                    raise ORMExc.ORMException(f"section {rsid} is not specified or appointed for you")
+            self.init_sections(ins, sections_id)
         else:
-            val_req_psts_id = [pst.id for pst in ins.current_remaining_positions if pst in self.cur_usr.held_positions]
-        for p_id in val_req_psts_id:
-            self.init_part(ins, p_id)
+            if self.cur_usr in ins.current_remaining_receivers_users:
+                self.init_sections(ins, crt_rmn_scf_sct_id)
+            elif self.cur_usr in ins.current_potential_handlers:
+                self.init_sections(ins, crt_rmn_sct_id)
+            else:
+                raise ORMExc.ORMException("you're not a potential handler or receiver of this instance")
 
     def check_requested_positions(self, req_psts_id: List[int], ins: Instance):
         """
@@ -136,6 +183,15 @@ class InstanceController(BaseController):
     def init_part(self, ins: Instance, pst_id: int):
         flds_of_prt = ins.fields_of_part(pst_id)
         for f in flds_of_prt:
+            ins.instances_fields.append(InstanceField(
+                instance_id=ins.id,
+                field_id=f.id,
+                creator_id=self.cur_usr.id
+            ))
+
+    def init_sections(self, ins: Instance, sections_id: List[int]):
+        init_field = self.session.query(Field).filter(Field.section_id.in_(sections_id)).all()
+        for f in init_field:
             ins.instances_fields.append(InstanceField(
                 instance_id=ins.id,
                 field_id=f.id,

@@ -457,14 +457,9 @@ class InstanceTransit(BaseModel):
     receivers: List['InstanceReceivers']
 
 
-class InstanceHandleRequest(BaseModel):
-    handle: bool
-    handled_positions_id: Optional[List[int]]
-
-
 class InstancePatchRequest(BaseModel):
     transit: Optional['InstanceTransit']
-    instance_handle_request: Optional['InstanceHandleRequest']
+    handle: Optional[List[int]]  # List of section id
 
     class Config:
         orm_mode = True
@@ -555,7 +550,7 @@ class ReceiverResponse(BaseModel):
     receiver_id: int
 
     class Config:
-        orm_mod: True
+        orm_mode = True
 
 
 class CommitPostRequest(BaseModel):
