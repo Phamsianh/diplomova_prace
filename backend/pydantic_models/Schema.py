@@ -447,13 +447,23 @@ class InstancePostRequest(BaseModel):
         orm_mode = True
 
 
+class InstanceReceivers(BaseModel):
+    section_id: int
+    receiver_id: int
+
+
+class InstanceTransit(BaseModel):
+    current_phase_id: int
+    receivers: List['InstanceReceivers']
+
+
 class InstanceHandleRequest(BaseModel):
     handle: bool
     handled_positions_id: Optional[List[int]]
 
 
 class InstancePatchRequest(BaseModel):
-    current_phase_id: Optional[int]
+    transit: Optional['InstanceTransit']
     instance_handle_request: Optional['InstanceHandleRequest']
 
     class Config:
@@ -515,6 +525,37 @@ class InstanceFieldResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class ReceiverPostRequest(BaseModel):
+    instance_id: int
+    section_id: int
+    receiver_id: int
+
+    class Config:
+        orm_mode: True
+
+
+class ReceiverPatchRequest(BaseModel):
+    receiver_id: int
+
+    class Config:
+        orm_mode: True
+
+
+class ReceiverDeleteRequest(BaseModel):
+    pass
+
+
+class ReceiverResponse(BaseModel):
+    id: int
+    created_at: datetime
+    instance_id: int
+    section_id: int
+    receiver_id: int
+
+    class Config:
+        orm_mod: True
 
 
 class CommitPostRequest(BaseModel):

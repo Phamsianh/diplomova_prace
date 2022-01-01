@@ -33,6 +33,7 @@ class User(Base):
     users_positions = relationship("UserPosition", back_populates="user", foreign_keys="UserPosition.user_id")
     created_instances = relationship("Instance", back_populates="creator")
     instances_fields = relationship("InstanceField", back_populates="creator")
+    receivers = relationship("Receiver", back_populates="user")
 
     def __repr__(self):
         return f'''
@@ -268,6 +269,7 @@ class Section(Base):
 
     # one-to-many relationship(s)
     fields = relationship("Field", cascade="all, delete", back_populates="section")
+    receivers = relationship("Receiver", back_populates="section")
 
     def __repr__(self):
         return f'''
@@ -391,6 +393,7 @@ class Instance(Base):
 
     # one-to-many relationship(s)
     instances_fields = relationship("InstanceField", cascade="all,delete", back_populates="instance")
+    receivers = relationship("Receiver", back_populates="instance")
     commits = relationship("Commit", back_populates="instance")
     head = relationship("Head", back_populates="instance", uselist=False)
 
@@ -687,6 +690,22 @@ value: {self.value}
 creator_id: {self.creator_id}
 )
 '''
+
+
+class Receiver(Base):
+    __tablename__ = "receiver"
+
+    id = Column(BigInteger, primary_key=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    instance_id = Column(BigInteger, ForeignKey("instances.id"))
+    section_id = Column(BigInteger, ForeignKey("sections.id"))
+    receiver_id = Column(BigInteger, ForeignKey("users.id"))
+
+    # relationship(s) many-to-one
+    instance = relationship("Instance", back_populates="receivers")
+    section = relationship("Section", back_populates="receivers")
+    user = relationship("User", back_populates="receivers")
 
 
 class Group(Base):
