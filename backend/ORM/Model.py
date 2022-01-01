@@ -302,6 +302,11 @@ order: {self.order}
     def obsolete(self) -> bool:
         return self.form.obsolete
 
+    @property
+    def potential_handlers(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.users_positions). \
+            filter(UserPosition.position_id == self.position_id).all()
+
 
 class Field(Base):
     __tablename__ = "fields"
