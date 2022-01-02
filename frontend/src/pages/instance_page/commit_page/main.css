@@ -1,0 +1,48 @@
+div.commits{
+    padding: 20px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+div.read-commits {
+    margin: 60px 0px;
+}
+
+table {
+    width: 700px;
+}
+
+table, tr, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+td.created-at, th.created-at{
+    width: 20%;
+    /* overflow: scroll; */
+}
+td.phase-id, th.phase-id{
+    width: 10%;
+}
+td.prev-hash, th.prev-hash{
+    width: 25%;
+}
+td.hash-commit, th.hash-commit{
+    width: 25%;
+}
+td.view-commit, th.view-commit{
+    width: 20%;
+}
+td {
+    text-align: center;
+}
+
+tr td.view-commit a {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 3px;
+}

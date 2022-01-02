@@ -1,0 +1,85 @@
+nav {
+    width: 20%;
+    height: 100vh;
+    position: relative;
+}
+
+nav div.nav-bar a, nav div.nav-bar button {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 15px;
+    margin: 0;
+    font-family: inherit;
+    font-size: medium;
+}
+
+div.nav-bar {
+    width: 20%;
+    height: 100vh;
+    position: fixed;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: 100;
+    background-color: #0a3d62;
+}
+
+div.dropdown {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+
+    background-color: rgb(6 35 56);
+    border-bottom: solid 1px #1b1b2f;
+    border-top: solid 1px #1f4068;
+}
+
+
+.nav-bar .submenu {
+    width: 100%;
+    background: rgb(6 35 56);
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .5s ease-out;
+}
+
+.nav-bar .submenu a{
+    padding-left: 35px;
+    position: relative;
+    background: rgb(6 35 56);
+}
+
+.nav-bar .submenu a::before{
+    content:'';
+    display:block;
+    position: absolute;
+    top:0;
+    left:0;
+    height: 100%;
+    width: 5px;
+    background: #e43f5a;
+    opacity: 0;
+    transition: all .5s;
+}
+
+.nav-bar .submenu a:hover{
+    padding-left: 40px;
+}
+
+.nav-bar .submenu a:hover::before{
+    opacity: 1;
+}
+
+.show-submenu {
+    max-height: 20rem !important;
+}
+
+a > span, button > span {
+    padding-right: 10px;
+}

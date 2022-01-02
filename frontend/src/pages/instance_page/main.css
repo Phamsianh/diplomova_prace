@@ -1,0 +1,45 @@
+div.instance {
+    width: 100%;
+    height: auto;
+    padding: 20px 0px;
+
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+
+    background-color: white;
+}
+
+div.instance div {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+div.read-instance, div.update-instance {
+    width: 90%;
+    margin: 20px 0px;
+    box-shadow: none !important;
+}
+
+div.content {
+    padding: 20px;
+}
+
+div.read-content, div.update-content {
+    position: relative;
+    box-shadow: none !important;
+}
+div.value, div.resolved {
+    box-shadow: none !important;
+}
+
+div.value {
+    position: relative;
+}
+.resolved {
+    position: absolute;
+    top: 50%;
+    right: 0px;
+    transform: translateY(-50%);
+}

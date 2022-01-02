@@ -1,0 +1,60 @@
+div.form {
+    width: 100%;
+    height: auto;
+    padding: 20px 0px;
+
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+
+    background-color: white;
+}
+
+div.form div {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+
+div.create-form, div.read-form, div.update-form,  div.phases {
+    width: 95%;
+    padding: 20px;
+    box-shadow: none !important;
+
+}
+
+div.phase{
+    margin: 40px 0px;
+}
+
+div.sections, div.transitions {
+    padding: 30px;
+    box-shadow: none !important;
+}
+div.section, div.transition  {
+    margin: 20px 0px;
+}
+
+div.fields {
+    padding: 20px;
+    box-shadow: none !important;
+}
+
+div.field {
+    margin: 10px 0px;
+}
+div.read-form, div.create-form, div.update-form,
+div.read-phase, div.create-phase, div.update-phase,
+div.read-transition, div.create-transition, div.update-transition,
+div.read-section, div.create-section, div.update-section,
+div.read-field, div.create-field, div.update-field
+{
+    padding: 40px 20px 20px 20px;
+}
+
+
+
+div.form, div.phase, div.transition, div.section, div.field {
+    position: relative
+}

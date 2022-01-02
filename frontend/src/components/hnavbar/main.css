@@ -1,0 +1,69 @@
+div.hnavbar {
+    width: 100%;
+    height: 52px;
+    display: flex;
+    justify-content: space-between;
+    background-color: rgb(6 35 56);
+}
+
+div.left {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 20px;
+
+    color: #ffff;
+}
+
+.hnavbar .dropdown {
+    z-index: 100;
+}
+
+.hnavbar button, .hnavbar a {
+    width: auto;
+    margin: 0px;
+    padding: 0px 20px;
+    background-color: rgb(6 35 56);
+}
+
+.hnavbar .submenu {
+    width: 100%;
+    background: rgb(6 35 56);
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .5s ease-out;
+}
+
+.hnavbar .submenu a{
+    padding-left: 35px;
+    position: relative;
+    background: rgb(6 35 56);
+    transition: background .5s;
+}
+
+/* .hnavbar .submenu a::before{
+    content:'';
+    display:block;
+    position: absolute;
+    top:0;
+    left:0;
+    height: 100%;
+    width: 5px;
+    background: #e43f5a;
+    opacity: 0;
+    transition: all .5s;
+} */
+
+.hnavbar .submenu a:hover{
+    background: rgb(10 61 98);
+    border-radius: 3px;
+}
+
+/* .hnavbar .submenu a:hover::before{
+    opacity: 1;
+} */
+
+.show-submenu {
+    max-height: 20rem !important;
+}
+
