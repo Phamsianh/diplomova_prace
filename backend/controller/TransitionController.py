@@ -8,10 +8,11 @@ class TransitionController(FormComponentController):
         """
         To create transition between 2 phases:
 
-        * These 2 phases must not be the same
-        * Current user must own these 2 phases,
-        * These 2 phases must belong to 1 form
-        * Form must not be public or obsolete.
+        * These 2 phases must not be the same.
+        * Current user must own these 2 phases.
+        * These 2 phases must belong to 1 form.
+        * Form must not be obsolete.
+        * No transition existed between these 2 phases. Only 1 transition can exist between these 2 phases.
         """
         val_body = self.get_val_dat(req_body, 'post')
 
@@ -32,10 +33,14 @@ class TransitionController(FormComponentController):
 
         if from_phase.form != to_phase.form:
             raise ORMExc.ORMException("from phase and to phase must belong to one form")
-        # if from_phase.form.public:
-        #     raise ORMExc.ORMException("Form is public")
-        # if from_phase.form.obsolete:
-        #     raise ORMExc.ORMException('Form is obsolete')
+
+        if from_phase.form.obsolete:
+            raise ORMExc.ORMException('Form is obsolete')
+
+        existed_transition = self.session.query(Model.Transition).\
+            filter(Model.Transition.from_phase_id == from_phase.id, Model.Transition.to_phase_id == to_phase.id).first()
+        if existed_transition:
+            raise ORMExc.ORMException("transition already existed")
 
         return super().post_rsc_ins(val_body)
 
@@ -46,7 +51,7 @@ class TransitionController(FormComponentController):
         * These 2 phases must not be the same
         * Current user must own these 2 phase,
         * These 2 phases must belong to 1 form
-        * Form must not be public or obsolete.
+        * Form must not be obsolete.
         """
 
         val_body = self.get_val_dat(req_body, 'patch')
@@ -67,10 +72,9 @@ class TransitionController(FormComponentController):
 
         if from_phase.form != to_phase.form:
             raise ORMExc.ORMException("from phase and to phase must belong to one form")
-        # if from_phase.form.public:
-        #     raise ORMExc.ORMException("Form is public")
-        # if from_phase.form.obsolete:
-        #     raise ORMExc.ORMException('Form is obsolete')
+
+        if from_phase.form.obsolete:
+            raise ORMExc.ORMException('Form is obsolete')
 
         return super().patch_rsc_ins(rsc_ins, val_body)
 
