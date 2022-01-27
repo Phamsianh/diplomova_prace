@@ -89,24 +89,6 @@ student_of_CIT = Position(name="Student of 2-CIT-C", role=role_student, group=gr
 student_of_WA = Position(name="Student of 2-WA-C", role=role_student, group=group_2_WA_C)
 exchange_student_of_CIT = Position(name="Exchange Student of 2-CIT-C", role=role_student, group=group_2_CIT_C)
 
-# group_UoD.positions = [admin_of_UoD, rector_of_UoD]
-# group_FMT.positions = [dean_of_FMT, vice_dean_of_FMT]
-# group_FML.positions = [dean_of_FMl]
-# group_FMHS.positions = [dean_of_FMHS]
-# group_DoICO.positions = [head_of_DoICO]
-# group_DoWA.positions = [head_of_DoWA]
-# group_2_CIT_C.positions = [student_of_CIT, exchange_student_of_CIT]
-# group_2_WA_C.positions = [student_of_WA]
-#
-# role_system_admin.positions = [admin_of_UoD]
-# role_rector.positions = [rector_of_UoD]
-# role_dean.positions = [dean_of_FMT, dean_of_FMl, dean_of_FMHS]
-# role_vice_dean.positions = [vice_dean_of_FMT]
-# role_head_of_department.positions = [head_of_DoICO, head_of_DoWA]
-# role_leading_teacher.positions = [leading_teacher]
-# role_consultant.positions = [consultant]
-# role_student.positions = [student_of_CIT, student_of_WA]
-# role_exchange_student.positions = [exchange_student_of_CIT]
 
 phamsianh.created_groups = [
     group_UoD,
@@ -146,44 +128,24 @@ phamsianh.created_positions = [
 ]
 
 phamsianh_student_CIT = UserPosition(user=phamsianh, position=student_of_CIT)
-# phamsianh_student_CIT.user = phamsianh
-# phamsianh_student_CIT.position = student_of_CIT
 
 phamsianh_exchange_student_CIT = UserPosition(user=phamsianh, position=exchange_student_of_CIT)
-# phamsianh_exchange_student_CIT.user = phamsianh
-# phamsianh_exchange_student_CIT.position = exchange_student_of_CIT
 
 phamsianh_admin_UoD = UserPosition(user=phamsianh, position=admin_of_UoD)
-# phamsianh_admin_UoD.user = phamsianh
-# phamsianh_admin_UoD.position = admin_of_UoD
 
 zuzanakrocova_rector_admin_UoD = UserPosition(user=zuzanakrocova, position=rector_of_UoD)
-# zuzanakrocova_rector_admin_UoD.user = zuzanakrocova
-# zuzanakrocova_rector_admin_UoD.position = rector_of_UoD
 
 vlastimilneumann_dean_gr_admin_FMT = UserPosition(user=vlastimilneumann, position=dean_of_FMT)
-# vlastimilneumann_dean_gr_admin_FMT.user = vlastimilneumann
-# vlastimilneumann_dean_gr_admin_FMT.position = dean_of_FMT
 
 janfarlik_vice_dean_FMT = UserPosition(user=janfarlik, position=vice_dean_of_FMT)
-# janfarlik_vice_dean_FMT.user = janfarlik
-# janfarlik_vice_dean_FMT.position = vice_dean_of_FMT
 
 petrfrantis_head_of_DoICO = UserPosition(user=petrfrantis, position=head_of_DoICO)
-# petrfrantis_head_of_DoICO.user = petrfrantis
-# petrfrantis_head_of_DoICO.position = head_of_DoICO
 
 alexandrstefek_leading_teacher = UserPosition(user=alexandrstefek, position=leading_teacher)
-# alexandrstefek_leading_teacher.user = alexandrstefek
-# alexandrstefek_leading_teacher.position = leading_teacher
 
 alexandrstefek_consultant = UserPosition(user=alexandrstefek, position=consultant)
-# alexandrstefek_consultant.user = alexandrstefek
-# alexandrstefek_consultant.position = consultant
 
 petrfrantis_consultant = UserPosition(user=petrfrantis, position=consultant)
-# petrfrantis_consultant.user = petrfrantis
-# petrfrantis_consultant.position = consultant
 
 phamsianh.created_users_positions = [
     phamsianh_student_CIT,

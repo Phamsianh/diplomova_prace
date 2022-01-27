@@ -33,6 +33,7 @@ class User(Base):
     users_positions = relationship("UserPosition", back_populates="user", foreign_keys="UserPosition.user_id")
     created_instances = relationship("Instance", back_populates="creator")
     instances_fields = relationship("InstanceField", back_populates="creator")
+    director = relationship("Director", back_populates="user")
     receivers = relationship("Receiver", back_populates="user")
 
     def __repr__(self):
@@ -398,6 +399,7 @@ class Instance(Base):
 
     # one-to-many relationship(s)
     instances_fields = relationship("InstanceField", cascade="all,delete", back_populates="instance")
+    director = relationship("Director", back_populates="instance")
     receivers = relationship("Receiver", back_populates="instance")
     commits = relationship("Commit", back_populates="instance")
     head = relationship("Head", back_populates="instance", uselist=False)
@@ -469,8 +471,8 @@ current_state: {self.current_state}
 
     @property
     def current_receivers_users(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.receivers).join(Receiver.section).join(Section.phase).\
-            join(Phase.instances).filter(Instance.id == self.id).all()
+        return inspect(self).session.query(User).join(User.receivers).join(Receiver.section).\
+            filter(Receiver.instance_id == self.id, Section.phase_id == self.current_phase_id).all()
 
     @property
     def current_remaining_receivers_users(self) -> Optional[List['User']]:
@@ -661,9 +663,11 @@ current_state: {self.current_state}
 
     @property
     def current_director(self) -> Optional[User]:
-        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
-            join(Position.phases).join(Phase.instances).join(Instance.instances_fields).\
-            filter(InstanceField.instance_id == self.id, InstanceField.creator_id == User.id).first()
+        # return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
+        #     join(Position.phases).join(Phase.instances).join(Instance.instances_fields).\
+        #     filter(InstanceField.instance_id == self.id, InstanceField.creator_id == User.id).first()
+        return inspect(self).session.query(User).join(User.director).\
+            filter(Director.instance_id == self.id, Director.phase_id == Instance.current_phase_id).first()
 
     @property
     def current_potential_director(self) -> Optional[List['User']]:
@@ -673,8 +677,9 @@ current_state: {self.current_state}
 
     @property
     def curr_handlers(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
-            join(Field.section).join(Section.phase).join(Phase.instances).filter(Instance.id == self.id).all()
+        return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field).\
+            join(Field.section).filter(InstanceField.instance_id == self.id,
+                                       Section.phase_id == self.current_phase_id).all()
 
     def section_handler(self, section_id: int) -> Optional['User']:
         return inspect(self).session.query(User).join(User.instances_fields).join(InstanceField.field). \
@@ -696,6 +701,11 @@ current_state: {self.current_state}
             filter(Field.section_id == Section.id, InstanceField.instance_id == self.id)
         return inspect(self).session.query(Section). \
             filter(Section.phase_id == self.current_phase_id, ~current_receiver.exists(), ~handled_fields.exists()).all()
+
+    @property
+    def current_instances_fields(self) -> Optional[List['InstanceField']]:
+        return inspect(self).session.query(InstanceField).join(InstanceField.field).join(Field.section).\
+            filter(InstanceField.instance_id == self.id, Section.phase_id == self.current_phase_id).all()
 
     @property
     def latest_envelopes(self) -> Optional[List['Envelope']]:
@@ -743,19 +753,36 @@ creator_id: {self.creator_id}
 
 
 class Receiver(Base):
-    __tablename__ = "receiver"
+    __tablename__ = "receivers"
 
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     instance_id = Column(BigInteger, ForeignKey("instances.id"))
     section_id = Column(BigInteger, ForeignKey("sections.id"))
-    receiver_id = Column(BigInteger, ForeignKey("users.id"))
+    user_id = Column(BigInteger, ForeignKey("users.id"))
+    received = Column(Boolean, server_default="false")
 
     # relationship(s) many-to-one
     instance = relationship("Instance", back_populates="receivers")
     section = relationship("Section", back_populates="receivers")
     user = relationship("User", back_populates="receivers")
+
+
+class Director(Base):
+    __tablename__ = "directors"
+
+    id = Column(BigInteger, primary_key=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    instance_id = Column(BigInteger, ForeignKey("instances.id"))
+    phase_id = Column(BigInteger, ForeignKey("phases.id"))
+    user_id = Column(BigInteger, ForeignKey("users.id"))
+
+    # relationship(s) many-to-one
+    instance = relationship("Instance", back_populates="director")
+    phase = relationship("Phase", back_populates="director")
+    user = relationship("User", back_populates="director")
 
 
 class Group(Base):
@@ -864,6 +891,7 @@ class Phase(Base):
     sections = relationship("Section", back_populates="phase")
     from_transitions = relationship("Transition", cascade="all, delete", back_populates="from_phase", foreign_keys="Transition.from_phase_id")
     to_transitions = relationship("Transition", cascade="all, delete", back_populates="to_phase", foreign_keys="Transition.to_phase_id")
+    director = relationship("Director", back_populates="phase")
 
     def __repr__(self):
         return f'''
@@ -902,9 +930,9 @@ phase_type: {self.phase_type}
         return inspect(self).session.query(Field).join(Field.section).filter(Section.phase_id == self.id).all()
 
     @property
-    def available_users(self) -> Optional[List['User']]:
-        return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position). \
-            join(Position.sections).filter(Section.phase_id == self.id).all()
+    def potential_directors(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.users_positions).\
+            filter(UserPosition.position_id == self.position_id).all()
 
     @property
     def public(self) -> bool:
@@ -1093,7 +1121,7 @@ class Commit(Base):
 
     hash_commit = Column(String, primary_key=True)
     prev_hash_commit = Column(String, ForeignKey('commits.hash_commit'))
-    hash_tree = Column(String, ForeignKey('trees.hash_tree'), unique=True)
+    hash_tree = Column(String, ForeignKey('trees.hash_tree'))
     creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
     instance_id = Column(BigInteger, ForeignKey("instances.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())

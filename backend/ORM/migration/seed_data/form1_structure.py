@@ -114,30 +114,55 @@ form1_structure = {
         ],
         "transitions": [
             {
-                "name": "transition 1",
+                "name": "transition 1 to 2",
                 "from_phase": 1,
                 "to_phase": 2
             },
             {
-                "name": "transition 2",
+                "name": "transition 2 to 1",
+                "from_phase": 2,
+                "to_phase": 1
+            },
+            {
+                "name": "transition 1 to 3",
                 "from_phase": 1,
                 "to_phase": 3
             },
             {
-                "name": "transition 3",
+                "name": "transition 3 to 1",
+                "from_phase": 3,
+                "to_phase": 1
+            },
+            {
+                "name": "transition 2 to 4",
                 "from_phase": 2,
                 "to_phase": 4
             },
             {
-                "name": "transition 4",
+                "name": "transition 4 to 2",
+                "from_phase": 4,
+                "to_phase": 2
+            },
+            {
+                "name": "transition 3 to 5",
                 "from_phase": 3,
                 "to_phase": 5
             },
             {
-                "name": "transition 5",
+                "name": "transition 5 to 3",
+                "from_phase": 5,
+                "to_phase": 3
+            },
+            {
+                "name": "transition 4 to 5",
                 "from_phase": 4,
                 "to_phase": 5
-            }
+            },
+            {
+                "name": "transition 5 to 4",
+                "from_phase": 5,
+                "to_phase": 4
+            },
         ]
     }
 }

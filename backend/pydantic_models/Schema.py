@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import date, datetime
 
 
@@ -454,12 +454,14 @@ class InstanceReceivers(BaseModel):
 
 class InstanceTransit(BaseModel):
     current_phase_id: int
-    receivers: List['InstanceReceivers']
+    # receivers: List['InstanceReceivers']
+    receivers: Optional[Dict[int, int]]  # { section_id : user_id, }
+    director_id: Optional[int]
 
 
 class InstancePatchRequest(BaseModel):
     transit: Optional['InstanceTransit']
-    handle: Optional[List[int]]  # List of section id
+    handle: Optional[bool]  # Optional[List[int]]  # List of section id
 
     class Config:
         orm_mode = True
@@ -547,7 +549,19 @@ class ReceiverResponse(BaseModel):
     created_at: datetime
     instance_id: int
     section_id: int
-    receiver_id: int
+    user_id: int
+    received: bool
+
+    class Config:
+        orm_mode = True
+
+
+class DirectorResponse(BaseModel):
+    id: int
+    created_at: datetime
+    instance_id: int
+    phase_id: int
+    user_id: int
 
     class Config:
         orm_mode = True

@@ -1,7 +1,7 @@
 from typing import Optional, List
 from ORM.session import session
 from controller.BaseController import BaseController
-from ORM.Model import Form, InstanceField, Instance, Phase, Section, Receiver, Field, User
+from ORM.Model import Form, InstanceField, Instance, Phase, Section, Receiver, Field, User, Director
 from exceptions import ORMExceptions as ORMExc
 from exceptions import InstanceException as InsExc
 
@@ -14,6 +14,7 @@ class InstanceController(BaseController):
 
         * Set the current phase of this instance to begin phase of the form if user have assigned position.
         * Create all begin fields with value is null.
+        * Set director of current phase to current user
         """
         val_body = self.get_val_dat(req_body, 'post')
 
@@ -40,8 +41,13 @@ class InstanceController(BaseController):
                 creator_id=self.cur_usr.id
             ))
         new_ins.creator_id = self.cur_usr.id
+
+        # set director of current phase to current user
+        director = Director(instance=new_ins, phase=begin_phase, user=self.cur_usr)
+
         try:
             self.session.add(new_ins)
+            self.session.add(director)
             self.session.flush()
         except:
             raise
@@ -61,8 +67,8 @@ class InstanceController(BaseController):
 
         if "transit" in val_body:
             self.transit_instance(val_body["transit"], rsc_ins)
-        if "handle" in val_body:
-            self.handle_instance(rsc_ins, val_body["handle"])
+        if "handle" in val_body and val_body["handle"]:
+            self.handle_instance(rsc_ins)
         self.session.commit()
         self.session.refresh(rsc_ins)
         return rsc_ins
@@ -72,18 +78,16 @@ class InstanceController(BaseController):
         To transit instance:
 
         * User must be director of current phase.
-        * Instance must have state 'full resolved'
         * Requested next phase must be 1 of available next phases
-        * Director can specify:
+        * Director must specify:
 
-            * Who can be handler of each section of next phase.
+            Who is director for next phase.
+            Director of next phase must be one of receivers.
+            Director of next phase must be a potential director of next phase.
+
+            Who is receiver for each section of next phase.
             Each user assigned for each section must be potential handler of that section.
             Then this section can only handled by assigned user.
-
-            * If section is not assigned for a particular user:
-             All potential handlers can handle this section and hence can view this instance.
-             **Director of current phase must especially consider of this action.**
-
 
         Transit instance include:
 
@@ -91,79 +95,93 @@ class InstanceController(BaseController):
         * Change current phase of instance to requested next phase
         * Assigned receivers to each section.
         """
-        if ins.current_designated_position not in self.cur_usr.held_positions:
+
+        # check if current user is director of current phase
+        if ins.current_director != self.cur_usr:
             raise InsExc.InstanceException("you're not director of this phase")
 
-        ins_cur_state = ins.current_state
-        if ins_cur_state != "full resolved":
-            raise InsExc.CurrentPhaseNotResolved(ins_cur_state)
-
+        # check if requested next phase is 1 of available phases
         req_next_phase = self.session.query(Phase).get(transit_data["current_phase_id"])
         avai_next_phases = ins.current_phase.next_phases
         if req_next_phase not in avai_next_phases:
             raise InsExc.NotAvailableNextPhases(transit_data["current_phase_id"], ins.id, avai_next_phases)
 
-        requested_receivers = transit_data["receivers"]
-        avai_next_sections = req_next_phase.sections
-        if len(requested_receivers) >= len(avai_next_sections) :
-            raise ORMExc.ORMException("number of receivers must be less than or "
-                                      "equal to number of next available sections")
+        # check if next phase has been already received
+        next_director = session.query(Director).filter(Director.instance_id == ins.id,
+                                                       Director.phase_id == req_next_phase.id).first()
+        if not next_director:
+            # director_id and receivers must be defined:
+            if "director_id" not in transit_data or "receivers" not in transit_data:
+                raise ORMExc.ORMException("next phase has not been received. "
+                                          "director_id and receivers_id must be specified")
+            # check if director is one of receivers
+            new_next_director_id = transit_data["director_id"]
+            # requested_receivers is a dictionary with key is section_id and with value is user_id
+            # e.g. requested_receivers = { section_id: user_id }
+            requested_receivers = transit_data["receivers"]
+            if new_next_director_id not in requested_receivers.values():
+                raise ORMExc.ORMException("director of next phase must be one of the receivers")
 
-        receivers = []
-        for r in requested_receivers:
-            section = self.session.query(Section).get(r["section_id"])
-            user = self.session.query(User).get(r["receiver_id"])
-            if section not in avai_next_sections:
-                raise ORMExc.ORMException(f"section {r.section_id} doesn't belong to phase {req_next_phase.id}")
-            if user not in section.potential_handlers:
-                raise ORMExc.ORMException(f"user {r['receiver_id']} is not a potential handler "
-                                          f"of section {r['section_id']}")
-            receivers.append(Receiver(instance_id=ins.id, section_id=r["section_id"], receiver_id=r["receiver_id"]))
+            # check if director is one of potential directors
+            new_next_director_user = self.session.query(User).get(new_next_director_id)
+            if new_next_director_user not in req_next_phase.potential_directors:
+                raise ORMExc.ORMException(f"director {new_next_director_id} is not a potential directors")
+            new_next_director = Director(instance_id=ins.id, phase_id=req_next_phase.id, user_id=new_next_director_id)
+
+            # number of receivers must equal to number of sections in next phase
+            avai_next_sections = req_next_phase.sections
+            if len(requested_receivers) != len(avai_next_sections):
+                raise ORMExc.ORMException("number of receivers must be equal to number of next available sections")
+
+            #  create Receiver instance for each section
+            receivers = []
+            for sct in avai_next_sections:
+                # check if each section is specified in requested_receivers
+                if sct.id not in requested_receivers:
+                    raise ORMExc.ORMException(f"section {sct.id} must be specified")
+                # check if specified user is a potential handler for each section
+                receiver_id = requested_receivers[sct.id]
+                receiver = self.session.query(User).get(receiver_id)
+                if receiver not in sct.potential_handlers:
+                    raise ORMExc.ORMException(f"user {receiver_id} is not a potential handler of section {sct.id}")
+                receivers.append(Receiver(instance_id=ins.id, section_id=sct.id, user_id=receiver_id))
+
+            self.session.add(new_next_director)
+            self.session.add_all(receivers)
 
         from ORM.Commiter import Committer
         committer = Committer(self.session, self.cur_usr, ins)
         committer.commit()
         ins.current_phase_id = req_next_phase.id
-        self.session.add_all(receivers)
 
-    def handle_instance(self, ins: Instance, sections_id: List[int]):
+    def handle_instance(self, ins: Instance):
         """
         Instance can be handled:
 
-        * If instance has current state: "pending" or "partial received" or "partial received & partial resolved"
-        * If user is receiver of instance at current phase, initialize receiver's section.
-        * If user is not a receiver but a potential handler, init potential handler's section
+        * Only if user is receiver of instance at current phase.
+        Then all receiver's sections are initialized.
 
         Handle instance include:
 
-        *  Initialize receiver's or potential handler's sections.
+        *  Initialize all receiver's fields.
         *  Exchange key from instance's creator and handler. Thus handler can create envelopes to commit.
         """
+        query = self.session.query(Field, Receiver).join(Field.section).join(Section.receivers).\
+            filter(Receiver.instance_id == ins.id,
+                   Section.phase_id == ins.current_phase_id,
+                   Receiver.user_id == self.cur_usr.id,
+                   Receiver.received == False).all()
+        if not query:
+            raise ORMExc.ORMException("you can not receive this instance")
+        avai_fields, receiver = list(zip(*query))
+        receivers = list(set(receiver))
 
-        # if user is a receiver, requested sections must be 1 of remaining section specified for this user
-        # if user is a potential handler, requested sections must be remaining sections and
-        # user must hold position assigned for this section.
-        if ins.current_state not in ["pending", "partial received", "partial received & partial resolved"]:
-            raise InsExc.CurrentlyNotRequireHandle
-
-        # for current user:
-        held_positions = self.cur_usr.held_positions
-        # current remaining specified sections id
-        crt_rmn_scf_sct_id = [crr.section_id for crr in ins.current_remaining_receivers if crr.receiver_id == self.cur_usr.id]
-        # current remaining sections id
-        crt_rmn_sct_id = [crs.id for crs in ins.current_remaining_sections if crs.position in held_positions]
-        if sections_id:
-            for rsid in sections_id:
-                if rsid not in crt_rmn_scf_sct_id and rsid not in crt_rmn_sct_id:
-                    raise ORMExc.ORMException(f"section {rsid} is not specified or appointed for you")
-            self.init_sections(ins, sections_id)
-        else:
-            if self.cur_usr in ins.current_remaining_receivers_users:
-                self.init_sections(ins, crt_rmn_scf_sct_id)
-            elif self.cur_usr in ins.current_potential_handlers:
-                self.init_sections(ins, crt_rmn_sct_id)
-            else:
-                raise ORMExc.ORMException("you're not a potential handler or receiver of this instance")
+        instances_fields = []
+        for f in avai_fields:
+            instances_fields.append(InstanceField(instance=ins, field=f, creator=self.cur_usr))
+        for r in receivers:
+            r.received = True
+        self.session.add_all(instances_fields)
 
     def check_requested_positions(self, req_psts_id: List[int], ins: Instance):
         """

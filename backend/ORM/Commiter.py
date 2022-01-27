@@ -27,9 +27,7 @@ class Committer:
             str(instance_field.id) +
             envelope.encrypted_content +
             envelope.digital_signature +
-            str(envelope.field_id) +
-            str(envelope.creator_id) +
-            str(envelope.resolved)
+            str(envelope.field_id)
         )
         existed_envelope = self.session.query(Envelope).get(hash_envelope)
         if existed_envelope:
@@ -51,8 +49,7 @@ class Committer:
         )
         existed_tree = self.session.query(Tree).get(hash_tree)
         if existed_tree:
-            self.session.rollback()
-            raise Exception('tree already exist. nothing change to commit')
+            return existed_tree
         else:
             tree.hash_tree = hash_tree
             self.session.add(tree)
@@ -118,11 +115,13 @@ def somehashfunction(txt):
 
 
 def sencrypt(txt: str, skey):
-    return 'encryptedwith_' + skey + txt
+    text = txt if txt is not None else ''
+    return 'encryptedwith_' + skey + text
 
 
-def sign(txt):
-    return 'signed_' + txt
+def sign(txt: str):
+    text = txt if txt is not None else ''
+    return 'signed_' + text
 
 
 def sdecrypt(txt: str, skey):
