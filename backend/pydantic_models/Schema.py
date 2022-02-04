@@ -350,8 +350,8 @@ class TransitionResponse(BaseModel):
 
 class SectionPostRequest(BaseModel):
     name: str
-    phase_id: int       # TODO: may be optional. required when public form
-    position_id: int    #  may be optional. required when public form
+    phase_id: int
+    position_id: int
     order: Optional[int]
 
     class Config:
@@ -401,7 +401,6 @@ class FieldPostRequest(BaseModel):
 
 class FieldPatchRequest(BaseModel):
     name: Optional[str]
-    section_id: Optional[int]
     order: Optional[int]
 
     class Config:

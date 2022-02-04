@@ -44,10 +44,14 @@ class InstanceController(BaseController):
 
         # set director of current phase to current user
         director = Director(instance=new_ins, phase=begin_phase, user=self.cur_usr)
+        receivers = []
+        for s in begin_phase.sections:
+            receivers.append(Receiver(instance=new_ins, section=s, user=self.cur_usr, received=True))
 
         try:
             self.session.add(new_ins)
             self.session.add(director)
+            self.session.add_all(receivers)
             self.session.flush()
         except:
             raise
@@ -59,9 +63,9 @@ class InstanceController(BaseController):
     def patch_rsc_ins(self, rsc_ins, req_body):
         """
         Update instance include:
-        Transit instance from 1 phase to next phase or/and handle instance
-        * ``rsc_id``: resource id
-        * ``req_body``: request body data
+
+        * Transit instance from 1 phase to next phase or/and
+        * Handle(receive) instance
         """
         val_body = self.get_val_dat(req_body, 'patch')
 
@@ -82,12 +86,12 @@ class InstanceController(BaseController):
         * Director must specify:
 
             Who is director for next phase.
-            Director of next phase must be one of receivers.
             Director of next phase must be a potential director of next phase.
 
             Who is receiver for each section of next phase.
             Each user assigned for each section must be potential handler of that section.
             Then this section can only handled by assigned user.
+        *Note: director and and receivers can be different*
 
         Transit instance include:
 
@@ -114,20 +118,17 @@ class InstanceController(BaseController):
             if "director_id" not in transit_data or "receivers" not in transit_data:
                 raise ORMExc.ORMException("next phase has not been received. "
                                           "director_id and receivers_id must be specified")
-            # check if director is one of receivers
-            new_next_director_id = transit_data["director_id"]
-            # requested_receivers is a dictionary with key is section_id and with value is user_id
-            # e.g. requested_receivers = { section_id: user_id }
-            requested_receivers = transit_data["receivers"]
-            if new_next_director_id not in requested_receivers.values():
-                raise ORMExc.ORMException("director of next phase must be one of the receivers")
 
-            # check if director is one of potential directors
+            new_next_director_id = transit_data["director_id"]
+            # check if next director is one of potential directors
             new_next_director_user = self.session.query(User).get(new_next_director_id)
             if new_next_director_user not in req_next_phase.potential_directors:
                 raise ORMExc.ORMException(f"director {new_next_director_id} is not a potential directors")
             new_next_director = Director(instance_id=ins.id, phase_id=req_next_phase.id, user_id=new_next_director_id)
 
+            # requested_receivers is a dictionary with key is section_id and with value is user_id
+            # e.g. requested_receivers = { section_id: user_id }
+            requested_receivers = transit_data["receivers"]
             # number of receivers must equal to number of sections in next phase
             avai_next_sections = req_next_phase.sections
             if len(requested_receivers) != len(avai_next_sections):

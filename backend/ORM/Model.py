@@ -33,7 +33,7 @@ class User(Base):
     users_positions = relationship("UserPosition", back_populates="user", foreign_keys="UserPosition.user_id")
     created_instances = relationship("Instance", back_populates="creator")
     instances_fields = relationship("InstanceField", back_populates="creator")
-    director = relationship("Director", back_populates="user")
+    directors = relationship("Director", back_populates="user")
     receivers = relationship("Receiver", back_populates="user")
 
     def __repr__(self):
@@ -211,6 +211,11 @@ obsolete: {self.obsolete}
             .filter(Form.id == self.id).all()
 
     @property
+    def positions(self) -> Optional[List['Position']]:
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.form).\
+            filter(Form.id == self.id).all()
+
+    @property
     def begin_phase(self) -> Optional['Phase']:
         return inspect(self).session.query(Phase).join(Phase.form) \
             .filter(Form.id == self.id). \
@@ -308,6 +313,11 @@ order: {self.order}
         return inspect(self).session.query(User).join(User.users_positions). \
             filter(UserPosition.position_id == self.position_id).all()
 
+    @property
+    def potential_receivers(self) -> Optional[List['User']]:
+        return inspect(self).session.query(User).join(User.users_positions). \
+            filter(UserPosition.position_id == self.position_id).all()
+
 
 class Field(Base):
     __tablename__ = "fields"
@@ -399,7 +409,7 @@ class Instance(Base):
 
     # one-to-many relationship(s)
     instances_fields = relationship("InstanceField", cascade="all,delete", back_populates="instance")
-    director = relationship("Director", back_populates="instance")
+    directors = relationship("Director", back_populates="instance")
     receivers = relationship("Receiver", back_populates="instance")
     commits = relationship("Commit", back_populates="instance")
     head = relationship("Head", back_populates="instance", uselist=False)
@@ -666,8 +676,8 @@ current_state: {self.current_state}
         # return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
         #     join(Position.phases).join(Phase.instances).join(Instance.instances_fields).\
         #     filter(InstanceField.instance_id == self.id, InstanceField.creator_id == User.id).first()
-        return inspect(self).session.query(User).join(User.director).\
-            filter(Director.instance_id == self.id, Director.phase_id == Instance.current_phase_id).first()
+        return inspect(self).session.query(User).join(User.directors).\
+            filter(Director.instance_id == self.id, Director.phase_id == self.current_phase_id).first()
 
     @property
     def current_potential_director(self) -> Optional[List['User']]:
@@ -780,9 +790,9 @@ class Director(Base):
     user_id = Column(BigInteger, ForeignKey("users.id"))
 
     # relationship(s) many-to-one
-    instance = relationship("Instance", back_populates="director")
-    phase = relationship("Phase", back_populates="director")
-    user = relationship("User", back_populates="director")
+    instance = relationship("Instance", back_populates="directors")
+    phase = relationship("Phase", back_populates="directors")
+    user = relationship("User", back_populates="directors")
 
 
 class Group(Base):
@@ -891,7 +901,7 @@ class Phase(Base):
     sections = relationship("Section", back_populates="phase")
     from_transitions = relationship("Transition", cascade="all, delete", back_populates="from_phase", foreign_keys="Transition.from_phase_id")
     to_transitions = relationship("Transition", cascade="all, delete", back_populates="to_phase", foreign_keys="Transition.to_phase_id")
-    director = relationship("Director", back_populates="phase")
+    directors = relationship("Director", back_populates="phase")
 
     def __repr__(self):
         return f'''
