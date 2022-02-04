@@ -145,6 +145,8 @@ alexandrstefek_leading_teacher = UserPosition(user=alexandrstefek, position=lead
 
 alexandrstefek_consultant = UserPosition(user=alexandrstefek, position=consultant)
 
+petrfrantis_leading_teacher = UserPosition(user=petrfrantis, position=leading_teacher)
+
 petrfrantis_consultant = UserPosition(user=petrfrantis, position=consultant)
 
 phamsianh.created_users_positions = [
@@ -157,6 +159,7 @@ phamsianh.created_users_positions = [
     petrfrantis_head_of_DoICO,
     alexandrstefek_leading_teacher,
     alexandrstefek_consultant,
+    petrfrantis_leading_teacher,
     petrfrantis_consultant
 ]
 
