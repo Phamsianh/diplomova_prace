@@ -10,14 +10,20 @@ class FormController(BaseController):
         2. Each phase must at least has 1 section, each section must at least has 1 field.
         3. Phase must belong
         """
-        if 'public' in req_body and req_body['public']:
-            if len(rsc_ins.begin_phases) != 1 or len(rsc_ins.end_phases) != 1:
-                raise ORMExc.ORMException("form must have 1 begin phase and 1 end phase")
-            for p in rsc_ins.phases:
-                for s in p.sections:
-                    if not s.fields:
-                        raise ORMExc.ORMException("Each phase must at least has 1 section,"
-                                                  " and each section must at least has 1 field.")
+        if rsc_ins.obsolete:
+            raise ORMExc.ORMException("form is obsolete, cannot be changed")
+
+        if 'public' in req_body:
+            if req_body['public'] and not rsc_ins.public:
+                if len(rsc_ins.begin_phases) != 1 or len(rsc_ins.end_phases) != 1:
+                    raise ORMExc.ORMException("form must have 1 begin phase and 1 end phase")
+                for p in rsc_ins.phases:
+                    for s in p.sections:
+                        if not s.fields:
+                            raise ORMExc.ORMException("Each phase must at least has 1 section,"
+                                                      " and each section must at least has 1 field.")
+            if not req_body['public'] and rsc_ins.public:
+                raise ORMExc.ORMException("form is public, cannot change to private")
 
         if 'obsolete' in req_body and req_body['obsolete'] and not rsc_ins.public:
             raise ORMExc.ORMException("form's currently private")

@@ -8,7 +8,7 @@ class PhaseController(FormComponentController):
         """To create Phase for a form
 
         * Current user must be form's owner
-        * Form must not be obsolete
+        * Form must not be public or obsolete
         """
         val_body = self.get_val_dat(req_body, 'post')
 
@@ -17,6 +17,8 @@ class PhaseController(FormComponentController):
             raise ORMExc.ResourceInstanceNotFound(Model.Form, val_body['form_id'])
         if self.cur_usr != form.creator:
             raise ORMExc.RequireOwnership
+        if form.public:
+            raise ORMExc.ORMException("Form is public")
         if form.obsolete:
             raise ORMExc.ORMException("Form is obsolete")
 

@@ -16,6 +16,7 @@ class FormComponentController(BaseController):
         """To delete form's component (phase, section, field):
 
         * Form must not be public or obsolete
+        *Note: delete form's component also delete it's subcomponent*
         """
         if rsc_ins.public or rsc_ins.obsolete:
             raise ORMExc.IndelibleResourceInstance

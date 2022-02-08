@@ -31,7 +31,8 @@ def create_phase(p):
         name=p["name"] if "name" in p else None,
         description=p["description"] if "description" in p else None,
         position_id=p["position_id"],
-        phase_type=p["phase_type"]
+        phase_type=p["phase_type"],
+        order=p["order"]
     )
 
     for s in p["sections"]:
@@ -57,7 +58,8 @@ def create_phase(p):
 def create_section(s):
     section = Section(
         name=s["name"],
-        position_id=s["position_id"]
+        position_id=s["position_id"],
+        order=s["order"]
     )
     for f in s["fields"]:
         section.fields.append(create_field(f))
@@ -67,6 +69,7 @@ def create_section(s):
 def create_field(f):
     field = Field(
         name=f["name"],
+        order=f["order"]
     )
     return field
 

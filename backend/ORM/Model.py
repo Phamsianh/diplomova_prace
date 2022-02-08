@@ -212,8 +212,11 @@ obsolete: {self.obsolete}
 
     @property
     def positions(self) -> Optional[List['Position']]:
-        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.form).\
+        positions_sections = inspect(self).session.query(Position).join(Position.sections).join(Section.phase).\
+            join(Phase.form).filter(Form.id == self.id).all()
+        positions_phases = inspect(self).session.query(Position).join(Position.phases).join(Phase.form).\
             filter(Form.id == self.id).all()
+        return list(set(positions_sections + positions_phases))
 
     @property
     def begin_phase(self) -> Optional['Phase']:
@@ -267,7 +270,7 @@ class Section(Base):
     name = Column(String, nullable=False)
     phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
     position_id = Column(BigInteger, ForeignKey("positions.id"))
-    order = Column(Integer)
+    order = Column(Integer, server_default="1")
 
     # many-to-one relationship(s)
     phase = relationship("Phase", back_populates="sections")
@@ -327,7 +330,7 @@ class Field(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String, nullable=False)
     section_id = Column(BigInteger, ForeignKey("sections.id", ondelete="CASCADE"))
-    order = Column(Integer)
+    order = Column(Integer, server_default="1")
 
     # many-to-one relationship(s)
     section = relationship("Section", back_populates="fields")
@@ -516,9 +519,12 @@ current_state: {self.current_state}
             filter(Instance.id == self.id, ~current_receivers.exists(), ~current_handled_fields.exists()).all()
 
     @property
-    def participants(self) -> Optional['User']:
-        return inspect(self).session.query(User).join(User.instances_fields).\
-            filter(InstanceField.instance_id == self.id).all()
+    def participants(self) -> Optional[List['User']]:
+        receivers_users = inspect(self).session.query(User).join(User.receivers).\
+            filter(Receiver.instance_id == self.id).all()
+        directors_users = inspect(self).session.query(User).join(User.directors). \
+            filter(Director.instance_id == self.id).all()
+        return list(set((receivers_users + directors_users)))
 
     @property
     def current_appointed_positions(self) -> Optional[List['Position']]:
@@ -891,6 +897,7 @@ class Phase(Base):
     description = Column(String)
     position_id = Column(BigInteger, ForeignKey("positions.id"))
     phase_type = Column(Enum("begin", "transit", "end", name="phase_enum"))
+    order = Column(Integer, server_default="1")
 
     # many-to-one relationship(s)
     form = relationship("Form", back_populates="phases")
@@ -1136,6 +1143,7 @@ class Commit(Base):
     instance_id = Column(BigInteger, ForeignKey("instances.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     current_phase_id = Column(BigInteger, ForeignKey("phases.id"))
+    message = Column(String)
 
     # one-to-one relationship(s)
     tree = relationship('Tree', back_populates='commit')

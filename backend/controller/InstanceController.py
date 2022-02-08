@@ -152,7 +152,7 @@ class InstanceController(BaseController):
 
         from ORM.Commiter import Committer
         committer = Committer(self.session, self.cur_usr, ins)
-        committer.commit()
+        committer.commit(transit_data['message'])
         ins.current_phase_id = req_next_phase.id
 
     def handle_instance(self, ins: Instance):

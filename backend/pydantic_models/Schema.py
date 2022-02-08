@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from datetime import date, datetime
 
 
@@ -247,6 +247,10 @@ class FormResponse(BaseModel):
     creator_id: int
     public: bool
     obsolete: bool
+    # phases: List
+    # sections: List
+    # fields: List
+    # positions: List
 
     class Config:
         orm_mode = True
@@ -264,6 +268,7 @@ class PhasePostRequest(BaseModel):
     description: Optional[str]
     position_id: int
     phase_type: Optional['PhaseTypeEnum'] = 'transit'
+    order: Optional[int] = 1
 
     class Config:
         orm_mode = True
@@ -275,6 +280,7 @@ class PhasePatchRequest(BaseModel):
     description: Optional[str]
     position_id: Optional[int]
     phase_type: Optional['PhaseTypeEnum']
+    order: Optional[int]
 
     class Config:
         orm_mode = True
@@ -296,7 +302,7 @@ class PhaseResponse(BaseModel):
     description: Optional[str]
     position_id: int
     phase_type: 'PhaseTypeEnum'
-    # sections: Optional[List['Section']]
+    order: int
 
     class Config:
         orm_mode = True
@@ -352,7 +358,7 @@ class SectionPostRequest(BaseModel):
     name: str
     phase_id: int
     position_id: int
-    order: Optional[int]
+    order: Optional[int] = 1
 
     class Config:
         orm_mode = True
@@ -392,7 +398,7 @@ class SectionResponse(BaseModel):
 class FieldPostRequest(BaseModel):
     name: str
     section_id: int
-    order: Optional[int]
+    order: Optional[int] = 1
 
     class Config:
         orm_mode = True
@@ -456,6 +462,7 @@ class InstanceTransit(BaseModel):
     # receivers: List['InstanceReceivers']
     receivers: Optional[Dict[int, int]]  # { section_id : user_id, }
     director_id: Optional[int]
+    message: Optional[str] = ''
 
 
 class InstancePatchRequest(BaseModel):
@@ -475,6 +482,7 @@ class InstanceDeleteRequest(BaseModel):
 class InstanceResponse(BaseModel):
     id: int
     created_at: datetime
+    updated_at: Optional[datetime]
     form_id: int
     current_phase_id: Optional[int]
     creator_id: int
@@ -586,6 +594,7 @@ class CommitResponse(BaseModel):
     instance_id:  int
     created_at:  datetime
     current_phase_id:  int
+    message: str
 
     class Config:
         orm_mode = True

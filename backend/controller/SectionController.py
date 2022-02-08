@@ -8,7 +8,7 @@ class SectionController(FormComponentController):
         """To create section for a phase
 
         * Current user must be phase's owner
-        * The form, which this phase belongs to, must not be obsolete
+        * The form, which this phase belongs to, must not be public or obsolete
         """
         val_body = self.get_val_dat(req_body, 'post')
 
@@ -17,6 +17,8 @@ class SectionController(FormComponentController):
             raise ORMExc.ResourceInstanceNotFound(Model.Phase, val_body['phase_id'])
         if self.cur_usr != phase.creator:
             raise ORMExc.RequireOwnership
+        if phase.public:
+            raise ORMExc.ORMException("Form is public")
         if phase.obsolete:
             raise ORMExc.ORMException("Form is obsolete")
 
@@ -28,7 +30,7 @@ class SectionController(FormComponentController):
 
         Requirement:
         * Request phase_id must belong to current form
-        * If form is public, position_id can not be changed
+        * If form is public, phase_id and position_id can not be changed
         """
         val_bod = self.get_val_dat(req_body, 'patch')
 
@@ -39,6 +41,7 @@ class SectionController(FormComponentController):
 
         if rsc_ins.public:
             val_bod['position_id'] = rsc_ins.position_id
+            val_bod['phase_id'] = rsc_ins.phase_id
 
         return super().patch_rsc_ins(rsc_ins, val_bod)
 

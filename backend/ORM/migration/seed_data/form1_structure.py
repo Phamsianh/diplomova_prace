@@ -23,13 +23,16 @@ form1_structure = {
                 "name": "phase1",
                 "position_id": student_of_CIT.id,
                 "phase_type": "begin",
+                "order": 1,
                 "sections": [
                     {
                         "name": "Section for student of 2-CIT-C",
                         "position_id": student_of_CIT.id,
+                        "order": 1,
                         "fields": [
                             {
-                                "name": "Field for student of 2-CIT-C"
+                                "name": "Field for student of 2-CIT-C",
+                                "order": 1,
                             }
                         ]
                     }
@@ -39,25 +42,31 @@ form1_structure = {
                 "name": "phase2",
                 "position_id": leading_teacher.id,
                 "phase_type": "transit",
+                "order": 2,
                 "sections": [
                     {
                         "name": "Section for Leading Teacher",
                         "position_id": leading_teacher.id,
+                        "order": 1,
                         "fields": [
                             {
-                                "name": "1. Field for Leading Teacher"
+                                "name": "First Field for Leading Teacher",
+                                "order": 1,
                             },
                             {
-                                "name": "2. Field for Leading Teacher"
+                                "name": "Second Field for Leading Teacher",
+                                "order": 2,
                             }
                         ]
                     },
                     {
                         "name": "Section for Consultant",
                         "position_id": consultant.id,
+                        "order": 2,
                         "fields": [
                             {
-                                "name": "Field for Consultant"
+                                "name": "Field for Consultant",
+                                "order": 1,
                             }
                         ]
                     }
@@ -67,13 +76,16 @@ form1_structure = {
                 "name": "phase3",
                 "position_id": vice_dean_FMT.id,
                 "phase_type": "transit",
+                "order": 3,
                 "sections": [
                     {
                         "name": "Section for Vice Dean of FMT",
                         "position_id": vice_dean_FMT.id,
+                        "order": 1,
                         "fields": [
                             {
-                                "name": "Field for Vice Dean of FMT"
+                                "name": "Field for Vice Dean of FMT",
+                                "order": 1,
                             }
                         ]
                     }
@@ -83,13 +95,16 @@ form1_structure = {
                 "name": "phase4",
                 "position_id": head_of_DoICO.id,
                 "phase_type": "transit",
+                "order": 4,
                 "sections": [
                     {
                         "name": "Section for Head of Department of ICO",
                         "position_id": head_of_DoICO.id,
+                        "order": 1,
                         "fields": [
                             {
-                                "name": "Field for Head of Department of ICO"
+                                "name": "Field for Head of Department of ICO",
+                                "order": 1,
                             }
                         ]
                     }
@@ -99,13 +114,16 @@ form1_structure = {
                 "name": "phase5",
                 "position_id": dean_FMT.id,
                 "phase_type": "end",
+                "order": 5,
                 "sections": [
                     {
                         "name": "Section for Dean of FMT",
                         "position_id": dean_FMT.id,
+                        "order": 1,
                         "fields": [
                             {
-                                "name": "Field for Dean of FMT"
+                                "name": "Field for Dean of FMT",
+                                "order": 1,
                             }
                         ]
                     }

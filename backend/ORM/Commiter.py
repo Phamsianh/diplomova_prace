@@ -7,9 +7,9 @@ class Committer:
         self.cur_usr = cur_usr
         self.ins = ins
 
-    def commit(self):
+    def commit(self, message: str):
         tree = self.create_tree()
-        self.create_commit(tree)
+        self.create_commit(tree, message)
 
     def create_envelope(self, instance_field):
         content = instance_field.value
@@ -57,7 +57,7 @@ class Committer:
             self.session.refresh(tree)
             return tree
 
-    def create_commit(self, tree):
+    def create_commit(self, tree, message: str):
         head = self.ins.head
         if head:
             prev_commit = head.last_commit
@@ -90,6 +90,7 @@ class Committer:
             str(commit.current_phase_id)
         )
         commit.hash_commit = hash_commit
+        commit.message = message
         self.session.add(commit)
         self.session.flush()
         self.session.refresh(commit)

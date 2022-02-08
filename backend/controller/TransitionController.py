@@ -11,7 +11,7 @@ class TransitionController(FormComponentController):
         * These 2 phases must not be the same.
         * Current user must own these 2 phases.
         * These 2 phases must belong to 1 form.
-        * Form must not be obsolete.
+        * Form must not be public or obsolete.
         * No transition existed between these 2 phases. Only 1 transition can exist between these 2 phases.
         """
         val_body = self.get_val_dat(req_body, 'post')
@@ -34,6 +34,8 @@ class TransitionController(FormComponentController):
         if from_phase.form != to_phase.form:
             raise ORMExc.ORMException("from phase and to phase must belong to one form")
 
+        if from_phase.form.public:
+            raise ORMExc.ORMException('Form is public')
         if from_phase.form.obsolete:
             raise ORMExc.ORMException('Form is obsolete')
 
@@ -48,7 +50,9 @@ class TransitionController(FormComponentController):
         """
         To update transition between 2 phases:
 
+        * If form is public, can only change transition name
         * These 2 phases must not be the same
+        * No transition existed between these 2 phases. Only 1 transition can exist between these 2 phases.
         * Current user must own these 2 phase,
         * These 2 phases must belong to 1 form
         * Form must not be obsolete.
@@ -58,23 +62,30 @@ class TransitionController(FormComponentController):
         if val_body['from_phase_id'] == val_body['to_phase_id']:
             raise ORMExc.ORMException("from phase and to phase must not be the same")
 
-        from_phase = self.session.query(Model.Phase).get(val_body['from_phase_id'])
-        if not from_phase:
-            raise ORMExc.ResourceInstanceNotFound(Model.Phase, val_body['from_phase_id'])
-        if from_phase.creator != self.cur_usr:
-            raise ORMExc.RequireOwnership
+        existed_transition = self.session.query(Model.Transition). \
+            filter(Model.Transition.from_phase_id == val_body['from_phase_id'],
+                   Model.Transition.to_phase_id == val_body['to_phase_id']).first()
+        if existed_transition:
+            raise ORMExc.ORMException("transition already existed")
 
-        to_phase = self.session.query(Model.Phase).get(val_body['to_phase_id'])
-        if not to_phase:
-            raise ORMExc.ResourceInstanceNotFound(Model.Phase, val_body['to_phase_id'])
-        if from_phase.creator != self.cur_usr:
-            raise ORMExc.RequireOwnership
+        if rsc_ins.public:
+            val_body['from_phase_id'] = rsc_ins.from_phase_id
+            val_body['to_phase_id'] = rsc_ins.to_phase_id
+            return super().patch_rsc_ins(rsc_ins, val_body)
 
-        if from_phase.form != to_phase.form:
-            raise ORMExc.ORMException("from phase and to phase must belong to one form")
+        if val_body['from_phase_id'] != rsc_ins.from_phase_id:
+            from_phase = self.session.query(Model.Phase).get(val_body['from_phase_id'])
+            if not from_phase:
+                raise ORMExc.ResourceInstanceNotFound(Model.Phase, val_body['from_phase_id'])
+            if from_phase.form != rsc_ins.form:
+                raise ORMExc.ORMException("request from phase must belong to current form")
 
-        if from_phase.form.obsolete:
-            raise ORMExc.ORMException('Form is obsolete')
+        if val_body['to_phase_id'] != rsc_ins.to_phase_id:
+            to_phase = self.session.query(Model.Phase).get(val_body['to_phase_id'])
+            if not to_phase:
+                raise ORMExc.ResourceInstanceNotFound(Model.Phase, val_body['to_phase_id'])
+            if to_phase.form != rsc_ins.form:
+                raise ORMExc.ORMException("request to phase must belong to current form")
 
         return super().patch_rsc_ins(rsc_ins, val_body)
 

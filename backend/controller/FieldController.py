@@ -8,7 +8,7 @@ class FieldController(FormComponentController):
         """To create field for a section
 
         * Current user must be section's owner
-        * The form, which this section belongs to, must not be obsolete
+        * The form, which this section belongs to, must not be public or obsolete
         """
         val_body = self.get_val_dat(req_body, 'post')
 
@@ -17,6 +17,8 @@ class FieldController(FormComponentController):
             raise ORMExc.ResourceInstanceNotFound(Phase, val_body['section_id'])
         if self.cur_usr != section.creator:
             raise ORMExc.RequireOwnership
+        if section.public:
+            raise ORMExc.ORMException("Form is public")
         if section.obsolete:
             raise ORMExc.ORMException("Form is obsolete")
 
