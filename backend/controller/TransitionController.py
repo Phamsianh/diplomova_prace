@@ -65,7 +65,7 @@ class TransitionController(FormComponentController):
         existed_transition = self.session.query(Model.Transition). \
             filter(Model.Transition.from_phase_id == val_body['from_phase_id'],
                    Model.Transition.to_phase_id == val_body['to_phase_id']).first()
-        if existed_transition:
+        if existed_transition and existed_transition != rsc_ins:
             raise ORMExc.ORMException("transition already existed")
 
         if rsc_ins.public:

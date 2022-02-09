@@ -165,6 +165,14 @@ birthdate: {self.birthdate}
             join(Section.position).join(Position.users_positions).join(UserPosition.user).\
             filter(User.id == self.id, ~handled_sections.exists()).all()
 
+    @property
+    def pending_instances(self) -> Optional[List['Instance']]:
+        instances_to_transit =  inspect(self).session.query(Instance).join(Instance.directors).\
+            filter(Director.user_id == self.id, Instance.current_phase_id == Director.phase_id).all()
+        instances_to_receive = inspect(self).session.query(Instance).join(Instance.receivers).join(Receiver.section).\
+            filter(Section.phase_id == Instance.current_phase_id, Receiver.user_id == self.id).all()
+        return list(set(instances_to_transit + instances_to_receive))
+
 
 class Form(Base):
     __tablename__ = "forms"
