@@ -7,16 +7,13 @@ import './main.css';
 export const Hnavbar = () => {
     const { user_data } = useContext(UserContext)
 
-    function showSubmenu(e) {
-		e.target.nextSibling.classList.toggle('show-submenu');
-	}
 	return (
 		<div className="hnavbar">
 			<div className="left Breadcrum"></div>
 
 			<div className="right">
 				<div className="dropdown">
-					<button className="item" onClick={showSubmenu}>
+					<button className="show-dropdown-btn">
 						<span>
 							<UserPageIcon />
 						</span>{' '}

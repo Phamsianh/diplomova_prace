@@ -1,5 +1,5 @@
 import React from 'react'
-import { CommitsPageIcon, OptionIcon, PrintPDFIcon } from '../../components/icon'
+import { CommitsPageIcon, CreateIcon, OptionIcon, PrintPDFIcon } from '../../components/icon'
 import './main.css'
 export const Test = () => {
     return (
@@ -25,7 +25,7 @@ export const Test = () => {
                     </label>
                 </div>
                 <div className="phase-name">
-                    <span><i>Phase name</i></span>
+                    <span><i>Phase's name</i></span>
                 </div>
             </div>
             

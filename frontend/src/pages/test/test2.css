@@ -1,0 +1,12 @@
+/* input[type=text], input[type=number], textarea, select {
+    border: none;
+}
+
+input[type=text][disabled], input[type=number][disabled], textarea[disabled], select[disabled] {
+    display: inline-block;
+    width: fit-content;
+    color: black;
+    opacity: 1;
+    resize: none;
+    appearance: none;
+} */

@@ -1,6 +1,7 @@
 import Tab from '../../components/tab/tab';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useController } from '../../controllers';
+import { UserContext } from '../../App';
 
 const HomePage = () => {
 	const [forms, setForms] = useState(null);
@@ -9,8 +10,17 @@ const HomePage = () => {
 	const [created_instances, setCreatedInstances] = useState(null);
 	const [participated_instances, setParticipatedInstances] = useState(null);
 	const [potential_instances, setPotentialInstances] = useState(null);
+	
+	const {held_positions}	= useContext(UserContext);
+	const [is_admin, setIsAdmin] = useState(false)
 
 	const { FormCtlr, InstanceCtlr, UserCtlr } = useController();
+
+	useEffect(() => {
+		if (!held_positions) return
+		if(held_positions.find(hp => hp.role_id == 1)) setIsAdmin(true)
+		else setIsAdmin(false)
+	}, [held_positions])
 
 	useEffect(() => {
 		// get all forms, instances
@@ -58,30 +68,30 @@ const HomePage = () => {
 				title="Instance"
 				rsc_name="instances"
 			></Tab> */}
-			<Tab
+			{created_forms?.length !== 0 && is_admin && <Tab
 				name="My created forms"
 				overview_data={created_forms}
 				title="Form"
 				rsc_name="forms"
-			></Tab>
-			{created_instances && <Tab
+			></Tab>}
+			{created_instances?.length !== 0 && <Tab
 				name="My created instances"
 				overview_data={created_instances}
 				title="Instance"
 				rsc_name="instances"
 			></Tab>}
-			<Tab
+			{participated_instances?.length !== 0 && <Tab
 				name="Participated instances"
 				overview_data={participated_instances}
 				title="Instance"
 				rsc_name="instances"
-			></Tab>
-			<Tab
+			></Tab>}
+			{potential_instances?.length !== 0 && <Tab
 				name="Potential instances"
 				overview_data={potential_instances}
 				title="Instance"
 				rsc_name="instances"
-			></Tab>
+			></Tab>}
 		</div>
 	);
 };

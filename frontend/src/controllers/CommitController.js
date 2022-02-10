@@ -8,6 +8,7 @@ export class CommitController extends BaseController {
 		return envelopes.map(e => {
 			return {
 				field_id: e.field_id,
+				hash_envelope: e.hash_envelope.substring(0,4),
 				value: adecrypt(e.encrypted_content, akey),
 				resolved: e.resolved
 			}

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { ReadIcon, UpdateIcon } from '../icon' 
 import { formatDate } from '../../utils/datetime'
 
-const Overview = ({title="Title", data, to}) => {
+const Overview = ({title="Title", data, to, update}) => {
     return (
         <div className='overview'>
             <h2>
@@ -12,7 +12,7 @@ const Overview = ({title="Title", data, to}) => {
             </h2>
             {data?
                 Object.entries(data).map( ([k, v]) => {
-                    if (k === 'created_at') {
+                    if (k === 'created_at' || k === 'updated_at') {
                         return <Row key={k} name={k} value={formatDate(v)}></Row>
                     }
                     if ( k === "public" || k === "obsolete") {
@@ -23,7 +23,7 @@ const Overview = ({title="Title", data, to}) => {
             :''}
             <div className="manage-form">
                 <Link to={to}><ReadIcon/></Link>
-                <Link to={to + '/update'}><UpdateIcon/></Link>
+                {update && <Link to={to + '/update'}><UpdateIcon/></Link>}
             </div>
         </div>
     )

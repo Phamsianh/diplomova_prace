@@ -1,9 +1,8 @@
-.form-container {
+/* .form-container {
     margin: 10px 20px;
     padding: 15px;
     font-family: 'PT Sans', sans-serif;
-    /* box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); */
-    /* box-shadow: 0 1em .5em rgb(154 154 154); */
+
     box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
     position: relative;
 }
@@ -17,7 +16,7 @@ h4 {
     padding-bottom: 10px;
 }
 
-.section {
+.section, .new-field{
     border: 1px solid rgb(154 154 154);
     border-radius: 10px;
     padding: 10px;
@@ -38,3 +37,9 @@ div.manage-buttons > button {
     width: 35px;
     height: 35px;
 }
+
+div.form-container button {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+} */

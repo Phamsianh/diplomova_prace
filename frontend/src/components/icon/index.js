@@ -8,6 +8,7 @@ import {
 	faTimes,
 	faCheckCircle,
 	faExchangeAlt,
+	faUserEdit,
     faFileSignature,
 	faHome,
 	faUser,
@@ -19,7 +20,9 @@ import {
 	faEllipsisV,
 	faEllipsisH,
 	faFileMedical,
-	faFilePdf
+	faFilePdf,
+	faCheck,
+	faBars,
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircle } from '@fortawesome/free-regular-svg-icons';
 export const CreateIcon = () => {
@@ -76,6 +79,10 @@ export const TransitInstanceIcon = () => {
 	return <FontAwesomeIcon icon={faExchangeAlt} title="Transit" />;
 };
 
+export const ReceiveInstanceIcon = () => {
+	return <FontAwesomeIcon icon={faUserEdit} title="Receive" />;
+};
+
 export const HandleInstanceIcon = () => {
 	return <FontAwesomeIcon icon={faFileSignature} title="Handle" />;
 };
@@ -123,9 +130,21 @@ export const CommitIcon = () => {
 }
 
 export const OptionIcon = () => {
-	return <FontAwesomeIcon icon={faEllipsisH} title="Commits Page" />;
+	return <FontAwesomeIcon icon={faEllipsisH} title="Options" />;
 }
 
 export const PrintPDFIcon = () => {
-	return <FontAwesomeIcon icon={faFilePdf} title="Commits Page" />;
+	return <FontAwesomeIcon icon={faFilePdf} title="Print Form" />;
+}
+
+export const YesIcon = () => {
+	return <FontAwesomeIcon icon={faCheck} title="Yes" />;
+}
+
+export const NoIcon = () => {
+	return <FontAwesomeIcon icon={faTimes} title="No" />;
+}
+
+export const MenuBarIcon = () => {
+	return <FontAwesomeIcon icon={faBars} title="Menu" />;
 }

@@ -20,7 +20,7 @@ export const LoginIndex = () => {
 		    mode: 'cors',
 		    body: form_data,
 		})
-		if (!res.ok && res.status === 401) {
+		if (!res.ok && res.status === 404) {
 			setLoginFail(true)
 			return
 		}
@@ -55,7 +55,7 @@ export const LoginIndex = () => {
 						onChange={(e) => setPassword(e.target.value)}
 					/>
 				</label>
-				<button type="submit">Login</button>
+				<button type="submit" className='login-btn'>Login</button>
 			</form>
 		</div>
 	);

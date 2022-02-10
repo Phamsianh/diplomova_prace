@@ -1,4 +1,4 @@
-div.commits{
+/* div.commits{
     padding: 20px 0px;
     display: flex;
     justify-content: center;
@@ -20,7 +20,6 @@ table, tr, th, td {
 
 td.created-at, th.created-at{
     width: 20%;
-    /* overflow: scroll; */
 }
 td.phase-id, th.phase-id{
     width: 10%;
@@ -45,4 +44,4 @@ tr td.view-commit a {
     width: 50px;
     height: 50px;
     border-radius: 3px;
-}
+} */

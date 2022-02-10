@@ -1,4 +1,5 @@
 export function formatDate(datetime) {
+    if (!datetime) return null
     const now = new Date();
     const time = new Date(datetime)   
     const delta = now - time
@@ -14,6 +15,6 @@ export function formatDate(datetime) {
         return Math.floor(delta_h) + 'h ago'
     }
     else {
-        return `${time.getHours()}:${time.getMinutes()}, ${time.getDate()}.${time.getMonth()} `
+        return `${time.getHours()}:${time.getMinutes()}, ${time.getDate()}.${time.getMonth()}.${String(time.getFullYear()).slice(2,4)}`
     }
 }
