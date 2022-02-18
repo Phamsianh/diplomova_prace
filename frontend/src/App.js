@@ -19,6 +19,7 @@ import { LoginIndex } from './pages/login_page';
 
 import { createContext, useEffect, useState } from 'react';
 import { useController } from './controllers';
+import { useNavigate } from 'react-router-dom';
 
 import { NotFoundPage } from './pages/not_found_page/not_found_page';
 
@@ -29,6 +30,7 @@ import { MyParticipatedInstancesPage } from './pages/me_page/my_participated_ins
 import { MyPendingInstancesPage } from './pages/me_page/my_pending_instances';
 
 import './main.css';
+import { UserController } from './controllers/UserController';
 
 export const UserContext = createContext();
 
@@ -39,32 +41,25 @@ function App() {
 	const [user_data, setUserData] = useState();
 	const [held_positions, setHeldPositions] = useState();
 
-	const { UserCtlr } = useController();
-	
-	useEffect(() => {
-		if (location.pathname !== '/login') {
-			UserCtlr.get_rsc_ins('me').then((data) => {
-				setUserData(data);
-			});
-			UserCtlr.get_rel_rsc('me', 'held_positions').then((data) =>
-				setHeldPositions(data)
-			);
-		}
-	}, []);
+	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (location.pathname === '/login') { console.log("login"); setLogin(true) }
-		else setLogin(false);
-		if (location.state === 'new_login'){
-			console.log('new login');
-			UserCtlr.get_rsc_ins('me').then((data) => {
-				setUserData(data);
-			});
+		if (location.pathname === '/login') { console.log("login"); setLogin(true); return }
+		setLogin(false);
+	}, [location]);
+
+	useEffect(() => {
+		console.log('access token change');
+		let UserCtlr = new UserController(localStorage.getItem('access_token'))
+		UserCtlr.get_rsc_ins('me').then((data) => {
+			setUserData(data);
 			UserCtlr.get_rel_rsc('me', 'held_positions').then((data) =>
 				setHeldPositions(data)
 			);
-		}
-	}, [location]);
+		}).catch(() => navigate('/login'));
+	}, [localStorage.getItem('access_token')])
+	
+
 	return (
 		<div className="App">
 			<div className="container">

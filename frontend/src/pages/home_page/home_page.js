@@ -56,6 +56,7 @@ const HomePage = () => {
 	}, []);
 	return (
 		<div className="home-page page">
+			Home page
 			{forms && <Tab
 				name="All forms"
 				overview_data={forms}
