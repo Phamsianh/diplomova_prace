@@ -1,3 +1,5 @@
+import os
+
 # Database config
 database = 'postgresql'
 host = 'localhost'
@@ -5,6 +7,12 @@ port = '5432'
 user_name = 'postgres'
 password = '123456'
 database_name = 'test2'
+# database = os.environ.get('DB')
+# host = os.environ.get('DB_HOST')
+# port = os.environ.get('DB_PORT')
+# user_name = os.environ.get('DB_USERNAME')
+# password = os.environ.get('DB_PASSWORD')
+# database_name = os.environ.get('DB_NAME')
 
 # FastAPI config
 title = "Administrative work handling system"

@@ -1,0 +1,1 @@
+docker exec -it fastapi-app python -m ORM.migration.migration
