@@ -54,6 +54,7 @@ role_system_admin = Role(name="System Admin", role="admin")
 role_rector = Role(name="Rector", role="admin")
 role_dean = Role(name="Dean", role="group_admin")
 role_vice_dean = Role(name="Vice Dean", role="handler")
+role_guarantor = Role(name="Guarantor", role="handler")
 role_head_of_department = Role(name="Head of Department", role="handler")
 role_leading_teacher = Role(name="Leading Teacher", role="handler")
 role_consultant = Role(name="Consultant", role="handler")
@@ -75,16 +76,21 @@ group_2_WA_C.superior_group = group_DoWA
 
 admin_of_UoD = Position(name="Admin of University of Defence", role=role_system_admin, group=group_UoD)
 rector_of_UoD = Position(name="Rector of University of Defence", role=role_rector, group=group_UoD)
+dean = Position(name="Dean", role=role_dean)
 dean_of_FMT = Position(name="Dean of FMT (GrAdmin)", role=role_dean, group=group_FMT)
 dean_of_FMl = Position(name="Dean of FML (GrAdmin)", role=role_dean, group=group_FML)
 dean_of_FMHS = Position(name="Dean of FMHS (GrAdmin)", role=role_dean, group=group_FMHS)
+vice_dean = Position(name="Vice Dean", role=role_vice_dean)
 vice_dean_of_FMT = Position(name="Vice Dean of FMT", role=role_vice_dean, group=group_FMT)
+guarantor = Position(name="Guarantor", role=role_guarantor)
+head_of_department = Position(name="Head of Department", role=role_head_of_department)
 head_of_DoICO = Position(name="Head of Department of Informatics and Cyber Operations", role=role_head_of_department,
                          group=group_DoICO)
 head_of_DoWA = Position(name="Head of Department of Weapons and Ammunition", role=role_head_of_department,
                         group=group_DoWA)
 leading_teacher = Position(name="Leading Teacher", role=role_leading_teacher)
 consultant = Position(name="Consultant", role=role_consultant)
+student = Position(name="Student", role=role_student)
 student_of_CIT = Position(name="Student of 2-CIT-C", role=role_student, group=group_2_CIT_C)
 student_of_WA = Position(name="Student of 2-WA-C", role=role_student, group=group_2_WA_C)
 exchange_student_of_CIT = Position(name="Exchange Student of 2-CIT-C", role=role_student, group=group_2_CIT_C)
@@ -105,6 +111,7 @@ phamsianh.created_roles = [
     role_rector,
     role_dean,
     role_vice_dean,
+    role_guarantor,
     role_head_of_department,
     role_leading_teacher,
     role_consultant,
@@ -114,18 +121,25 @@ phamsianh.created_roles = [
 phamsianh.created_positions = [
     admin_of_UoD,
     rector_of_UoD,
+    dean,
     dean_of_FMl,
     dean_of_FMT,
     dean_of_FMHS,
+    vice_dean,
     vice_dean_of_FMT,
+    guarantor,
+    head_of_department,
     head_of_DoICO,
     head_of_DoWA,
     leading_teacher,
     consultant,
+    student,
     student_of_CIT,
     exchange_student_of_CIT,
     student_of_WA
 ]
+
+phamsianh_student = UserPosition(user=phamsianh, position=student)
 
 phamsianh_student_CIT = UserPosition(user=phamsianh, position=student_of_CIT)
 
@@ -135,9 +149,15 @@ phamsianh_admin_UoD = UserPosition(user=phamsianh, position=admin_of_UoD)
 
 zuzanakrocova_rector_admin_UoD = UserPosition(user=zuzanakrocova, position=rector_of_UoD)
 
+vlastimilneumann_dean = UserPosition(user=vlastimilneumann, position=dean)
+
 vlastimilneumann_dean_gr_admin_FMT = UserPosition(user=vlastimilneumann, position=dean_of_FMT)
 
+janfarlik_vice_dean = UserPosition(user=janfarlik, position=vice_dean)
+
 janfarlik_vice_dean_FMT = UserPosition(user=janfarlik, position=vice_dean_of_FMT)
+
+petrfrantis_head_of_department = UserPosition(user=petrfrantis, position=head_of_department)
 
 petrfrantis_head_of_DoICO = UserPosition(user=petrfrantis, position=head_of_DoICO)
 
@@ -150,12 +170,16 @@ petrfrantis_leading_teacher = UserPosition(user=petrfrantis, position=leading_te
 petrfrantis_consultant = UserPosition(user=petrfrantis, position=consultant)
 
 phamsianh.created_users_positions = [
+    phamsianh_student,
     phamsianh_student_CIT,
     phamsianh_admin_UoD,
     phamsianh_exchange_student_CIT,
     zuzanakrocova_rector_admin_UoD,
+    vlastimilneumann_dean,
     vlastimilneumann_dean_gr_admin_FMT,
+    janfarlik_vice_dean,
     janfarlik_vice_dean_FMT,
+    petrfrantis_head_of_department,
     petrfrantis_head_of_DoICO,
     alexandrstefek_leading_teacher,
     alexandrstefek_consultant,

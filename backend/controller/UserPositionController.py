@@ -1,36 +1,66 @@
+from typing import Union
+
 from controller.BaseController import BaseController
 from ORM import Model
 from exceptions import ORMExceptions as ORMExc
 
 
 class UserPositionController(BaseController):
-    def post_rsc_ins(self, req_body):
-        """
-        To assign a position to another user (create users_positions record):
+    related_resource = []
 
-        * Current user must have own this position.
-        """
+    def get_resource_collection(self):
+        """Get all user positions in the system."""
+        return super(UserPositionController, self).get_resource_collection()
+
+    def get_resource_instance(self, rsc_id: Union[str, int]):
+        """Get a user positions by id."""
+        return super(UserPositionController, self).get_resource_instance(rsc_id)
+
+    def post_resource_collection(self, req_body):
+        """Assign a position to another user (create users_positions record):
+
+Constraint:
+
+* Only admin can assign this position for other user.
+"""
         val_body = self.get_val_dat(req_body, 'post')
 
-        assigned_pst = self.session.query(Model.Position).get(val_body['position_id'])
-        if not assigned_pst:
+        assigned_position = self.session.query(Model.Position).get(val_body['position_id'])
+        if not assigned_position:
             raise ORMExc.ResourceInstanceNotFound(Model.Position, val_body['position_id'])
-        if assigned_pst.creator != self.cur_usr:
+        if assigned_position.creator != self.current_user:
             raise ORMExc.RequireOwnership
-        assigned_usr = self.session.query(Model.User).get(val_body['user_id'])
-        if not assigned_usr:
+        assigned_user = self.session.query(Model.User).get(val_body['user_id'])
+        if not assigned_user:
             raise ORMExc.ResourceInstanceNotFound(Model.User, val_body['user_id'])
 
-        super().post_rsc_ins(val_body)
+        return super(UserPositionController, self).post_resource_collection(req_body)
 
+    def patch_resource_instance(self, rsc_ins, req_body):
+        """Update a position to another user or update user for another position:
 
-if __name__ == '__main__':
-    from ORM.session import session
-    from ORM.Model import User
+Constraint:
 
-    usr1 = session.query(User).get(1)
-    fc1 = UserPositionController(session=session, cur_usr=usr1)
-    fc1.post_rsc_ins(req_body={
-        'user_id': 1,
-        'positio_id': 10
-    })
+* Only admin can update this user position.
+"""
+        val_body = self.get_val_dat(req_body, 'patch')
+
+        assigned_position = self.session.query(Model.Position).get(val_body['position_id'])
+        if not assigned_position:
+            raise ORMExc.ResourceInstanceNotFound(Model.Position, val_body['position_id'])
+        if assigned_position.creator != self.current_user:
+            raise ORMExc.RequireOwnership
+        assigned_user = self.session.query(Model.User).get(val_body['user_id'])
+        if not assigned_user:
+            raise ORMExc.ResourceInstanceNotFound(Model.User, val_body['user_id'])
+
+        return super(UserPositionController, self).patch_resource_instance(rsc_ins, req_body)
+
+    def delete_resource_instance(self, rsc_ins):
+        """Delete a position from user.
+
+        Constraint:
+
+        * Only admin can delete a position from user.
+        """
+        return super(UserPositionController, self).delete_resource_instance(rsc_ins)

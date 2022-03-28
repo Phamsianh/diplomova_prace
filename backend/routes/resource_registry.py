@@ -11,5 +11,6 @@ resource_registry = {
     'transitions': 'TransitionController',
     'positions': 'PositionController',
     'users_positions': 'UserPositionController',
-    'commits': 'CommitController'
+    'commits': 'CommitController',
+    'receivers': 'ReceiverController'
 }

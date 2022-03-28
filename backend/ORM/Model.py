@@ -1,10 +1,12 @@
-from ORM.Base import Base
-from ORM.session import Session
-from sqlalchemy import Column, ForeignKey, BigInteger, String, DateTime, Date, Integer, Enum, Boolean, func, inspect, \
-    text
-from sqlalchemy.orm import relationship, backref
-from typing import Optional, List
 import hashlib
+from typing import List, Optional
+
+from sqlalchemy import (BigInteger, Boolean, Column, Date, DateTime, Enum,
+                        ForeignKey, Integer, SmallInteger, String,
+                        UniqueConstraint, func, inspect, text)
+from sqlalchemy.orm import backref, relationship
+
+from ORM.Base import Base
 
 
 class User(Base):
@@ -13,11 +15,11 @@ class User(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    first_name = Column(String(50))
-    last_name = Column(String(50))
-    user_name = Column(String(50), unique=True, nullable=False)
+    first_name = Column(String(100))
+    last_name = Column(String(100))
+    user_name = Column(String(100), unique=True, nullable=False)
     _password = Column('password', String, nullable=False)
-    email = Column(String(50), unique=True)
+    email = Column(String(100), unique=True)
     phone = Column(String(20))
     public_key = Column(String)
     birthdate = Column(Date)
@@ -58,10 +60,7 @@ birthdate: {self.birthdate}
         return self._password
 
     @password.setter
-    def password(self, value):
-        """
-        :param value: For later implementation: This value must be validated
-        """
+    def password(self, value: str):
         self._password = hashlib.sha256(value.encode()).hexdigest()
 
     @property
@@ -112,10 +111,6 @@ birthdate: {self.birthdate}
                 return True
         return False
 
-    # def ga_cr_gs(self, session: Session) -> Optional[List['Group']]:
-    #     """get all groups created by user with role admin"""
-    #     return session.query(Group).filter(Group.admin_id == self.id).all()
-
     @property
     def joined_groups(self) -> Optional[List['Group']]:
         """get all joined groups of this user"""
@@ -125,10 +120,6 @@ birthdate: {self.birthdate}
             .filter(UserPosition.user_id == self.id) \
             .all()
 
-    # def ga_cr_rs(self, session: Session) -> Optional[List['Role']]:
-    #     """get all created roles of a user with role admin"""
-    #     return session.query(Role).join(Role.creator).filter(Role.creator_id == self.id).all()
-
     @property
     def held_roles(self) -> Optional[List['Role']]:
         """get all roles held by this user"""
@@ -137,16 +128,6 @@ birthdate: {self.birthdate}
             .join(Position.users_positions) \
             .filter(UserPosition.user_id == self.id) \
             .all()
-
-    # def ga_cr_forms(self, session: Session) -> Optional[List['Form']]:
-    #     """get all created form of this user with role admin or group admin"""
-    #     return session.query(Form).join(Form.creator).filter(Form.creator_id == self.id).all()
-
-    # def ga_cr_instances(self, session: Session) -> Optional[List['Instance']]:
-    #     """get all form instances created by this user"""
-    #     return session.query(Instance)\
-    #         .join(Instance.creator)\
-    #         .filter(Instance.creator_id == self.id).all()
 
     @property
     def participated_instances(self) -> Optional[List['Instance']]:
@@ -180,7 +161,7 @@ class Form(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    name = Column(String, nullable=False)
+    name = Column(String(100), nullable=False)
     creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
     public = Column(Boolean, server_default='false')
     obsolete = Column(Boolean, server_default='false')
@@ -221,9 +202,9 @@ obsolete: {self.obsolete}
     @property
     def positions(self) -> Optional[List['Position']]:
         positions_sections = inspect(self).session.query(Position).join(Position.sections).join(Section.phase).\
-            join(Phase.form).filter(Form.id == self.id).all()
-        positions_phases = inspect(self).session.query(Position).join(Position.phases).join(Phase.form).\
-            filter(Form.id == self.id).all()
+            filter(Phase.form_id == self.id).all()
+        positions_phases = inspect(self).session.query(Position).join(Position.phases).\
+            filter(Phase.form_id == self.id).all()
         return list(set(positions_sections + positions_phases))
 
     @property
@@ -240,20 +221,17 @@ obsolete: {self.obsolete}
 
     @property
     def begin_phases(self) -> Optional['Phase']:
+        """Used to check if private form have only one begin phase, the it can be public."""
         return inspect(self).session.query(Phase).join(Phase.form) \
             .filter(Form.id == self.id). \
             filter(Phase.phase_type == 'begin').all()
 
     @property
     def end_phases(self) -> Optional['Phase']:
+        """Used to check if private form have only one end phase, the it can be public."""
         return inspect(self).session.query(Phase).join(Phase.form) \
             .filter(Form.id == self.id). \
             filter(Phase.phase_type == 'end').all()
-
-    @property
-    def begin_fields(self) -> Optional[List['Field']]:
-        return inspect(self).session.query(Field).join(Field.section).join(Section.phase).join(Phase.form).\
-            filter(Form.id == self.id, Phase.phase_type == 'begin').all()
 
     @property
     def transitions(self) -> Optional[List['Transition']]:
@@ -265,8 +243,11 @@ obsolete: {self.obsolete}
 
     @property
     def available_positions(self) -> Optional[List['Position']]:
-        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.form). \
-            filter(Form.id == self.id).all()
+        positions_for_handlers = inspect(self).session.query(Position).join(Position.sections).join(Section.phase). \
+            filter(Phase.form_id == self.id).all()
+        positions_for_directors = inspect(self).session.query(Position).join(Position.phases). \
+            filter(Phase.form_id == self.id).all()
+        return list(set(positions_for_handlers + positions_for_directors))
 
 
 class Section(Base):
@@ -275,10 +256,10 @@ class Section(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    name = Column(String, nullable=False)
+    name = Column(String(100), nullable=False)
     phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
     position_id = Column(BigInteger, ForeignKey("positions.id"))
-    order = Column(Integer, server_default="1")
+    order = Column(SmallInteger, server_default="1")
 
     # many-to-one relationship(s)
     phase = relationship("Phase", back_populates="sections")
@@ -440,14 +421,14 @@ current_state: {self.current_state}
 
     @property
     def current_state(self):
-        current_appointed_positions = self.current_appointed_positions
-        number_of_part = len(current_appointed_positions)
+        current_assigned_positions = self.current_assigned_positions
+        number_of_part = len(current_assigned_positions)
         uninit = 0
         init = 0
         resolving = 0
         resolved = 0
 
-        for c_a_p in current_appointed_positions:
+        for c_a_p in current_assigned_positions:
             part_state = self.part_state(self.current_phase_id, c_a_p.id)
             if part_state is None:
                 uninit += 1
@@ -535,9 +516,9 @@ current_state: {self.current_state}
         return list(set((receivers_users + directors_users)))
 
     @property
-    def current_appointed_positions(self) -> Optional[List['Position']]:
-        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).join(Phase.instances).\
-            filter(Instance.id == self.id).all()
+    def current_assigned_positions(self) -> Optional[List['Position']]:
+        return inspect(self).session.query(Position).join(Position.sections).join(Section.phase).\
+            filter(Phase.id == self.current_phase_id).all()
 
     @property
     def current_remaining_positions(self) -> Optional[List['Position']]:
@@ -588,8 +569,7 @@ current_state: {self.current_state}
 
     @property
     def current_sections(self) -> Optional[List['Section']]:
-        return inspect(self).session.query(Section).join(Section.phase).join(Phase.instances). \
-            filter(Instance.id == self.id).all()
+        return inspect(self).session.query(Section).filter(Section.phase_id == self.current_phase_id).all()
 
     @property
     def current_init_sections(self) -> Optional[List['Section']]:
@@ -686,10 +666,12 @@ current_state: {self.current_state}
         return
 
     @property
-    def current_director(self) -> Optional[User]:
-        # return inspect(self).session.query(User).join(User.users_positions).join(UserPosition.position).\
-        #     join(Position.phases).join(Phase.instances).join(Instance.instances_fields).\
-        #     filter(InstanceField.instance_id == self.id, InstanceField.creator_id == User.id).first()
+    def current_director(self) -> Optional['Director']:
+        return inspect(self).session.query(Director).\
+            filter(Director.instance_id == self.id, Director.phase_id == self.current_phase_id).first()
+
+    @property
+    def current_director_user(self) -> Optional[User]:
         return inspect(self).session.query(User).join(User.directors).\
             filter(Director.instance_id == self.id, Director.phase_id == self.current_phase_id).first()
 
@@ -746,12 +728,15 @@ class InstanceField(Base):
 
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # default value for updated_at is used for creating envelope. refer to Committer.create_envelope()
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
     instance_id = Column(BigInteger, ForeignKey("instances.id", ondelete="CASCADE"))
     field_id = Column(BigInteger, ForeignKey("fields.id"))
     creator_id = Column(BigInteger, ForeignKey("users.id"))
-    value = Column(String)
+    # an empty string is used for creating the envelopes. refer to Commiter.create_envelope()
+    value = Column(String, server_default="")
     resolved = Column(Boolean, server_default='false')
+    __table_args__ = (UniqueConstraint('instance_id', 'field_id', name='instance_field_uc'),)
 
     # many-to-one relationship(s)
     instance = relationship("Instance", back_populates="instances_fields")
@@ -759,8 +744,10 @@ class InstanceField(Base):
     creator = relationship("User", back_populates="instances_fields")
 
     # one-to-many relationship(s)
-    # instances_fields = relationship("InstanceField", back_populates="instance")
-    # histories = relationship("History", back_populates="instance")
+
+    def receiver(self):
+        return inspect(self).session.query(User).join(User.receivers).join(Receiver.section).join(Section.fields).\
+            filter(Field.id == self.field_id, Receiver.instance_id == self.instance_id).first()
 
     def __repr__(self):
         return f'''
@@ -786,6 +773,7 @@ class Receiver(Base):
     section_id = Column(BigInteger, ForeignKey("sections.id"))
     user_id = Column(BigInteger, ForeignKey("users.id"))
     received = Column(Boolean, server_default="false")
+    __table_args__ = (UniqueConstraint('instance_id', 'section_id', name='instance_section_uc'),)
 
     # relationship(s) many-to-one
     instance = relationship("Instance", back_populates="receivers")
@@ -802,6 +790,7 @@ class Director(Base):
     instance_id = Column(BigInteger, ForeignKey("instances.id"))
     phase_id = Column(BigInteger, ForeignKey("phases.id"))
     user_id = Column(BigInteger, ForeignKey("users.id"))
+    __table_args__ = (UniqueConstraint('instance_id', 'phase_id', name='instance_phase_uc'),)
 
     # relationship(s) many-to-one
     instance = relationship("Instance", back_populates="directors")
@@ -857,7 +846,7 @@ class Role(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    name = Column(String(50), unique=True, nullable=False)
+    name = Column(String(100), unique=True, nullable=False)
     role = Column(Enum("admin", "group_admin", "handler", "applicant", name="role_enum"))
     creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
 
@@ -901,11 +890,10 @@ class Phase(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     form_id = Column(BigInteger, ForeignKey("forms.id"))
     name = Column(String(100), nullable=False)
-    # order = Column(Integer) #For later consideration
     description = Column(String)
     position_id = Column(BigInteger, ForeignKey("positions.id"))
     phase_type = Column(Enum("begin", "transit", "end", name="phase_enum"))
-    order = Column(Integer, server_default="1")
+    order = Column(SmallInteger, server_default="1")
 
     # many-to-one relationship(s)
     form = relationship("Form", back_populates="phases")
@@ -984,10 +972,11 @@ class Transition(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    name = Column(String(50))
+    name = Column(String(100))
     from_phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
     to_phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
     order = Column(Integer)
+    __table_args__ = (UniqueConstraint('from_phase_id', 'to_phase_id', name='from_phase_to_phase_uc'),)
 
     # many-to-one relationship(s)
     from_phase = relationship("Phase", back_populates="from_transitions", foreign_keys=[from_phase_id])
@@ -1105,18 +1094,25 @@ class Envelope(Base):
     __tablename__ = "envelopes"
 
     hash_envelope = Column(String, primary_key=True, unique=True)
-    encrypted_content = Column(String)
-    digital_signature = Column(String)
-    field_id = Column(BigInteger, ForeignKey('fields.id'), nullable=False)
-    creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
-    resolved = Column(Boolean)
+    instance_field_id = Column(BigInteger, ForeignKey('instances_fields.id'), nullable=False)
+    content_value = Column(String)
+    updated_at = Column(DateTime(timezone=True))
 
     # many-to-one relationship(s)
-    creator = relationship("User", backref="envelopes")
-    field = relationship("Field", backref="envelopes")
+    instance_field = relationship('InstanceField', backref='envelopes')
 
     # one-to-many relationship(s)
     trees_envelopes = relationship('TreeEnvelope', back_populates='envelope')
+
+    @property
+    def creator(self):
+        return inspect(self).session.query(User).join(User.instances_fields).\
+            filter(InstanceField.id == self.instance_field_id).first()
+
+    @property
+    def field(self):
+        return inspect(self).session.query(Field).join(Field.instances_fields).\
+            filter(InstanceField.id == self.instance_field_id).first()
 
 
 class Tree(Base):

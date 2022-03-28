@@ -1,46 +1,88 @@
-from sqlalchemy.exc import IntegrityError
+import json
 from typing import Optional, Union
+
 from fastapi import HTTPException
 from pydantic import ValidationError
-from ORM.session import Session
+from sqlalchemy.exc import IntegrityError
+
 from ORM import Model
-from pydantic_models import Schema
+from ORM.session import Session
 from exceptions import ORMExceptions as ORMExc
-import json
+from pydantic_models import Schema
+from utils.markdown_table_from_schema import create_markdown_table
 
 
 class BaseController:
-    def __init__(self, session: Session = None, cur_usr: Model.User = None):
+    """Class derived from this base class can declare following attributes:
+
+    * ``controller_name`` is the base name for ``model``, ``post_schema``, ``patch_schema``, ``delete_schema``,
+    ``response_schema``. Declare ``controller_name`` require to declare all attributes based on it.
+
+    * ``model.__table__.name`` is the default name of resource. Declare resource name give it alias
+
+    * ``related_resource`` is array of string, which contain all the keys of object's writable attributes of ``model``,
+    excluding the attributes, whose keys begin with '_'. Declare this attribute to filter which related resource will
+    be served as an endpoint.
+
+    Class derived from this base class can overwrite methods:
+
+    * ``get_resource_collection``
+    * ``get_resource_instance``
+    * ``get_related_resource``
+    * ``post_resource_collection``
+    * ``patch_resource_instance``
+    * ``delete_resource_instance``
+    to add more constraint and call to the correspond methods of the ``BaseController``. The docstring of overwritten
+    methods is used as the description for the corresponding endpoint.
+
+    Method ``get_related_resource`` can be overwritten for getting the related resource. The name of the method must
+    follow the convention:
+    get_{resource_name}_{related_resource}
+    """
+
+    def __init__(self, session: Session = None, current_user: Model.User = None):
         self.session = session
-        self._cur_usr = cur_usr
-        self.controller_name = self.__class__.__name__.removesuffix('Controller')
-        self.model = getattr(Model, self.controller_name)
-        self.rsc_name = self.model.__table__.name
-        self.post_schema = getattr(Schema, self.controller_name + 'PostRequest')
-        self.patch_schema = getattr(Schema, self.controller_name + 'PatchRequest')
-        self.delete_schema = getattr(Schema, self.controller_name + 'DeleteRequest')
-        self.response_schema = getattr(Schema, self.controller_name + 'Response')
-        self.rel_rsc = [rr for rr in self.model.__dict__.keys() if rr[:1] != '_']
+        self._current_user = current_user
+        if not hasattr(self, "controller_name"):
+            self.controller_name = self.__class__.__name__.removesuffix('Controller')
+        if not hasattr(self, "model"):
+            self.model = getattr(Model, self.controller_name)
+        if not hasattr(self, "resource_name"):
+            self.resource_name = self.model.__table__.name
+        if not hasattr(self, "post_schema"):
+            self.post_schema = getattr(Schema, self.controller_name + 'PostRequest')
+        if not hasattr(self, "patch_schema"):
+            self.patch_schema = getattr(Schema, self.controller_name + 'PatchRequest')
+        if not hasattr(self, "delete_schema"):
+            self.delete_schema = getattr(Schema, self.controller_name + 'DeleteRequest')
+        if not hasattr(self, "response_schema"):
+            self.response_schema = getattr(Schema, self.controller_name + 'Response')
+        if not hasattr(self, "related_resource"):
+            self.related_resource = [rr for rr in self.model.__dict__.keys() if rr[:1] != '_']
+        if not hasattr(self, "post_schema_documentation"):
+            self.post_schema_documentation = create_markdown_table(self.post_schema)
+        if not hasattr(self, "patch_schema_documentation"):
+            self.patch_schema_documentation = create_markdown_table(self.patch_schema)
 
     @property
-    def cur_usr(self):
-        return self._cur_usr
+    def current_user(self):
+        return self._current_user
 
-    @cur_usr.setter
-    def cur_usr(self, cur_usr):
-        self._cur_usr = cur_usr
+    @current_user.setter
+    def current_user(self, current_user):
+        self._current_user = current_user
 
-    def get_rsc_col(self):
+    def get_resource_collection(self):
         rscs = self.session.query(self.model).limit(50).all()
         return rscs
 
-    def get_rsc_ins(self, rsc_id: Union[str, int]):
+    def get_resource_instance(self, rsc_id: Union[str, int]):
         if type(rsc_id) == str:
-            if 'name' in self.model.__table__.c.keys():
+            if 'name' in self.model.__table__.controller_name.keys():
                 # get resource instance by name
                 rsc_ins = self.session.query(self.model).filter(self.model.name == rsc_id).first()
             else:
-                raise ORMExc.ResourceCantSearchByName(self.rsc_name)
+                raise ORMExc.ResourceCantSearchByName(self.resource_name)
         else:
             # get resource instance by id
             rsc_ins = self.session.query(self.model).get(rsc_id)
@@ -49,10 +91,10 @@ class BaseController:
         else:
             return rsc_ins
 
-    def get_rel_rsc(self, rsc_id: Union[str, int], rel_rsc, query: Optional[dict] = None):
-        if rel_rsc not in self.rel_rsc:
+    def get_related_resource(self, rsc_id: Union[str, int], rel_rsc, query: Optional[dict] = None):
+        if rel_rsc not in self.related_resource:
             raise ORMExc.RelatedResourceNotFound(self.model, rel_rsc)
-        rsc_ins = self.get_rsc_ins(rsc_id)
+        rsc_ins = self.get_resource_instance(rsc_id)
         rr = getattr(rsc_ins, rel_rsc)
         if type(rr).__name__ == 'method':
             from inspect import getfullargspec
@@ -69,9 +111,12 @@ class BaseController:
         else:
             return rr
 
-    def post_rsc_ins(self, req_body):
+    def post_resource_collection(self, req_body):
         val_body = self.get_val_dat(req_body, 'post')
-        new_rsc_ins = self.model(**val_body)
+        if hasattr(self.model, 'creator_id'):
+            new_rsc_ins = self.model(**val_body, creator_id=self.current_user.id)
+        else:
+            new_rsc_ins = self.model(**val_body)
         self.session.add(new_rsc_ins)
 
         try:
@@ -98,9 +143,8 @@ class BaseController:
             self.session.refresh(new_rsc_ins)
         return new_rsc_ins
 
-    def patch_rsc_ins(self, rsc_ins, req_body):
+    def patch_resource_instance(self, rsc_ins, req_body):
         val_body = self.get_val_dat(req_body, 'patch')
-        # TODO: update without for, research https://docs.sqlalchemy.org/en/14/core/tutorial.html#inserts-updates-and-deletes
         for k, v in val_body.items():
             setattr(rsc_ins, k, v)
         try:
@@ -112,7 +156,7 @@ class BaseController:
             self.session.refresh(rsc_ins)
         return rsc_ins
 
-    def delete_rsc_ins(self, rsc_ins):
+    def delete_resource_instance(self, rsc_ins):
         try:
             self.session.delete(rsc_ins)
             self.session.flush()
@@ -121,7 +165,8 @@ class BaseController:
         else:
             self.session.commit()
 
-    def get_res(self, rscs):
+    @staticmethod
+    def prepare_response(rscs):
         """Get validated response from resource(s).\n
         If ``rscs`` is a collection of resource instances or a single resource instance,
         it'll be validated with pydantic model(schema).\n
@@ -132,7 +177,7 @@ class BaseController:
         """
         from sqlalchemy.orm.collections import InstrumentedList
         from sqlalchemy.orm import DeclarativeMeta
-        if type(rscs) == list or type(rscs) == InstrumentedList:
+        if isinstance(rscs, list) or isinstance(rscs, InstrumentedList):
             if rscs:
                 if type(type(rscs[0])) == DeclarativeMeta:
                     # if resources is a collection of resource instances
@@ -168,8 +213,6 @@ class BaseController:
         """
         try:
             req_schema = getattr(self, f'{req_mtd}_schema')
-            if 'creator_id' in req_schema.__fields__.keys():
-                req_body['creator_id'] = self.cur_usr.id
             return req_schema(**req_body).dict(exclude_unset=True)
         except ValidationError as e:
             raise ORMExc.ORMException(json.loads(e.json()))

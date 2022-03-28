@@ -1,30 +1,72 @@
+import importlib
 from typing import List
 
 from fastapi import APIRouter, Depends, status
+
 from routes.dependencies import oauth2_scheme as oa2s
-from routes.resource_registry import resource_registry as rr
 from routes.pof_generator import POFGenerator
-import importlib
+from routes.resource_registry import resource_registry
 
 router = APIRouter(
     dependencies=[Depends(oa2s.oauth2_scheme)],
-    tags=["all resources"]
+    # tags=["all resources"]
 )
 
+for resource_name, controller_name in resource_registry.items():
+    pof_generator = POFGenerator(controller_name)
+    router.get(
+        f"/{resource_name}",
+        response_model=List[pof_generator.response_schema],
+        tags=[
+            resource_name,
+            # "Get Resource Collection"
+        ]
+    )(pof_generator.grc_generator())
 
-for r, c in rr.items():
-    pof_generator = POFGenerator(c)
-    router.get(f"/{r}", response_model=List[pof_generator.response_schema])(pof_generator.grc_generator())
-    router.get("/" + r + "/{rsc_id}", response_model=pof_generator.response_schema)(pof_generator.gri_generator())
+    router.get(
+        "/" + resource_name + "/{rsc_id}",
+        response_model=pof_generator.response_schema,
+        tags=[
+            resource_name,
+            # "Get Resource Instance"
+        ]
+    )(pof_generator.gri_generator())
 
-    RC_module = importlib.import_module(f'controller.{c}')
-    rc = getattr(RC_module, c)()
-    for r_r in rc.rel_rsc:
-        router.get("/" + r + "/{rsc_id}/" + r_r)(pof_generator.grr_generator(r_r))
+    Controller_module = importlib.import_module(f'controller.{controller_name}')
+    resource_controller = getattr(Controller_module, controller_name)()
+    for related_resource in resource_controller.related_resource:
+        router.get(
+            "/" + resource_name + "/{rsc_id}/" + related_resource,
+            tags=[
+                resource_name,
+                # "Get Related Resource"
+            ]
+        )(pof_generator.grr_generator(related_resource))
 
-    router.post(f"/{r}",
-                response_model=pof_generator.response_schema)(pof_generator.pr_generator())
-    router.patch("/" + r + "/{rsc_id}",
-                 response_model=pof_generator.response_schema)(pof_generator.pri_generator())
-    router.delete("/" + r + "/{rsc_id}", status_code=status.HTTP_410_GONE)(pof_generator.dri_generator())
+    router.post(
+        f"/{resource_name}",
+        response_model=pof_generator.response_schema,
+        tags=[
+            resource_name,
+            # "Post Resource Collection"
+        ],
+        status_code=status.HTTP_201_CREATED
+    )(pof_generator.prc_generator())
 
+    router.patch(
+        "/" + resource_name + "/{rsc_id}",
+        response_model=pof_generator.response_schema,
+        tags=[
+            resource_name,
+            # "Patch Resource Instance"
+        ]
+    )(pof_generator.pri_generator())
+
+    router.delete(
+        "/" + resource_name + "/{rsc_id}",
+        status_code=status.HTTP_410_GONE,
+        tags=[
+            resource_name,
+            # "Delete Resource Instance"
+        ]
+    )(pof_generator.dri_generator())

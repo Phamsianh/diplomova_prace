@@ -12,22 +12,15 @@ class Committer:
         self.create_commit(tree, message)
 
     def create_envelope(self, instance_field):
-        content = instance_field.value
-        skey = "superstrongkey"
-        encrypted_content = sencrypt(content, skey)
-        digital_signature = sign(encrypted_content)
         envelope = Envelope(
-            encrypted_content=encrypted_content,
-            digital_signature=digital_signature,
-            field_id=instance_field.field_id,
-            creator_id=self.cur_usr.id,
-            resolved=instance_field.resolved
+            instance_field_id=instance_field.id,
+            content_value=instance_field.value,
+            updated_at=instance_field.updated_at
         )
         hash_envelope = somehashfunction(
-            str(instance_field.id) +
-            envelope.encrypted_content +
-            envelope.digital_signature +
-            str(envelope.field_id)
+            str(envelope.instance_field_id) +
+            envelope.content_value +
+            str(envelope.updated_at)
         )
         existed_envelope = self.session.query(Envelope).get(hash_envelope)
         if existed_envelope:
