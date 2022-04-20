@@ -8,7 +8,7 @@ const Tab = ({ name, overview_data, title, rsc_name }) => {
 	return (
 		<div className="tab">
 			{/* <summary> */}
-				<h1>{name}</h1>
+				<h1>{name && name}</h1>
 			{/* </summary>
 			<details> */}
 				<div className="detail">

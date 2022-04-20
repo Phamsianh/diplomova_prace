@@ -1,258 +1,290 @@
-import { useEffect, useState, createContext, useContext } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ReadInstance } from '../../components/instance/read_instance';
-import { ReadFormPhases } from '../../components/instance/form/read_form_phases';
-import { InstanceContentContext } from './read_instance_page';
-import {
-	CancelIcon,
-	CommitsPageIcon,
-	HandleInstanceIcon,
-	ReadIcon,
-	TransitInstanceIcon,
-} from '../../components/icon';
-import { useController } from '../../controllers';
-import { TransitInstance } from '../../components/instance/form/transit_instance';
-import { HandleInstance } from '../../components/instance/form/handle_instance';
+import { useContext, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { CommitsPageIcon, MarkDoneIcon, OptionIcon, ReadIcon, ReceiveInstanceIcon, TransitInstanceIcon, UpdateIcon, YesIcon } from '../../components/icon';
+import { useNavigate } from 'react-router-dom';
+import { useUpdateInstancePage } from '../../custom_hooks/useUpdateInstancePage';
+import { UpdateInstanceField } from '../../components/instance_field/update_instance_field';
+import { useReadPhasesTransitions } from '../../custom_hooks/useReadPhasesTransitions';
+import { useTransitInstance } from '../../custom_hooks/useTransitInstance';
 import { UserContext } from '../../App';
+import { useReceiveInstance } from '../../custom_hooks/useReceiveInstance';
+import { useViewCommit } from '../../custom_hooks/useViewCommit';
+import { useReadDirectorsReceivers } from '../../custom_hooks/useReadDirectorsReceivers';
+import { useReadPhaseDetail } from '../../custom_hooks/useReadPhaseDetail';
+import { useUpdateReceiver } from '../../custom_hooks/useUpdateReceivers';
+import { useMarkInstaceDone } from '../../custom_hooks/useMarkInstaceDone';
+
 
 export const UpdateInstancePage = () => {
 	const { id: instance_id } = useParams();
-	const { InstanceCtlr, FormCtlr } = useController();
-	const navigate = useNavigate();
-	const { user_data } = useContext(UserContext);
+	const {user_data} = useContext(UserContext);
+	
+	const {
+		instance_data,
+        setInstanceData,
+        instances_fields_data,
+        setInstancesFieldsData,
+        form_data,
+        phases_data,
+        sections_data,
+        fields_data,
+        transitions_data,
+        positions_data,
+        // all_positions_data,
+		commits,
 
-	const [instance_data, setInstanceData] = useState();
-	const [form_data, setFormData] = useState();
-	const [content_data, setContentData] = useState();
+        receivers,
+        setReceivers,
+        directors,
+		participants,
+		participated_users,
+        // current_director,
+        current_phase,
+        next_phases,
+        current_sections,
+        current_receivers,
 
-	const [is_participant, setIsParticipant] = useState(false);
-	const [is_potential_handler, setIsPotentialHandler] = useState(false);
+        can_transit,
+		can_receive,
+		can_mark_done,
 
-	const [can_be_handled, setCanBeHandled] = useState(false);
-	const [is_handling, setIsHandling] = useState(false);
-	const [can_be_transited, setCanBeTransited] = useState(false);
-	const [is_transiting, setIsTransiting] = useState(false);
+		is_done,
 
-	// Only initialize UpdateInstancePage when:
-	// 1. user is a current potential handler of current phase OR
-	// 2. a participant of instance.
+        all_potential_directors,
+        all_potential_receivers,
+	} = useUpdateInstancePage(user_data, instance_id);
+	
+	const {read_phases_transitions_component, setReadPhasesTransitions, reading: reading_p_t} = useReadPhasesTransitions();
+	const {read_directors_receivers_component, setReadDirectorsReceivers, reading: reading_d_r} = useReadDirectorsReceivers();
+	const {transit_instance_component, setTransitInstance, transiting: transiting_instance, success_component: t_i_success_component} = useTransitInstance(setInstanceData);
+	const {receive_instance_component, setReceiveInstance, receiving: receiving_instance, success_component: r_i_success_component} = useReceiveInstance(setInstanceData, setInstancesFieldsData);
+	const {
+		view_commits_component, 
+		setReadCommits, 
+		reading: reading_commits, 
+        unsetViewCommits, 
+		viewing: viewing_commits
+	} = useViewCommit(setInstancesFieldsData, setInstanceData);
+	const {read_phase_detail_component, setPhaseDetailToRead, reading: reading_phase_detail} = useReadPhaseDetail();
+	const {update_receiver_component, setReceiverToUpdate, updating: updating_r, u_r_success_component} = useUpdateReceiver(setReceivers)
+	const {mark_done_component, setMarkDone, marking_done, success_component: m_d_success_component} = useMarkInstaceDone(setInstanceData);
+
 	useEffect(() => {
-		if (user_data) {
-			InstanceCtlr.get_rel_rsc(instance_id, 'participants').then((data) => {
-				if (data.find((participant) => participant.id === user_data.id)) {
-					setIsParticipant(true);
-				}
-			});
-			InstanceCtlr.get_rel_rsc(instance_id, 'current_potential_handlers').then(
-				(data) => {
-					if (
-						data.find(
-							(potential_handler) =>
-								potential_handler.id === user_data.id
-						)
-					) {
-						setIsPotentialHandler(true);
-					}
-				}
-			);
-		}
-	}, [user_data]);
-	useEffect(() => {
-		if (is_participant || is_potential_handler) {
-			InstanceCtlr.get_rsc_ins(instance_id).then((data) => {
-				console.log('instancedata', data);
-				setInstanceData(data);
-
-				FormCtlr.get_rsc_ins(data.form_id).then((data) => {
-					console.log('formdata', data);
-					setFormData(data);
-				});
-			});
-			InstanceCtlr.get_rel_rsc(instance_id, 'instances_fields').then(
-				(data) => {
-					console.log('content data', data);
-					setContentData(data);
-				}
-			);
-		}
-	}, [is_participant, is_potential_handler])
-
-	// Depend on current state of instance and role of user to this instance, check if current user can:
-	useEffect(() => {
-		if (user_data && instance_data) {
-			// 1. Handle this instance at current phase?
-			if (
-				['full received', 'full received & partial resolved'].includes(
-					instance_data.current_state
-				)
+		if(
+			reading_p_t || reading_d_r || transiting_instance || receiving_instance || reading_commits || reading_phase_detail ||
+			updating_r || marking_done
 			) {
-				setCanBeHandled(false);
-			} else if (
-				[
-					'pending',
-					'partial received',
-					'partial received & partial resolved',
-				].includes(instance_data.current_state)
-			) {
-				InstanceCtlr.get_rel_rsc(
-					instance_data.id,
-					'current_potential_handlers'
-				).then((data) => {
-					console.log('potential handlers', data);
-					if (
-						data.find((potential_handler) => {
-							return potential_handler.id === user_data.id;
-						})
-					) {
-						setCanBeHandled(true);
-						console.log("i'm a potential handler");
-					} else {
-						setCanBeHandled(false);
-						console.log("i'm not a potential handler");
-					}
-				});
-			}
-			// 2. Transit instance to next phase?
-			if (instance_data.current_state === 'full resolved') {
-				InstanceCtlr.get_rel_rsc(
-					instance_data.id,
-					'current_director'
-				).then((data) => {
-					console.log('current director: ', data);
-					if (data && data.id === user_data.id) {
-						console.log("i'm director of this phase");
-						setCanBeTransited(true);
-					} else {
-						console.log("i'm not director of this phase");
-						setCanBeTransited(false);
-					}
-				});
-			} else setCanBeTransited(false);
+			document.querySelector(".modal").classList.add("show-modal");
 		}
-	}, [instance_data, user_data]);
-
-	// Transit instance logic happens here
-	const transitInstance = async (e) => {
-		e.preventDefault();
-		const req_bod = {
-			current_phase_id: e.target.current_phase_id.value,
-		};
-		let data = await InstanceCtlr.patch_rsc_ins(instance_id, req_bod);
-		console.log(data);
-		setInstanceData(data);
-		setIsTransiting(false);
-	};
-
-	// Handle instance logic's quite complex, so it happens inside HandleInstance component.
-
+		else {
+			document.querySelector(".modal")?.classList.remove("show-modal");
+		}
+	}, [
+		reading_p_t, reading_d_r, transiting_instance, receiving_instance, reading_commits, reading_phase_detail,
+		updating_r, marking_done
+	])
+	
+	useEffect(() => {
+		if(
+			t_i_success_component || r_i_success_component || u_r_success_component || m_d_success_component
+			){
+			document.querySelector(".success")?.classList.add("show-success")
+		}else{
+			document.querySelector(".success")?.classList.remove("show-success")
+		}
+	}, [
+		t_i_success_component, r_i_success_component,
+		u_r_success_component, m_d_success_component
+	])
 	return (
 		<div className="update-instance-page">
-			{!(is_potential_handler || is_participant)
-				? "You're not a potential handler nor a participant of this instance"
-				: instance_data &&
-				  form_data &&
-				  content_data && (
-						<InstanceContentContext.Provider
-							value={{
-								instance_data,
-								setInstanceData, // child component UpdateFieldContent will update instance state when it updated field
-								content_data,
-								setContentData, // child component HandleInstance will update content when user handle some parts of instance.
-								page: 'update',
-							}}
-						>
-							<div className="instance">
-								<div className="manage-buttons">
-									{/* --------TRANSIT BUTTON---------  */}
-									{is_transiting ||
-									is_handling ||
-									!can_be_transited ? (
-										''
-									) : (
-										<button
-											title="Transiting Instance"
-											onClick={() =>
-												setIsTransiting(true)
-											}
-										>
-											<TransitInstanceIcon />
-										</button>
-									)}
-									{is_transiting && (
-										<button
-											title="Cancel Transiting"
-											onClick={() =>
-												setIsTransiting(false)
-											}
-										>
-											<CancelIcon />
-										</button>
-									)}
-									{/* ----------HANDLE BUTTON---------- */}
-									{is_handling ||
-									is_transiting ||
-									!can_be_handled ? (
-										''
-									) : (
-										<button
-											title="Handle Instance"
-											onClick={() => setIsHandling(true)}
-										>
-											<HandleInstanceIcon />
-										</button>
-									)}
-									{is_handling && (
-										<button
-											title="Cancel Handle Instance"
-											onClick={() => setIsHandling(false)}
-										>
-											<CancelIcon />
-										</button>
-									)}
-									{/* ------------VIEW COMMITS BUTTON-------------- */}
-									{is_transiting || is_handling ? (
-										''
-									) : (
-										<Link
-											title="View Commits"
-											to={'/instances/' + instance_id + '/commits'}
-										>
-											<CommitsPageIcon />
-										</Link>
-									)}
-									{/* ------------VIEW INSTANCE BUTTON-------------- */}
-									{is_transiting || is_handling ? (
-										''
-									) : (
-										<Link
-											title="View Instance"
-											to={'/instances/' + instance_id}
-										>
-											<ReadIcon />
-										</Link>
-									)}
-								</div>
+			<div className="success">
+				{t_i_success_component}
+				{r_i_success_component}
+				{u_r_success_component}
+				{m_d_success_component}
+			</div>
 
-								{<ReadInstance instance_data={instance_data} />}
-
-								{is_transiting && (
-									<TransitInstance
-										old_instance_data={instance_data}
-										handleUpdateInstance={transitInstance}
-									/>
-								)}
-								{is_handling && (
-									<HandleInstance
-										instance_data={instance_data}
-										setInstanceData={setInstanceData}
-										setIsHandling={setIsHandling}
-									/>
-								)}
-
-								{<ReadFormPhases form_data={form_data} />}
+			{instance_data && <div className="instance">
+				<div className="form">
+					<div className="manage-buttons">
+						<button className="option-button"><OptionIcon/></button>
+						<div className="context-menu">
+							<div className="option" onClick={() => setReadCommits(
+								commits, 
+								instances_fields_data, 
+								instance_data, 
+								participants, 
+								phases_data
+							)}>
+								<button ><CommitsPageIcon/></button>
+								<span>View commits</span>
 							</div>
-						</InstanceContentContext.Provider>
-				  )}
+							{viewing_commits && 
+							<div className="option" onClick={() => unsetViewCommits()}>
+								<button ><CommitsPageIcon/></button>
+								<span>View current instance</span>
+							</div>}
+							{!is_done && can_transit && !viewing_commits && 
+							<div className="option" onClick={() => setTransitInstance(
+								instance_data, 
+								phases_data, 
+								transitions_data, 
+								sections_data, 
+								positions_data,
+								current_phase,
+								next_phases,
+								directors,
+								receivers,
+								all_potential_directors,
+								all_potential_receivers
+								)}>
+								<button ><TransitInstanceIcon/></button>
+								<span>Transit instance</span>
+							</div>}
+							{!is_done && can_receive && !viewing_commits && 
+							<div className="option" onClick={() => setReceiveInstance(
+								user_data,
+								instance_data,
+								current_sections,
+								current_receivers,
+								positions_data
+								)}>
+								<button><ReceiveInstanceIcon/></button>
+								<span>Receive Instance</span>
+							</div>}
+							{can_mark_done && !viewing_commits && !is_done && 
+							<div className="option" onClick={() => setMarkDone(instance_data)}>
+								<button><MarkDoneIcon/></button>
+								<span>Mark instance as done</span>
+							</div>}
+							<div className="option" onClick={() => setReadPhasesTransitions(
+								instance_data,
+								phases_data, 
+								transitions_data,
+								sections_data,
+								positions_data,
+								directors,
+								receivers, 
+								participants
+								)}>
+								<button ><ReadIcon/></button>
+								<span>{"Phases & transitions"}</span>
+							</div>
+							<div className="option" onClick={() => setReadDirectorsReceivers(
+								instance_data,
+								phases_data, 
+								transitions_data,
+								sections_data,
+								positions_data,
+								directors,
+								receivers, 
+								participants
+								)}>
+								<button ><ReadIcon/></button>
+								<span>{"Director & Receiver"}</span>
+							</div>
+							{!is_done && can_transit  && 
+							<div className="option" onClick={() => setReceiverToUpdate(
+								instance_data,
+								current_receivers,
+								current_sections,
+								receivers,
+								)}>
+								<button ><UpdateIcon/></button>
+								<span>{"Update Receivers"}</span>
+							</div>}
+						</div>
+					</div>
+
+					{instance_data && <h3 className="instance-id">
+						Instance ID: {instance_data.id} &nbsp;
+						{is_done? <YesIcon/> : ''}
+					</h3>}
+
+					{form_data && (
+                    	<h1 className="form-name">{form_data.name}</h1>
+					)}
+
+					<div className="phases">
+					{phases_data && phases_data.map((phase_data) => {
+						return (
+							<div key={phase_data.id}>
+								<div className="phase">
+									<div className={instance_data.current_phase_id == phase_data.id? "sections current-sections" : "sections"} >
+										<div className="manage-buttons">
+											<button className="option-button" onClick={e => {
+												let context_menu = e.target.nextSibling? e.target.nextSibling: e.target.closest(".option-button").nextSibling
+												context_menu.classList.toggle("show-options")
+											}}>
+												<OptionIcon/>
+											</button>
+											<div className="context-menu">
+												{transitions_data && sections_data && positions_data && fields_data &&
+												<div className="option" onClick={() => setPhaseDetailToRead(
+													phase_data,
+													phases_data,
+													transitions_data,
+													sections_data,
+													fields_data,
+													positions_data,
+												)}>
+													<button ><ReadIcon/></button>
+													<span>Phase details</span>
+												</div>}
+											</div>
+										</div>
+
+										{sections_data && current_receivers && sections_data.filter(sd => sd.phase_id == phase_data.id).map((section_data) => {
+											let can_edit = true
+											if (current_receivers.find(cr => cr.section_id == section_data.id && cr.user_id == user_data.id)) {can_edit = false} // editable
+											return (
+												<div className="section" key={section_data.id}>
+													<h3 className="section-name">
+														{section_data.name? section_data.name: 'Section Name'} 
+														- { positions_data && positions_data.find(pd => pd.id == section_data.position_id)?.name}
+													</h3>
+
+													<div className="fields">
+														{fields_data && instances_fields_data && participated_users && fields_data.filter(fd => fd.section_id == section_data.id).map(field_data => {
+															const instance_field = instances_fields_data.find(ifd => ifd.field_id == field_data.id);
+															const creator = instance_field? participated_users.find(pu => pu.id == instance_field.creator_id): null;
+															return (
+															<div className="field" key={field_data.id} title={creator? `Editor: ${creator.first_name} ${creator.last_name}`: ''}>
+																<p className='field-name'>
+																	{field_data.name? field_data.name: 'Field Name'}
+																</p>
+																{instance_field && <UpdateInstanceField 
+																	key={instance_field.id + instance_field.hash_envelope? instance_field.hash_envelope: ''}
+																	readonly={is_done || can_edit || viewing_commits}
+																	old_instance_field_data={instance_field} 
+																	instances_fields_data={instances_fields_data} 
+																	setInstancesFieldsData={setInstancesFieldsData}
+																/>}
+															</div>)
+														})}
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								</div>
+							</div>
+						);
+					})}
+					</div>
+					<div className="modal">
+						{view_commits_component}
+						{transit_instance_component}
+						{receive_instance_component}
+						{mark_done_component}
+						{read_phases_transitions_component}
+						{read_directors_receivers_component}
+						{read_phase_detail_component}
+						{update_receiver_component}
+					</div>
+				</div>
+			</div>}
 		</div>
 	);
 };

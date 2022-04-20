@@ -41,9 +41,19 @@ button, a, input[type=submit] {
     color: white;
     border-radius: 3px;
     cursor: pointer;
+    font-family: inherit;
+    font-size: small;
 }
 
-input[type=text], input[type=password], input[type=number], textarea, select, .message{
+input[type=text],
+input[type=email],
+input[type=number],
+input[type=password],
+input[type=date], 
+textarea, 
+select, 
+.message
+{
     width: 95%;
     height: 3em;
     padding: 10px;
@@ -79,7 +89,9 @@ input[type=checkbox] {
 
 div.page {
     width: 100%;
+    min-height: calc(100vh);
     position: relative;
+    padding: 10px;
     /* overflow-x: auto; */
 }
 
@@ -115,4 +127,64 @@ form > .manage-buttons button:last-child:hover {
 
 .hide {
     display: none;
+}
+
+/***************PAGINATION*******************/
+
+.pagination {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.limit span, .search span {
+    font-weight: bold;
+}
+
+.pagination input#limit {
+    width: 70px;
+    height: initial;
+    display: inline;
+    margin-left: 5px;
+    text-align: center;
+}
+div.search input, div.search select {
+    display: inline;
+    margin-left: 5px;
+    width: auto;
+    height: initial;
+}
+
+div.pagination .page_numbers {
+    margin: auto;
+}
+
+div.page_numbers button.page_number {
+    all:unset;
+    width: 30px;
+    height: 30px;
+    border-radius: 3px;
+    background-color: white;
+    border: 1px solid rgb(154 154 154);
+    cursor: pointer;
+    text-align: center;
+}
+
+.current_page {
+    background-color: rgb(10 61 98) !important;
+    color: white !important;
+}
+
+.page table {
+    margin: 30px auto;
+}
+
+table thead {
+    background-color: rgb(187 187 187);
+}
+
+/***************SORT*******************/
+.order {
+    cursor: pointer;
 }

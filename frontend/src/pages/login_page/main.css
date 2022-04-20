@@ -1,36 +1,40 @@
 .login-page {
     width: 100%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.login-index, .login-index > form {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.login-index label {
-    width: 50%;
-}
-
-
-div.login-index button.login-btn {
-    width: 100px;
-    height: 50px;
-    padding: 5px;
-    margin: 5px;
-
-    text-decoration: none;
-    border: none;
-    text-align: center;
-    background-color: #0a3d62    ;/*rgb(87, 87, 209);*/
+    /* min-height: 100vh; */
+    padding: 0 !important;
     color: white;
-    border-radius: 3px;
+    background-image: linear-gradient( 358.7deg, rgb(42 136 157) 1.7%, rgb(122 197 214) 51.1%, rgb(211 232 242) 95.5% );
+}
+
+.login-index, .signup {
+    max-width: 525px;
+    min-height: 100vh;
+    margin: auto;
+    background:url(university.jpeg) no-repeat center;
+    box-shadow:0 12px 15px 0 rgba(0,0,0,.24),0 17px 50px 0 rgba(0,0,0,.19);
+}
+
+.login-htm, .signup-htm {
+    padding: 30px 70px 30px 70px;
+    background: rgb(40 57 101 / 90%);
+    min-height: 100vh;
+}
+
+.logo {
+    text-align: center;
+}
+
+.login-page input {
+    border-radius: 999px !important;
+}
+
+.login-page button, .login-page a {
+    width: 95% !important;
+    border-radius: 999px !important;
+    margin: 10px auto 10px auto !important;
+    padding: 23px !important;
+    background-color: rgb(17 97 238) !important;
+    height: 3em !important;
 }
 
 .login-fail-message {

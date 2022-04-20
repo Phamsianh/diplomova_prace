@@ -4,13 +4,16 @@ import { BaseController } from './BaseController.js';
 export class CommitController extends BaseController {
 	rsc_name = 'commits';
 	
-	convertEnvelopeToContent(envelopes, akey='superstrongkey') {
+	convertEnvelopeToContent(envelopes, instances_fields_data) {
 		return envelopes.map(e => {
+			let field_id = instances_fields_data.find(ifd => ifd.id == e.instance_field_id).field_id
 			return {
-				field_id: e.field_id,
+				id: e.instance_field_id,
+				field_id: field_id,
+				creator_id: e.creator_id,
 				hash_envelope: e.hash_envelope.substring(0,4),
-				value: adecrypt(e.encrypted_content, akey),
-				resolved: e.resolved
+				value: e.content_value,
+				updated_at: e.updated_at
 			}
 		});	
 	}

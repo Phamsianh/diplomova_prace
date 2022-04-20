@@ -55,7 +55,7 @@ export const useUpdateTransition = (setTransitionsData) => {
 			to_phase_id: e.target.to_phase_id.value,
 		};
 		let data = await TransitionCtlr.patch_rsc_ins(transition_data.id, req_bod);
-		console.log('updated transition data', data);
+		// console.log('updated transition data', data);
         setSuccessComponent(<UpdateTransitionSuccess clearMessage={clearMessage}/>)
         setTransitionsData(trs_data.map(pd => pd.id == data.id? data: pd))
         setUpdating(false);

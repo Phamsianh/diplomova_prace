@@ -55,11 +55,11 @@ export const useReceiveInstance = (setInstanceData, setInstancesFieldsData) => {
             handle: true
         }
         let data = await InstanceCtlr.patch_rsc_ins(ins.id, req_bod)
-        console.log("instance data after received", data);
+        // console.log("instance data after received", data);
         setSuccessComponent(<ReceiveInstanceSuccess clearMessage={clearMessage}/>)
         setInstanceData(data);
         data = await InstanceCtlr.get_rel_rsc(ins.id, 'instances_fields')
-        console.log("instances fields data after received", data);
+        // console.log("instances fields data after received", data);
         setInstancesFieldsData(data);
         setReceiving(false);
     }

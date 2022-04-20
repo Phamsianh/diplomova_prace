@@ -16,9 +16,9 @@ export const useDeletePhase = (setPhasesData) => {
     
     async function deletePhase(phase_data, phases_data) {
 		let data = await PhaseCtlr.delete_rsc_ins(phase_data.id);
-        console.log(data);
+        // console.log(data);
         if (data == null) {
-            console.log(phases_data.filter(pd => pd.id != phase_data.id));
+            // console.log(phases_data.filter(pd => pd.id != phase_data.id));
             setSuccessComponent(<DeletePhaseSuccess clearMessage={clearMessage}/>)
             setPhasesData(phases_data.filter(pd => pd.id != phase_data.id))    
         }

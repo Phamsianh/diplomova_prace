@@ -50,7 +50,7 @@ export function useReadPhasesTransitions() {
 		setTransitionsData(transitions_data)
 		setSectionsData(sections_data)
 		setPositionsData(positions_data)
-		console.log('positions', positions_data);
+		// console.log('positions', positions_data);
 		setDirectorsData(directors)
 		setReceiversData(receivers)
 		setParticipantsData(participants)
@@ -102,7 +102,7 @@ const ReadPhasesTransitions = ({
 			pd.transitions = transitions
 			return pd
 		})
-		console.log('whole phases data', phs_d);
+		// console.log('whole phases data', phs_d);
 		setPhsData(phs_d);
 	}, [])
 	

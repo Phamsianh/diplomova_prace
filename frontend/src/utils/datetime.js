@@ -15,6 +15,6 @@ export function formatDate(datetime) {
         return Math.floor(delta_h) + 'h ago'
     }
     else {
-        return `${time.getHours()}:${time.getMinutes()}, ${time.getDate()}.${time.getMonth()}.${String(time.getFullYear()).slice(2,4)}`
+        return `${time.getHours()}:${time.getMinutes()}, ${time.getDate()}.${time.getMonth()+1}.${String(time.getFullYear()).slice(2,4)}`
     }
 }

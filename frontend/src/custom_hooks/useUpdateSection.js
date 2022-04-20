@@ -47,7 +47,7 @@ export const useUpdateSection = (all_positions_data, setSectionsData) => {
 			order: e.target.order.value,
 		};
 		let data = await SectionCtlr.patch_rsc_ins(section_data.id, req_bod);
-		console.log('updated section data', data);
+		// console.log('updated section data', data);
         setSuccessComponent(<UpdateSectionSuccess clearMessage={clearMessage}/>)
         setSectionsData(scts_data.map(sd => sd.id == data.id? data: sd))
         setUpdating(false);

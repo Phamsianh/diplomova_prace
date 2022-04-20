@@ -8,7 +8,7 @@ export const MyInstancesPage = () => {
 	
 	useEffect(() => {
 		UserCtlr.get_rel_rsc('me', 'created_instances').then((data) => {
-			console.log('created instances data', data);
+			// console.log('created instances data', data);
 			setInstancesData(data);
 		});
 	}, []);

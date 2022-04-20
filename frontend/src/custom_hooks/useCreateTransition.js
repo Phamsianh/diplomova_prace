@@ -61,7 +61,7 @@ export const useCreateTransition = (setTransitionsData) => {
 			)
 			throw e
 		});
-		console.log('created transition data', data);
+		// console.log('created transition data', data);
         setSuccessComponent(<CreateTransitionSuccess clearMessage={clearSuccess}/>)
         setTransitionsData([...trs_data, data])
         setCreating(false);

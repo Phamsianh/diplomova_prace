@@ -45,9 +45,7 @@ export function displayPhasesTransitions (container_id, phases_data, transitions
 		],
 	})
 	cy.json({elements: convert_phases(phases_data, instance_data).concat(convert_transitions(transitions_data, instance_data))})
-	cy.$('[class = "phase"], [class = "transition"]')
-		.layout({ name: 'dagre' })
-		.run();
+	cy.layout({ name: 'dagre' }).run();
 		
 	return cy;
 }
@@ -89,4 +87,70 @@ export function convert_transitions(transitions_data, instance_data) {
 		}
 	console.log(`converted transitions data`, tr);
 	return tr;
+}
+
+export function displayGroups(container_id, groups_data) {
+	cytoscape.use(dagre);
+	const cy = cytoscape({
+		container: document.getElementById(container_id),
+		layout: {
+			name: 'grid',
+			rows: 1
+		},
+		style: [
+			{
+				selector: 'node[class = "group"]',
+				style: {
+					label: 'data(data_api.name)',
+				},
+			},
+			{
+				selector: 'edge',
+				style: {
+					'curve-style': 'bezier',
+					'target-arrow-shape': 'triangle',
+					'target-arrow-color': 'red',
+					'target-endpoint': 'outside-to-node-or-label',
+				},
+			},
+		],
+
+		layout: {
+			name: 'grid',
+		}
+	})
+	cy.json({elements: convert_groups(groups_data)})
+	cy.layout({ name: 'dagre' }).run();
+		
+	return cy;
+}
+
+export function convert_groups(groups_data){
+	let gr = [];
+	if (groups_data !== null && groups_data != [])
+		for (const g of groups_data) {
+			let group_data_cy = {
+				data_api: JSON.parse(JSON.stringify(g)),
+				id: 'group' + g.id.toString(),
+				class: 'group',
+			}
+			gr.push({
+				group: 'nodes',
+				data: group_data_cy,
+			});
+			if (g.superior_group_id != null){
+				let group_connection = {
+					id: 'group' + g.id.toString() + 'group' + g.superior_group_id.toString(),
+					target: 'group' + g.id.toString(),
+					source: 'group' + g.superior_group_id.toString(),
+					class: 'connection'
+				}
+				gr.push({
+					group: 'edges',
+					data: group_connection,
+				})
+			}			
+		}
+	console.log(`converted groups data`, gr);
+	return gr;
 }

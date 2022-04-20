@@ -17,9 +17,9 @@ export const useDeleteTransition = (setTransitionsData) => {
 
     async function deleteTransition(transition_data, transitions_data) {
 		let data = await TransitionCtlr.delete_rsc_ins(transition_data.id);
-        console.log(data);
+        // console.log(data);
         if (data == null) {
-            console.log(transitions_data.filter(td => td.id != transition_data.id));
+            // console.log(transitions_data.filter(td => td.id != transition_data.id));
             setSuccessComponent(<DeletePhaseSuccess clearMessage={clearMessage}/>)
             setTransitionsData(transitions_data.filter(td => td.id != transition_data.id))    
         }

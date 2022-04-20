@@ -12,7 +12,7 @@ const CreateFormPage = () => {
         e.preventDefault();
         const req_bod = {"name": form_name}
         let data = await FormCtlr.post_rsc(req_bod)
-		console.log("form data from api", data);
+		// console.log("form data from api", data);
         navigate(`/forms/${data.id}/update`)
     }
     

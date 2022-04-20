@@ -12,6 +12,7 @@ import {
     faFileSignature,
 	faHome,
 	faUser,
+	faUsers,
 	faFile,
 	faFileAlt,
 	faSignInAlt,
@@ -23,6 +24,9 @@ import {
 	faFilePdf,
 	faCheck,
 	faBars,
+	faUserTie,
+	faUserCog,
+	faSortAlphaDown,
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircle } from '@fortawesome/free-regular-svg-icons';
 export const CreateIcon = () => {
@@ -87,8 +91,24 @@ export const HandleInstanceIcon = () => {
 	return <FontAwesomeIcon icon={faFileSignature} title="Handle" />;
 };
 
+export const MarkDoneIcon = () => {
+	return <FontAwesomeIcon icon={faCheck} title="Yes" />;
+}
+
 export const HomePageIcon = () => {
 	return <FontAwesomeIcon icon={faHome} title="Home" />;
+};
+
+export const GroupPageIcon = () => {
+	return <FontAwesomeIcon icon={faUsers} title="Group Page" />;
+};
+
+export const RolePageIcon = () => {
+	return <FontAwesomeIcon icon={faUserCog} title="Role Page" />;
+};
+
+export const PositionPageIcon = () => {
+	return <FontAwesomeIcon icon={faUserTie} title="Position Page" />;
 };
 
 export const FormPageIcon = () => {
@@ -99,11 +119,11 @@ export const InstancePageIcon = () => {
 	return <FontAwesomeIcon icon={faFileAlt} title="Instance Page" />;
 };
 
-export const LogoutPageIcon = () => {
+export const SignOutIcon = () => {
 	return <FontAwesomeIcon icon={faSignOutAlt} title="Log out" />;
 };
 
-export const LoginPageIcon = () => {
+export const SignInIcon = () => {
 	return <FontAwesomeIcon icon={faSignInAlt} title="Log in" />;
 };
 
@@ -147,4 +167,8 @@ export const NoIcon = () => {
 
 export const MenuBarIcon = () => {
 	return <FontAwesomeIcon icon={faBars} title="Menu" />;
+}
+
+export const SortIcon = () => {
+	return <FontAwesomeIcon icon={faSortAlphaDown} title="Menu" />;
 }

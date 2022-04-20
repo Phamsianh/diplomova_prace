@@ -52,7 +52,7 @@ export function useReadDirectorsReceivers() {
 		setPositionsData(positions_data)
 		setDirectorsData(directors)
 		setReceiversData(receivers)
-		console.log('participants', participants);
+		// console.log('participants', participants);
 		setParticipantsData(participants)
 	}
 
@@ -97,7 +97,7 @@ const ReadDirectorsReceivers = ({
 			pd.sections = sections
 			return pd
 		})
-		console.log('whole phases data', phs_d);
+		// console.log('whole phases data', phs_d);
 		setPhsData(phs_d);
 	}, [])
 	

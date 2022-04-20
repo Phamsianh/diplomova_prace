@@ -45,7 +45,7 @@ export const useUpdateField = (setFieldsData) => {
 			order: !isNaN(e.target.order.value) ? 1 : e.target.order.value,
 		};
 		let data = await FieldCtlr.patch_rsc_ins(field_data.id, req_bod);
-		console.log('updated field data', data);
+		// console.log('updated field data', data);
         setSuccessComponent(<UpdateFieldSuccess clearMessage={clearMessage}/>)
         setFieldsData(fs_data.map(fd => fd.id == data.id? data: fd));
         setUpdating(false);

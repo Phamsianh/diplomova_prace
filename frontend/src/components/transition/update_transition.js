@@ -10,12 +10,12 @@ export const UpdateTransition = ({
 	const phases_data = useContext(PhasesData);
 	const [name, setName] = useState(old_transition_data.name);
 	const [to_phase_id, setToPhaseId] = useState(old_transition_data.to_phase_id);
-	const [filtered_phases_data, setFiltered_phases_data] = useState()
+	const [filtered_phases_data, setFiltered_phases_data] = useState(phases_data.filter(pd => {
+		return pd.id !== from_phase_id
+	}))
 
 	useEffect(() => {
-		setFiltered_phases_data(phases_data.filter(pd => {
-			return pd.id !== from_phase_id
-		}))
+		setFiltered_phases_data()
 	}, [phases_data])
 
 	return (

@@ -5,9 +5,11 @@ import {
 	FormPageIcon,
 	HomePageIcon,
 	InstancePageIcon,
-	LoginPageIcon,
 	MenuBarIcon,
 	SubpageIcon,
+	GroupPageIcon,
+	PositionPageIcon,
+	RolePageIcon,
 } from '../icon';
 import { useState, useContext, useEffect } from 'react';
 import { UserContext } from '../../App';
@@ -34,6 +36,48 @@ const Navbar = () => {
 			</div>
 			<div className="dropdown">
 				<button className="show-dropdown-btn">
+					<span><GroupPageIcon /></span>Groups
+				</button>
+				<div className="submenu">
+					{
+						<>
+						<Link to="/groups">
+							<span><SubpageIcon /></span>{' '}All groups
+						</Link>
+						</>
+					}
+				</div>
+			</div>
+			<div className="dropdown">
+				<button className="show-dropdown-btn">
+					<span><RolePageIcon /></span>Roles
+				</button>
+				<div className="submenu">
+					{
+						<>
+						<Link to="/roles">
+							<span><SubpageIcon /></span>{' '}All roles
+						</Link>
+						</>
+					}
+				</div>
+			</div>
+			<div className="dropdown">
+				<button className="show-dropdown-btn">
+					<span><PositionPageIcon /></span>Positions
+				</button>
+				<div className="submenu">
+					{
+						<>
+						<Link to="/positions">
+							<span><SubpageIcon /></span>{' '}All positions
+						</Link>
+						</>
+					}
+				</div>
+			</div>
+			<div className="dropdown">
+				<button className="show-dropdown-btn">
 					<span><FormPageIcon /></span>Forms
 				</button>
 				<div className="submenu">
@@ -42,9 +86,6 @@ const Navbar = () => {
 						<Link to="/forms">
 							<span><SubpageIcon /></span>{' '}All forms
 						</Link>
-						{is_admin && <Link to="/forms/create">
-							<span><SubpageIcon /></span>Create form
-						</Link>}
 						{is_admin && <Link to="/me/forms">
 							<span><SubpageIcon /></span>My forms
 						</Link>}
@@ -62,10 +103,13 @@ const Navbar = () => {
 				<div className="submenu">
 					{
 						<>
+						{is_admin && <Link to="/instances">
+							<span><SubpageIcon /></span>All instances
+						</Link>}
 						<Link to="/instances/create">
 							<span><SubpageIcon /></span>Create instance
 						</Link>
-						<Link to="me/instances">
+						<Link to="/me/instances">
 							<span><SubpageIcon /></span>My created instances
 						</Link>
 						<Link to="/me/participated_instances">
@@ -77,11 +121,6 @@ const Navbar = () => {
 						</>
 					}
 				</div>
-			</div>
-			<div className="dropdown">
-				<Link to="/login">
-					<span><LoginPageIcon /></span>Login
-				</Link>
 			</div>
 		</nav>
 	);

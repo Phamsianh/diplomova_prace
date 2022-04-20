@@ -42,7 +42,7 @@ export const useUpdateForm = (setFormData) => {
             obsolete: e.target.obsolete.checked
 		};
 		let data = await FormCtlr.patch_rsc_ins(f_data.id, req_bod);
-        console.log("updated form data", data);
+        // console.log("updated form data", data);
         setSuccessComponent(<UpdateFormSuccess clearMessage={clearMessage}/>)
         setFormData(data);
         setUpdating(false);

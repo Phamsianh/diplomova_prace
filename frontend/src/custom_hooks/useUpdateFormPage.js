@@ -16,31 +16,31 @@ export const useUpdateFormPage = () => {
 
 	useEffect(() => {
 		FormCtlr.get_rsc_ins(form_id).then((data) => {
-			console.log('form data', data);
+			// console.log('form data', data);
 			setFormData(data);
 		});
 		FormCtlr.get_rel_rsc(form_id, 'phases').then((data) => {
-			console.log('phases data', data);
+			// console.log('phases data', data);
 			setPhasesData(data);
 		});
 		FormCtlr.get_rel_rsc(form_id, 'transitions').then((data) => {
-			console.log('transitions data', data);
+			// console.log('transitions data', data);
 			setTransitionsData(data);
 		});
 		FormCtlr.get_rel_rsc(form_id, 'sections').then((data) => {
-			console.log('sections data', data);
+			// console.log('sections data', data);
 			setSectionsData(data);
 		});
 		FormCtlr.get_rel_rsc(form_id, 'fields').then((data) => {
-			console.log('fields data', data);
+			// console.log('fields data', data);
 			setFieldsData(data);
 		});
 		FormCtlr.get_rel_rsc(form_id, 'positions').then((data) => {
-			console.log('positions data', data);
+			// console.log('positions data', data);
 			setPositionsData(data);
 		});
         PositionCtlr.get_rsc_col().then(data => {
-            console.log('all positions data', data);
+            // console.log('all positions data', data);
             setAllPositionsData(data);
         })
 	}, []);
@@ -48,25 +48,25 @@ export const useUpdateFormPage = () => {
 	useEffect(() => {
 		if (!phases_data) return
 		setPhasesData(phases_data.sort((a, b) => a.order - b.order))
-		console.log('sorted phases data', phases_data);
+		// console.log('sorted phases data', phases_data);
 	}, [phases_data])
 
 	useEffect(() => {
 		if (!sections_data) return
 		setSectionsData(sections_data.sort((a, b) => a.order - b.order))
-		console.log('sorted sections data', sections_data);
+		// console.log('sorted sections data', sections_data);
 	}, [sections_data])
 
 	useEffect(() => {
 		if (!fields_data) return
 		setFieldsData(fields_data.sort((a, b) => a.order - b.order))
-		console.log('sorted fields data', fields_data);
+		// console.log('sorted fields data', fields_data);
 	}, [fields_data])
 	
 	useEffect(() => {
 		if (!(phases_data && sections_data && positions_data)) return
 		FormCtlr.get_rel_rsc(form_id, 'positions').then((data) => {
-			console.log('positions data', data);
+			// console.log('positions data', data);
 			setPositionsData(data);
 		});
 	}, [phases_data, sections_data])

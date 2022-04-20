@@ -49,18 +49,18 @@ export const ReadInstancePage = () => {
 	useEffect(() => {
 		if (is_participant || is_potential_handler) {
 			InstanceCtlr.get_rsc_ins(instance_id).then((data) => {
-				console.log('instancedata', data);
+				// console.log('instancedata', data);
 				setInstanceData(data);
 
 				FormCtlr.get_rsc_ins(data.form_id).then((data) => {
-					console.log('formdata', data);
+					// console.log('formdata', data);
 					setFormData(data);
 				});
 			});
 
 			InstanceCtlr.get_rel_rsc(instance_id, 'instances_fields').then(
 				(data) => {
-					console.log('content data', data);
+					// console.log('content data', data);
 					setContentData(data);
 				}
 			);

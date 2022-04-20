@@ -8,7 +8,7 @@ export const MyPendingInstancesPage = () => {
 	
 	useEffect(() => {
 		UserCtlr.get_rel_rsc('me', 'pending_instances').then((data) => {
-			console.log('pending instances data', data);
+			// console.log('pending instances data', data);
 			setInstancesData(data);
 		});
 	}, []);

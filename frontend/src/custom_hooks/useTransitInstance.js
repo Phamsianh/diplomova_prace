@@ -85,36 +85,24 @@ export const useTransitInstance = (setInstanceData) => {
         e.preventDefault();
         let next_phase_id = e.target.to_phase_id.value;
         let next_phase = phases_data.find(p => p.id == next_phase_id);
-        let req_bod = {}
+        let req_bod = {
+            transit: {
+                current_phase_id: next_phase_id
+            }
+        }
         let next_director = directors.find(d => d.phase_id == next_phase_id)
         // let next_director_user = all_potential_directors
         // let next_receivers_users = []
-        if (next_director) {
-            req_bod = {
-                transit:{
-                    current_phase_id: next_phase_id,
-                }
-            }
-            // next_receivers = all_potential_receivers.filter(nr => {
-            //     if (sections_data.find(s => s.phase_id == next_phase_id && s.id == nr.id)) return true
-            //     else return false
-            // })
-
+        if (!next_director) {
+            req_bod.transit.director_id = e.target.director_id.value;
         }
-        else {
-            req_bod = {
-                transit: {
-                    current_phase_id: next_phase_id,
-                    receivers: {},
-                    director_id: e.target.director_id.value   
-                }
-            };
-            for (const ns of sections_data.filter(sd => sd.phase_id == next_phase_id)) {
-                req_bod.transit.receivers[ns.id] = e.target[`section${ns.id}`].value;
-            }
+        req_bod.transit.receivers = {};
+        for (const ns of sections_data.filter(sd => sd.phase_id == next_phase_id)) {
+            req_bod.transit.receivers[ns.id] = e.target[`section${ns.id}`].value;
         }
+        
         req_bod.transit.message = e.target.message.value
-        console.log("transit instance req_bod", req_bod);
+        // console.log("transit instance req_bod", req_bod);
         const data = await InstanceCtlr.patch_rsc_ins(ins_data.id, req_bod);
         setSuccessComponent(<TransitInstanceSuccess next_phase={next_phase} clearMessage={clearMessage}/>)
         setInstanceData(data);
@@ -154,7 +142,9 @@ const TransitInstance = ({
     const [next_sections, setNextSections] = useState();
     const [next_directors, setNextDirectors] = useState();
     const [next_receivers, setNextReceivers] = useState();
-    const [disabled_specified, setDisabledSpecified] = useState(false);
+    // const [disabled_specified, setDisabledSpecified] = useState({});
+    const [disabled_specified_director, setDisabledSpecifiedDirectors] = useState(true);
+    const [disabled_specified_receivers, setDisabledSpecifiedReceivers] = useState();
 
     const [message, setMessage] = useState();
 
@@ -168,34 +158,51 @@ const TransitInstance = ({
         setNextSections(nxt_sections)
 
         // if director has been already specified for next phase, 
-        //      set next director and next receivers to specified director and specified receivers
-        // else set next director and next receivers to potential directors and potential receivers
+        //      set next director specified director,
+        // else set next director to potential directors
+
+        // if receivers has been already specified for next sections,
+        //      set next receivers to specified receivers
+        // else set next receivers to potential receivers
         let specified_director = directors.find(d => d.phase_id == next_phase.id)
         if(specified_director) {
-            let nxt_director = all_potential_directors[`${next_phase.id}`].filter(pd => pd.id == specified_director.user_id)
-            console.log('next director', nxt_director);
-            setNextDirectors(nxt_director)
+            setDisabledSpecifiedDirectors(true);
+            let nxt_director = all_potential_directors[`${next_phase.id}`].filter(pd => pd.id == specified_director.user_id);
+            // console.log('next director', nxt_director);
+            setNextDirectors(nxt_director);
 
             let nxt_receivers = {}
+            let disabled_specified_receivers = {}
             for (const ns of nxt_sections) {
                 let specified_receiver = receivers.find(r => r.section_id == ns.id)
-                nxt_receivers[ns.id] = all_potential_receivers[`${ns.id}`].filter(pr => pr.id == specified_receiver.user_id)
+                if (specified_receiver) {
+                    nxt_receivers[ns.id] = all_potential_receivers[`${ns.id}`].filter(pr => pr.id == specified_receiver.user_id)
+                    disabled_specified_receivers[ns.id] = true
+
+                }
+                else {
+                    nxt_receivers[ns.id] = all_potential_receivers[`${ns.id}`]
+                    disabled_specified_receivers[ns.id] = false
+                }
             }
-            console.log('next receivers', nxt_receivers);
+            // console.log('next receivers', nxt_receivers);
             setNextReceivers(nxt_receivers)
-            setDisabledSpecified(true)
+            setDisabledSpecifiedReceivers(disabled_specified_receivers)
         }
         else{
-            let nxt_director = all_potential_directors[`${next_phase.id}`]
-            setNextDirectors(nxt_director)
-            console.log('next director', nxt_director);
+            setDisabledSpecifiedDirectors(false);
+            let nxt_director = all_potential_directors[`${next_phase.id}`];
+            setNextDirectors(nxt_director);
+            // console.log('next director', nxt_director)
             let nxt_receivers = {}
+            let disabled_specified_receivers = {}
             for (const ns of nxt_sections) {
                 nxt_receivers[ns.id] = all_potential_receivers[`${ns.id}`]
+                disabled_specified_receivers[ns.id] = false
             }
-            console.log('next receivers', nxt_receivers);
+            // console.log('next receivers', nxt_receivers);
             setNextReceivers(nxt_receivers)
-            setDisabledSpecified(false);
+            setDisabledSpecifiedReceivers(disabled_specified_receivers)
         }
     }, [next_phase])
 
@@ -234,7 +241,7 @@ const TransitInstance = ({
                 <>
                 <label>
                     Select director:
-                    {<select name="director_id" id="director_id" disabled={disabled_specified}>
+                    {<select name="director_id" id="director_id" disabled={disabled_specified_director}>
                             {next_directors && next_directors.map(nd => {
                                 return <option value={nd.id} key={nd.id}>{nd.first_name} {nd.last_name}</option>
                             })}
@@ -245,10 +252,12 @@ const TransitInstance = ({
                     return (
                         <label key={nsd.id}>
                             {nsd.name} {`(Section ID: ${nsd.id})`} - {positions_data.find(pd => pd.id == nsd.position_id).name}
-                            {<select name={`section${nsd.id}`} id={`section${nsd.id}`} disabled={disabled_specified}>
-                                {next_receivers && next_receivers[`${nsd.id}`].map(nr => {
+                            {disabled_specified_receivers && 
+                            <select name={`section${nsd.id}`} id={`section${nsd.id}`} disabled={disabled_specified_receivers[`${nsd.id}`]}>
+                                {next_receivers && next_receivers[`${nsd.id}`]?.map(nr => {
                                     return <option value={nr.id} key={nr.id}>{nr.first_name} {nr.last_name}</option>
                                 })}
+                                <option value={0}>None</option>
                             </select>}
                         </label>
                     )

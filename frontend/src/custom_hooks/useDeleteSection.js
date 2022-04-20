@@ -16,7 +16,7 @@ export const useDeleteSection = (setSectionsData) => {
     
     async function deleteSection(section_data, sections_data) {
 		let data = await SectionCtlr.delete_rsc_ins(section_data.id);
-        console.log(data);
+        // console.log(data);
         if (data == null) {
             setSuccessComponent(<DeleteSectionSuccess clearMessage={clearMessage}/>)
             setSectionsData(sections_data.filter(sd => sd.id != section_data.id))    

@@ -16,9 +16,9 @@ export const useDeleteField = (setFieldsData) => {
     
     async function deleteField(field_data, fields_data) {
 		let data = await FieldCtlr.delete_rsc_ins(field_data.id);
-        console.log(data);
+        // console.log(data);
         if (data == null) {
-            console.log(fields_data.filter(fd => fd.id != field_data.id));
+            // console.log(fields_data.filter(fd => fd.id != field_data.id));
             setSuccessComponent(<DeleteFieldSuccess clearMessage={clearMessage}/>)
             setFieldsData(fields_data.filter(fd => fd.id != field_data.id))    
         }

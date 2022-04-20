@@ -8,7 +8,7 @@ export const MyParticipatedInstancesPage = () => {
 	
 	useEffect(() => {
 		UserCtlr.get_rel_rsc('me', 'participated_instances').then((data) => {
-			console.log('participated instances data', data);
+			// console.log('participated instances data', data);
 			setInstancesData(data);
 		});
 	}, []);

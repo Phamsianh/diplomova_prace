@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useController } from "../../controllers";
+import { formatDate } from "../../utils/datetime";
 import { resizeTextarea } from "../../utils/resize_textarea";
 
 export function UpdateInstanceField ({readonly=true, old_instance_field_data, instances_fields_data, setInstancesFieldsData}) {
@@ -43,7 +44,7 @@ export function UpdateInstanceField ({readonly=true, old_instance_field_data, in
     }
 
     return (
-        <div className="instance-field">
+        <div className="instance-field" title={`Last updated: ${formatDate(old_instance_field_data?.updated_at)}`}>
             <form onSubmit={handleSubmit}>
                 {/* <div className="manage-buttons">
                     <button className="option-button" onClick={e => {

@@ -51,7 +51,7 @@ export const useUpdatePhase = (all_positions_data, setPhasesData) => {
 			order: e.target.order.value
 		};
 		let data = await PhaseCtlr.patch_rsc_ins(phase_data.id, req_bod);
-		console.log('updated phase data', data);
+		// console.log('updated phase data', data);
         setSuccessComponent(<UpdatePhaseSuccess clearMessage={clearMessage}/>)
         setPhasesData(phs_data.map(pd => pd.id == data.id? data: pd))
         setUpdating(false);

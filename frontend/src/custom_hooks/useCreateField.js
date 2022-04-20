@@ -21,7 +21,7 @@ export const useCreateField = (setFieldsData) => {
         if (creating) {
             let fields_data = fds_data.filter(f => f.section_id == section_data.id)
             setCreateFieldComponent(
-                <CreateField fields_data={fields_data} section handleSubmit={handleSubmit} cancelSubmit={cancelSubmit} />
+                <CreateField fields_data={fields_data} handleSubmit={handleSubmit} cancelSubmit={cancelSubmit} />
             )
         }
         else {

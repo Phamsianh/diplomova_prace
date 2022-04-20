@@ -8,7 +8,7 @@ export const MyFormsPage = () => {
 	
 	useEffect(() => {
 		UserCtlr.get_rel_rsc('me', 'created_forms').then((data) => {
-			console.log('created forms data', data);
+			// console.log('created forms data', data);
 			setFormsData(data);
 		});
 	}, []);

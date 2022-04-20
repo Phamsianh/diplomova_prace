@@ -1,0 +1,29 @@
+.roles table{
+    width: 80%;
+    margin: auto;
+}
+
+.success {
+    width: auto;
+    height: 0;
+    position: sticky;
+    top: 10px;
+    right: 0;
+    display: none;
+    overflow: visible;
+    color: white;
+    z-index: 200;
+
+}
+
+.success div {
+    position: relative;
+    margin: 0 10px 10px;
+    padding: 10px 30px 10px 20px;
+    background-color: limegreen;
+    box-shadow: 0 0 10px 2px rgb(18, 124, 18);    
+}
+
+.show-success {
+    display: block;
+}
