@@ -2,5 +2,8 @@
 **/*.pyc
 **/test.py
 **/test[0-9].py
+**/test[0-9][0-9].py
 backend/.idea
 **/venv/
+.gitignore
+**/.vscode/
