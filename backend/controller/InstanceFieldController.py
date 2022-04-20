@@ -10,12 +10,12 @@ class InstanceFieldController(BaseController):
         "receiver"
     ]
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Contents can only be retrieved through endpoint Get Instances Instances Fields.
 
         For development process, this constraint is disable.
         """
-        return super(InstanceFieldController, self).get_resource_collection()
+        return super(InstanceFieldController, self).get_resource_collection(limit, offset, attribute, value, order)
         # raise ORMExc.ORMException("contents can only be retrieved through endpoint Get Instances Instances Fields")
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
@@ -48,6 +48,7 @@ Constraint:
             raise ORMExc.ORMException("you're not receiver of this instance field")
 
         # update creator of the content in case the receiver of the instance can be changed by the director.
+        # this creator_id of the content is used for creating the envelope. Refer to Commiter.create_envelope() method.
         rsc_ins.creator_id = self.current_user.id
         return super().patch_resource_instance(rsc_ins, req_body)
 

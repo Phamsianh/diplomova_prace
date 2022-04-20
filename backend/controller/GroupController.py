@@ -12,9 +12,9 @@ class GroupController(BaseController):
         "joiners"
     ]
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all groups in the system."""
-        return super(GroupController, self).get_resource_collection()
+        return super(GroupController, self).get_resource_collection(limit, offset, attribute, value, order)
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get a group by id."""
@@ -46,11 +46,13 @@ Constraint:
         Constraint:
         * Authenticated user must be the creator of this group.
         * Group has no joiners.
+        * Group has no subordinate groups.
         """
         if rsc_ins.joiners:
-            raise ORMExc.IndelibleResourceInstance
-        else:
-            super().delete_resource_instance(rsc_ins)
+            raise ORMExc.ORMException("group must not have any joiners.")
+        if rsc_ins.subordinate_groups:
+            raise ORMExc.ORMException("group must not have subordinate groups.")
+        return super().delete_resource_instance(rsc_ins)
 
     def get_groups_positions(self, rsc_id: Union[str, int], rel_rsc, query: Optional[dict] = None):
         """Get all positions in the group."""

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 from controller.FormComponentController import FormComponentController
 from ORM import Model
 from exceptions import ORMExceptions as ORMExc
@@ -15,9 +15,9 @@ class SectionController(FormComponentController):
         "potential_receivers",
     ]
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all sections in the system."""
-        return super().get_resource_collection()
+        return super().get_resource_collection(limit, offset, attribute, value, order)
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get a section by id."""

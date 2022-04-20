@@ -12,13 +12,28 @@ class Committer:
         self.create_commit(tree, message)
 
     def create_envelope(self, instance_field):
+        """Create an envelope from the content.
+        The envelope will have:
+        
+        * ``instance_field_id``: the id of the content
+        * ``creator_id``: the creator_id of the content, which is used for determining who is the last handler updated the content.
+        * ``content_value``: the value of the content. it cannot be null. it can be an empty for creating the hash of envelope.
+        * ``updated_at``: the time of the last update of the content. default value provided by the database when the content first created.
+        Refer to the Model.InstanceField.updated_at
+        """
         envelope = Envelope(
             instance_field_id=instance_field.id,
+            # 
+            creator_id=instance_field.creator_id,
+            # The content value can be an empty string
             content_value=instance_field.value,
+            # The time of the last update of the content, default value provided by the database when the content first created.
+            # Refer to the Model.InstanceField.updated_at
             updated_at=instance_field.updated_at
         )
         hash_envelope = somehashfunction(
             str(envelope.instance_field_id) +
+            str(envelope.creator_id) +
             envelope.content_value +
             str(envelope.updated_at)
         )

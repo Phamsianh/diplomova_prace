@@ -24,6 +24,15 @@ for resource_name, controller_name in resource_registry.items():
     )(pof_generator.grc_generator())
 
     router.get(
+        f"/{resource_name}/length",
+        response_model=int,
+        tags=[
+            resource_name,
+            # "Get Resource Collection"
+        ]
+    )(pof_generator.grcl_generator())
+
+    router.get(
         "/" + resource_name + "/{rsc_id}",
         response_model=pof_generator.response_schema,
         tags=[

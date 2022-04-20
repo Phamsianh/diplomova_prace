@@ -14,6 +14,7 @@ class InstanceController(BaseController):
         "directors",
         "receivers",
         "participants",
+        "participated_users",
         "commits",
         "current_director",
         "current_receivers",
@@ -21,7 +22,7 @@ class InstanceController(BaseController):
         "current_receivers_users",
     ]
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all instances in the system.
 
         Constraint:
@@ -30,7 +31,7 @@ class InstanceController(BaseController):
         """
         if not self.current_user.is_admin:
             raise ORMExc.ORMException("require role admin for this endpoint")
-        return super(InstanceController, self).get_resource_collection()
+        return super(InstanceController, self).get_resource_collection(limit, offset, attribute, value, order)
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get the instance's information by id.
@@ -118,7 +119,7 @@ Authenticated user, which is:
 
 * Director of the current phase can transit instance to next phase.
 * Receiver of the current phase can handle(receive) instance.
-
+* Director of the end phase can mark the instance as 'done' to indicate the instance is completely handled.
 ---
 
 # To transit instance:
@@ -158,11 +159,25 @@ Then all receiver's instance fields (contents) are auto created.
 
 *Note: The content cannot be manually created.*
 
+# To mark the instance as done:
+
+## Constraints:
+
+* Only the director of the end phase can mark the instance as 'done'.
+* The instance at state done cannot be modified.
+
 ---
 
 """
         val_body = self.get_val_dat(req_body, 'patch')
-
+        
+        if rsc_ins._current_state == "done":
+            raise ORMExc.ORMException("the instance is completely handled.")
+        if "done" in val_body and val_body["done"]:
+            self.mark_instance_done(rsc_ins)
+            self.session.commit()
+            self.session.refresh(rsc_ins)
+            return rsc_ins
         if "transit" in val_body:
             self.transit_instance(val_body["transit"], rsc_ins)
         if "handle" in val_body and val_body["handle"]:
@@ -170,6 +185,23 @@ Then all receiver's instance fields (contents) are auto created.
         self.session.commit()
         self.session.refresh(rsc_ins)
         return rsc_ins
+
+    def mark_instance_done(self, ins: Instance):
+        """To mark the instance as done:
+
+        Constraints:
+
+        * Only the director of the end phase can mark the instance as 'done'.
+        * The instance at state done cannot be modified.
+        """
+        if ins.current_phase.phase_type != "end":
+            raise ORMExc.ORMException("the current phase is not the end phase.")
+        if self.current_user != ins.current_director_user:
+            raise ORMExc.ORMException("you are not current director of this phase.")
+        ins._current_state = "done"
+        from ORM.Commiter import Committer
+        committer = Committer(self.session, self.current_user, ins)
+        committer.commit("Done.")
 
     def transit_instance(self, transit_data: dict, ins: Instance):
         """
@@ -379,12 +411,26 @@ Then all receiver's instance fields (contents) are auto created.
         return self.get_related_resource(rsc_id, rel_rsc, query)
 
     def get_instances_participants(self, rsc_id: Union[str, int], rel_rsc, query: Optional[dict] = None):
-        """Get all participants of the instance.
+        """Get all current participants of the instance. 
+        Participants include all directors and receivers of the instance.
 
         Constraint:
 
         * Only participants of the instance can retrieve its participants.
         """
+        return self.get_related_resource(rsc_id, rel_rsc, query)
+
+    def get_instances_participated_users(self, rsc_id: Union[str, int], rel_rsc, query: Optional[dict] = None):
+        """Get all participated users of the instance.
+        Participated users include all users who've already became a creator of at least one of the envelope of the instance.
+        That is, the user must be the last handler, who editted the content and the director must transit the instance to the next phase to create a commit.
+        The system will create the envelope with the creator_id of the user, who is the last editor of the content.
+
+        Constraint:
+
+        * Only participants of the instance can retrieve its participants.
+        """
+        # Refer to the Commiter.create_envelope() method for more information.
         return self.get_related_resource(rsc_id, rel_rsc, query)
 
     def get_instances_commits(self, rsc_id: Union[str, int], rel_rsc, query: Optional[dict] = None):

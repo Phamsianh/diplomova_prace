@@ -37,6 +37,7 @@ class User(Base):
     instances_fields = relationship("InstanceField", back_populates="creator")
     directors = relationship("Director", back_populates="user")
     receivers = relationship("Receiver", back_populates="user")
+    envelopes = relationship("Envelope", back_populates="creator")
 
     def __repr__(self):
         return f'''
@@ -62,6 +63,9 @@ birthdate: {self.birthdate}
     @password.setter
     def password(self, value: str):
         self._password = hashlib.sha256(value.encode()).hexdigest()
+        # from codecs import encode
+        # self._password = encode(hashlib.sha256(value.encode()).digest(), 'base64').decode()
+
 
     @property
     def held_positions(self) -> Optional[List['Position']]:
@@ -257,8 +261,8 @@ class Section(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String(100), nullable=False)
-    phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
-    position_id = Column(BigInteger, ForeignKey("positions.id"))
+    phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"), nullable=False)
+    position_id = Column(BigInteger, ForeignKey("positions.id"), nullable=False)
     order = Column(SmallInteger, server_default="1")
 
     # many-to-one relationship(s)
@@ -318,7 +322,7 @@ class Field(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String, nullable=False)
-    section_id = Column(BigInteger, ForeignKey("sections.id", ondelete="CASCADE"))
+    section_id = Column(BigInteger, ForeignKey("sections.id", ondelete="CASCADE"), nullable=False)
     order = Column(Integer, server_default="1")
 
     # many-to-one relationship(s)
@@ -379,8 +383,8 @@ class Instance(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    form_id = Column(BigInteger, ForeignKey("forms.id"))
-    current_phase_id = Column(BigInteger, ForeignKey("phases.id"))
+    form_id = Column(BigInteger, ForeignKey("forms.id"), nullable=False)
+    current_phase_id = Column(BigInteger, ForeignKey("phases.id"), nullable=False)
     creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     _current_state = Column("current_state", Enum(
         "initialized",
@@ -418,6 +422,13 @@ creator_id: {self.creator_id}
 current_state: {self.current_state}
 )
 '''
+
+    @property
+    def done(self):
+        if self._current_state != "done":
+            return False
+        else:
+            return True
 
     @property
     def current_state(self):
@@ -514,6 +525,13 @@ current_state: {self.current_state}
         directors_users = inspect(self).session.query(User).join(User.directors). \
             filter(Director.instance_id == self.id).all()
         return list(set((receivers_users + directors_users)))
+
+    @property
+    def participated_users(self) -> Optional[List['User']]:
+        """Participated users includes users, who is receivers, directors or users, who edited the content"""
+        users_edited_content = inspect(self).session.query(User).join(User.envelopes).join(Envelope.instance_field). \
+            filter(InstanceField.instance_id == self.id).all()
+        return list(set(users_edited_content + self.participants))
 
     @property
     def current_assigned_positions(self) -> Optional[List['Position']]:
@@ -730,9 +748,9 @@ class InstanceField(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     # default value for updated_at is used for creating envelope. refer to Committer.create_envelope()
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
-    instance_id = Column(BigInteger, ForeignKey("instances.id", ondelete="CASCADE"))
-    field_id = Column(BigInteger, ForeignKey("fields.id"))
-    creator_id = Column(BigInteger, ForeignKey("users.id"))
+    instance_id = Column(BigInteger, ForeignKey("instances.id", ondelete="CASCADE"), nullable=False)
+    field_id = Column(BigInteger, ForeignKey("fields.id"), nullable=False)
+    creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     # an empty string is used for creating the envelopes. refer to Commiter.create_envelope()
     value = Column(String, server_default="")
     resolved = Column(Boolean, server_default='false')
@@ -745,6 +763,7 @@ class InstanceField(Base):
 
     # one-to-many relationship(s)
 
+    @property
     def receiver(self):
         return inspect(self).session.query(User).join(User.receivers).join(Receiver.section).join(Section.fields).\
             filter(Field.id == self.field_id, Receiver.instance_id == self.instance_id).first()
@@ -769,9 +788,9 @@ class Receiver(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    instance_id = Column(BigInteger, ForeignKey("instances.id"))
-    section_id = Column(BigInteger, ForeignKey("sections.id"))
-    user_id = Column(BigInteger, ForeignKey("users.id"))
+    instance_id = Column(BigInteger, ForeignKey("instances.id"), nullable=False)
+    section_id = Column(BigInteger, ForeignKey("sections.id"), nullable=False)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     received = Column(Boolean, server_default="false")
     __table_args__ = (UniqueConstraint('instance_id', 'section_id', name='instance_section_uc'),)
 
@@ -787,9 +806,9 @@ class Director(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    instance_id = Column(BigInteger, ForeignKey("instances.id"))
-    phase_id = Column(BigInteger, ForeignKey("phases.id"))
-    user_id = Column(BigInteger, ForeignKey("users.id"))
+    instance_id = Column(BigInteger, ForeignKey("instances.id"), nullable=False)
+    phase_id = Column(BigInteger, ForeignKey("phases.id"), nullable=False)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     __table_args__ = (UniqueConstraint('instance_id', 'phase_id', name='instance_phase_uc'),)
 
     # relationship(s) many-to-one
@@ -888,10 +907,10 @@ class Phase(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    form_id = Column(BigInteger, ForeignKey("forms.id"))
+    form_id = Column(BigInteger, ForeignKey("forms.id"), nullable=False)
     name = Column(String(100), nullable=False)
     description = Column(String)
-    position_id = Column(BigInteger, ForeignKey("positions.id"))
+    position_id = Column(BigInteger, ForeignKey("positions.id"), nullable=False)
     phase_type = Column(Enum("begin", "transit", "end", name="phase_enum"))
     order = Column(SmallInteger, server_default="1")
 
@@ -973,8 +992,8 @@ class Transition(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     name = Column(String(100))
-    from_phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
-    to_phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"))
+    from_phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"), nullable=False)
+    to_phase_id = Column(BigInteger, ForeignKey("phases.id", ondelete="CASCADE"), nullable=False)
     order = Column(Integer)
     __table_args__ = (UniqueConstraint('from_phase_id', 'to_phase_id', name='from_phase_to_phase_uc'),)
 
@@ -1068,9 +1087,9 @@ class UserPosition(Base):
     id = Column(BigInteger, primary_key=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    creator_id = Column(BigInteger, ForeignKey("users.id"))
-    user_id = Column(BigInteger, ForeignKey("users.id"))
-    position_id = Column(BigInteger, ForeignKey("positions.id"))
+    creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    position_id = Column(BigInteger, ForeignKey("positions.id"), nullable=False)
 
     # many-to-one relationship(s)
     creator = relationship("User", back_populates="created_users_positions", foreign_keys=[creator_id])
@@ -1093,21 +1112,18 @@ position_id: {self.position_id}
 class Envelope(Base):
     __tablename__ = "envelopes"
 
-    hash_envelope = Column(String, primary_key=True, unique=True)
+    hash_envelope = Column(String(64), primary_key=True, unique=True)
     instance_field_id = Column(BigInteger, ForeignKey('instances_fields.id'), nullable=False)
+    creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
     content_value = Column(String)
     updated_at = Column(DateTime(timezone=True))
 
     # many-to-one relationship(s)
     instance_field = relationship('InstanceField', backref='envelopes')
+    creator = relationship('User', back_populates='envelopes')
 
     # one-to-many relationship(s)
     trees_envelopes = relationship('TreeEnvelope', back_populates='envelope')
-
-    @property
-    def creator(self):
-        return inspect(self).session.query(User).join(User.instances_fields).\
-            filter(InstanceField.id == self.instance_field_id).first()
 
     @property
     def field(self):
@@ -1118,7 +1134,7 @@ class Envelope(Base):
 class Tree(Base):
     __tablename__ = "trees"
 
-    hash_tree = Column(String, primary_key=True)
+    hash_tree = Column(String(64), primary_key=True)
 
     # one-to-one relationship(s)
     commit = relationship('Commit', back_populates="tree", uselist=False)
@@ -1130,9 +1146,10 @@ class TreeEnvelope(Base):
     __tablename__ = "trees_envelopes"
 
     id = Column(BigInteger, primary_key=True)
-    hash_tree = Column(String, ForeignKey('trees.hash_tree'))
-    hash_envelope = Column(String, ForeignKey('envelopes.hash_envelope'))
+    hash_tree = Column(String(64), ForeignKey('trees.hash_tree'), nullable=False)
+    hash_envelope = Column(String(64), ForeignKey('envelopes.hash_envelope'), nullable=False)
 
+    #  many-to-one relationships
     envelope = relationship('Envelope', back_populates="trees_envelopes")
     tree = relationship('Tree', back_populates='trees_envelopes')
 
@@ -1140,13 +1157,13 @@ class TreeEnvelope(Base):
 class Commit(Base):
     __tablename__ = "commits"
 
-    hash_commit = Column(String, primary_key=True)
-    prev_hash_commit = Column(String, ForeignKey('commits.hash_commit'))
-    hash_tree = Column(String, ForeignKey('trees.hash_tree'))
+    hash_commit = Column(String(64), primary_key=True)
+    prev_hash_commit = Column(String(64), ForeignKey('commits.hash_commit'))
+    hash_tree = Column(String(64), ForeignKey('trees.hash_tree'), nullable=False)
     creator_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
-    instance_id = Column(BigInteger, ForeignKey("instances.id"))
+    instance_id = Column(BigInteger, ForeignKey("instances.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    current_phase_id = Column(BigInteger, ForeignKey("phases.id"))
+    current_phase_id = Column(BigInteger, ForeignKey("phases.id"), nullable=False)
     message = Column(String)
 
     # one-to-one relationship(s)

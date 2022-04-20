@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 from ORM.Model import Instance, Section, UserPosition, Receiver
 from exceptions.ORMExceptions import ORMException
 from controller.BaseController import BaseController
@@ -7,14 +7,14 @@ from controller.BaseController import BaseController
 class ReceiverController(BaseController):
     related_resource = []
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all receivers in the system.
         
         Constraint:
         * Only admin can get all receivers in the system"""
         if self.current_user.is_admin:
             raise ORMException("you are not an admin")
-        return super().get_resource_collection()
+        return super().get_resource_collection(limit, offset, attribute, value, order)
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get the receiver by id.

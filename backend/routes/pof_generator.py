@@ -1,7 +1,7 @@
 import importlib
-from typing import Union
+from typing import Optional, Union
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Query, Request
 
 from ORM.session import Session
 from authentication.authorization.auth_checker import AuthorizationChecker
@@ -31,11 +31,16 @@ class POFGenerator:
         """Get Resource Collection Generator generates a get resource collection POF."""
 
         def get_resource_collection(session: Session = Depends(get_session),
-                                    user_dependency: UserDependency = Depends()):
+                                    user_dependency: UserDependency = Depends(),
+                                    limit: Optional[int] = Query(50, description="Limit number of results"),
+                                    offset: Optional[int] = Query(0, description="Offset from which the result is queried"),
+                                    attribute: Optional[str] = Query(None, description="Attribute of the resource"),
+                                    value: Optional[str] = Query(None, description="Value of the attribute"),
+                                    order: Optional[list] = Query(None, description="Name of attribute to sort")):
             try:
                 current_user = user_dependency.get_current_user()
                 controller = self.controller_class(session, current_user)
-                resource_collection = controller.get_resource_collection()
+                resource_collection = controller.get_resource_collection(limit, offset, attribute, value, order)
                 return controller.prepare_response(resource_collection)
             except ORMExc.ORMException as e:
                 raise HTTPException(400, e.message)
@@ -43,6 +48,25 @@ class POFGenerator:
         get_resource_collection.__name__ = f"get_{self.controller.resource_name}_collection"
         get_resource_collection.__doc__ = self.controller.get_resource_collection.__doc__
         return get_resource_collection
+
+    def grcl_generator(self):
+        """Get Resource Collection Generator generates a get resource collection length POF."""
+
+        def get_resource_collection_length(session: Session = Depends(get_session),
+                                            user_dependency: UserDependency = Depends(),
+                                            attribute: Optional[str] = Query(None, description="Attribute of the resource"),
+                                            value:Optional[str] = Query(None, description="Value of the attribute")):
+            try:
+                current_user = user_dependency.get_current_user()
+                controller = self.controller_class(session, current_user)
+                resource_collection_length = controller.get_resource_collection_length(attribute, value)
+                return resource_collection_length
+            except ORMExc.ORMException as e:
+                raise HTTPException(400, e.message)
+
+        get_resource_collection_length.__name__ = f"get_{self.controller.resource_name}_collection_length"
+        get_resource_collection_length.__doc__ = self.controller.get_resource_collection_length.__doc__
+        return get_resource_collection_length
 
     def gri_generator(self):
         """Get Resource Instance Generator generates a get resource instance POF."""

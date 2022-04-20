@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 
 from controller.BaseController import BaseController
 from exceptions import ORMExceptions as ORMExc
@@ -16,11 +16,14 @@ class FormController(BaseController):
         "available_positions"
     ]
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all the public forms in the system."""
         from ORM.Model import Form
-        public_forms = self.session.query(Form).filter(Form.public == True).limit(50).all()
-        return public_forms
+        if not self.current_user.is_admin:
+            forms = self.session.query(Form).filter(Form.public == True).order_by(Form.id).limit(limit).offset(offset).all()
+        else:
+            forms = super(FormController, self).get_resource_collection(limit, offset, attribute, value, order)
+        return forms
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get form from id."""

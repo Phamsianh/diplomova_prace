@@ -11,14 +11,14 @@ class CommitController(BaseController):
         "envelopes",
     ]
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all commits in the system
 
         Constraint:
 
         * Only admin can retrieve all commits in the system.
         """
-        return super(CommitController, self).get_resource_collection()
+        return super(CommitController, self).get_resource_collection(limit, offset, attribute, value, order)
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get commit by hash.

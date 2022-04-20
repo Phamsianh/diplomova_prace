@@ -7,4 +7,7 @@ uri = f'{database}://{user_name}:{password}@{host}:{port}/{database_name}'
 # more detail in: https://docs.sqlalchemy.org/en/14/core/connections.html#sql-caching
 # and in:  https://docs.sqlalchemy.org/en/14/faq/performance.html#why-is-my-application-slow-after-upgrading-to-1-4-and-or-2-x
 
-engine = create_engine(uri, echo=True)
+engine = create_engine(
+    uri, 
+    echo=True
+)

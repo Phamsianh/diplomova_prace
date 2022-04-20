@@ -24,24 +24,28 @@ phase_for_student = Phase(
     phase_type="begin",
     form=form1,
     position=student,
+    order=1,
 )
 phase_for_head_of_department = Phase(
     name="Phase for Head of Department",
     form=form1,
     position=head_of_department,
-    phase_type="transit"
+    phase_type="transit",
+    order=2
 )
 phase_for_vice_dean = Phase(
     name="Phase For Vice Dean",
     form=form1,
     position=vice_dean,
-    phase_type="transit"
+    phase_type="transit",
+    order=3
 )
 phase_for_guarantor = Phase(
     name="Phase for Guarantor",
     form=form1,
     position=guarantor,
-    phase_type="end"
+    phase_type="end",
+    order=4
 )
 
 # ---------------------TRANSITION--------------------
@@ -166,14 +170,14 @@ statement_of_hod = Field(
     section=section_for_head_of_department,
     order=1
 )
-statement_of_guarantor = Field(
-    name="Statement of the guarantor of the study program:",
-    section=section_for_guarantor,
-    order=1
-)
 statement_of_dean = Field(
     name="Statement of the Dean of the Faculty:",
     section=section_for_dean,
+    order=1
+)
+statement_of_guarantor = Field(
+    name="Statement of the guarantor of the study program:",
+    section=section_for_guarantor,
     order=1
 )
 

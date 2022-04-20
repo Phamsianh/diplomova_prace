@@ -38,15 +38,15 @@ class UserRegistration(BaseModel):
         max_length=100,
         description="password used to authenticate user"
                     "password must contain at least 8 characters, at least 1 uppercase letter, 1 lower letter, "
-                    "1 number and can contain special character"
+                    "1 number and can contain special character",
         # regular expression for password from https://regexr.com/3bfsi
-        # regex=r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,100}$"
+        regex=r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,100}$"
     )
     email: str = Field(
         ...,
-        description="Email of the user. Must follow email naming schema"
+        description="Email of the user. Must follow email naming schema",
         # regular expression for email from https://regexr.com/2rhq7
-        # regex=r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+        regex=r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
     )
     phone: Optional[int] = Field(
         None,
@@ -84,15 +84,15 @@ class UserPatchRequest(BaseModel):
         max_length=100,
         description="password used to authenticate user. "
                     "password must contain at least 8 characters, at least 1 uppercase letter, 1 lower letter, "
-                    "1 number and can contain special character"
+                    "1 number and can contain special character",
         # regular expression for password from https://regexr.com/3bfsi
-        # regex=r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,100}$"
+        regex=r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,100}$"
     )
     email: Optional[str] = Field(
         None,
         description="Email of the user. Must follow email naming schema",
         # regular expression for email from https://regexr.com/2rhq7
-        # regex=r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+        regex=r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
     )
     phone: Optional[int] = Field(
         None,
@@ -140,8 +140,9 @@ class GroupPostRequest(BaseModel):
         max_length=100,
         description="The address of the group"
     )
-    phone: Optional[int] = Field(
+    phone: Optional[str] = Field(
         None,
+        regex="^[0-9]{8,20}$",
         description="The phone number of the group"
     )
     superior_group_id: Optional[int] = Field(
@@ -781,7 +782,12 @@ class InstancePatchRequest(BaseModel):
         None,
         description="Set this field to true if authenticated user is the handler(receiver) of the next phase"
     )
-
+    done: Optional[bool] = Field(
+        None,
+        description="The state of the instance when it is complete handle and reach the end phase. "
+                    "Mark this field to true to change the state of the instance to done."
+                    "The instance at state 'done' cannot be modified."
+    )
     class Config:
         orm_mode = True
         # require_ownership = True
@@ -799,7 +805,8 @@ class InstanceResponse(BaseModel):
     form_id: int
     current_phase_id: Optional[int]
     creator_id: int
-    current_state: InstanceCurrentStateEnum
+    # current_state: InstanceCurrentStateEnum
+    done: bool
 
     class Config:
         orm_mode = True
@@ -824,7 +831,10 @@ class InstanceFieldPatchRequest(BaseModel):
 
     class Config:
         orm_mode = True
-        require_ownership = True
+        # Don't require ownership, because the director can change the receiver of the content.
+        # Then this content can be updated by different handler.
+        # The user must be the receiver of this content. Refer the InstanceFieldController.path_resource_instance() method.
+        # require_ownership = True
 
 
 class InstanceFieldDeleteRequest(BaseModel):
@@ -835,6 +845,7 @@ class InstanceFieldDeleteRequest(BaseModel):
 class InstanceFieldResponse(BaseModel):
     id: int
     created_at: datetime
+    updated_at: datetime
     instance_id: int
     field_id: int
     creator_id: int
@@ -934,6 +945,7 @@ class CommitResponse(BaseModel):
 class EnvelopeResponse(BaseModel):
     hash_envelope: str
     instance_field_id: str
+    creator_id: int
     content_value: str
     updated_at: datetime
 

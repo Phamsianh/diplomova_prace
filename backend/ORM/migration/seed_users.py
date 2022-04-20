@@ -49,6 +49,14 @@ petrfrantis = User(
     email='petr.frantis@unob.cz',
     phone='973442348'
 )
+zdenekvintr = User(
+    first_name='Zdeněk',
+    last_name='Vintr',
+    user_name='zdenekvintr',
+    password='strongpassword',
+    email='zdenek.vintr@unob.cz',
+    phone='973443474'
+)
 
 role_system_admin = Role(name="System Admin", role="admin")
 role_rector = Role(name="Rector", role="admin")
@@ -157,6 +165,8 @@ janfarlik_vice_dean = UserPosition(user=janfarlik, position=vice_dean)
 
 janfarlik_vice_dean_FMT = UserPosition(user=janfarlik, position=vice_dean_of_FMT)
 
+zdenekvintr_guarantor = UserPosition(user=zdenekvintr, position=guarantor)
+
 petrfrantis_head_of_department = UserPosition(user=petrfrantis, position=head_of_department)
 
 petrfrantis_head_of_DoICO = UserPosition(user=petrfrantis, position=head_of_DoICO)
@@ -179,6 +189,7 @@ phamsianh.created_users_positions = [
     vlastimilneumann_dean_gr_admin_FMT,
     janfarlik_vice_dean,
     janfarlik_vice_dean_FMT,
+    zdenekvintr_guarantor,
     petrfrantis_head_of_department,
     petrfrantis_head_of_DoICO,
     alexandrstefek_leading_teacher,
@@ -187,7 +198,7 @@ phamsianh.created_users_positions = [
     petrfrantis_consultant
 ]
 
-session.add_all([phamsianh, alexandrstefek, zuzanakrocova, vlastimilneumann, petrfrantis])
+session.add_all([phamsianh, alexandrstefek, zuzanakrocova, vlastimilneumann, petrfrantis, zdenekvintr])
 session.commit()
 session.close()
 

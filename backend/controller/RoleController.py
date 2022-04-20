@@ -11,9 +11,9 @@ class RoleController(BaseController):
         "holders",
     ]
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all roles defined in the system."""
-        return super(RoleController, self).get_resource_collection()
+        return super(RoleController, self).get_resource_collection(limit, offset, attribute, value, order)
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get role by id."""
@@ -44,7 +44,7 @@ Constraint:
         * Only owner of the role can delete it.
         * The role without any holders can be delete.
         """
-        if rsc_ins.holders is not None:
+        if rsc_ins.holders:
             raise ORMExc.IndelibleResourceInstance
         else:
             super().delete_resource_instance(rsc_ins)

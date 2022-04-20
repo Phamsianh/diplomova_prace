@@ -3,7 +3,9 @@ from typing import Optional, Union
 
 from fastapi import HTTPException
 from pydantic import ValidationError
+from sqlalchemy import String
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql.expression import cast
 
 from ORM import Model
 from ORM.session import Session
@@ -63,6 +65,8 @@ class BaseController:
             self.post_schema_documentation = create_markdown_table(self.post_schema)
         if not hasattr(self, "patch_schema_documentation"):
             self.patch_schema_documentation = create_markdown_table(self.patch_schema)
+        if not hasattr(self, "query_attributes"):
+            self.query_attributes = [c.key for c in self.model.__table__.columns]
 
     @property
     def current_user(self):
@@ -72,9 +76,37 @@ class BaseController:
     def current_user(self, current_user):
         self._current_user = current_user
 
-    def get_resource_collection(self):
-        rscs = self.session.query(self.model).limit(50).all()
-        return rscs
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
+        rscs = self.session.query(self.model)
+        if order:
+            for o in order:
+                if o in self.query_attributes:
+                    rscs = rscs.order_by(o)
+                else:
+                    raise ORMExc.ORMException('attribute cannot be sorted')
+        else:
+            rscs = rscs.order_by(self.model.id)
+        if attribute:
+            if not value:
+                raise ORMExc.ORMException('attribute require value')
+            if attribute not in self.query_attributes:
+                raise ORMExc.ORMException('attribute cannot be queried')
+            rscs = rscs.filter(cast(getattr(self.model, attribute), String).like(f'%{value}%'))
+        rscs = rscs.limit(limit).offset(offset)
+
+        return rscs.all()
+
+    def get_resource_collection_length(self, attribute: Optional[str] = None, value: Optional[str] = None):
+        # length = self.session.query(self.model).count()
+        # return length
+        rscs = self.session.query(self.model).order_by(self.model.id)
+        if attribute:
+            if not value:
+                raise ORMExc.ORMException('attribute require value')
+            if attribute not in self.query_attributes:
+                raise ORMExc.ORMException('attribute cannot be queried')
+            rscs = rscs.filter(cast(getattr(self.model, attribute), String).like(f'%{value}%'))
+        return rscs.count()
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         if type(rsc_id) == str:

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 
 from controller.BaseController import BaseController
 from ORM import Model
@@ -8,9 +8,9 @@ from exceptions import ORMExceptions as ORMExc
 class UserPositionController(BaseController):
     related_resource = []
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all user positions in the system."""
-        return super(UserPositionController, self).get_resource_collection()
+        return super(UserPositionController, self).get_resource_collection(limit, offset, attribute, value, order)
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get a user positions by id."""

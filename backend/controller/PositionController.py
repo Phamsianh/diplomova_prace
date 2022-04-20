@@ -12,9 +12,9 @@ class PositionController(BaseController):
         "holders",
     ]
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all positions in the system."""
-        return super(PositionController, self).get_resource_collection()
+        return super(PositionController, self).get_resource_collection(limit, offset, attribute, value, order)
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get position by id."""
@@ -43,7 +43,7 @@ Constraint:
         Constraint:
         * Only creator can delete the position
         * There must not be any user, who is holding this position."""
-        if rsc_ins.holders is not None:
+        if rsc_ins.holders:
             raise ORMExc.IndelibleResourceInstance
         else:
             super().delete_resource_instance(rsc_ins)

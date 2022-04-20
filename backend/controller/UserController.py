@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 
 from controller.BaseController import BaseController
 from exceptions import ORMExceptions as ORMExc
@@ -19,9 +19,9 @@ class UserController(BaseController):
         "potential_instances",
     ]
 
-    def get_resource_collection(self):
+    def get_resource_collection(self, limit: Optional[int] = 50, offset: Optional[int] = 0, attribute: Optional[str] = None, value: Optional[str] = None, order: Optional[list] = None):
         """Get all users of the system, default number of users return is 50."""
-        return super(UserController, self).get_resource_collection()
+        return super(UserController, self).get_resource_collection(limit, offset, attribute, value, order)
 
     def get_resource_instance(self, rsc_id: Union[str, int]):
         """Get the user instance."""
