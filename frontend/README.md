@@ -1,70 +1,47 @@
-# Getting Started with Create React App
+# FOR DEVELOPMENT
+## Config the app
+Open the file [`src/config.js`](src/config.js) set the `domain` to the domain name of the api for example:
+```js
+const domain = 'http://www.localhost:8000'
+```
+## Run the app
+Open the terminal in the current directory and run the following command:
+```sh
+npm start
+```
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+---
 
-In the project directory, you can run:
 
-### `npm start`
+# FOR USING WITH DOCKER
+Open the file [`src/config.js`](src/config.js) set the `domain` as following:
+```js
+const domain = `http://localhost/api`
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# STRUCTURE OF `frontend`
+The `frontend` is created by the command:
+```sh
+npm create-react-app frontend
+```
+Therefore the directory has the structure of a react app. The main directory for development is the directory [`src/`](src) and its structure is described as follow:
 
-### `npm run build`
+## [`src/components/`](src/components/)
+Contains all components for creating the frontend
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## [`src/controllers/`](src/controllers/)
+Contains the controller classes for communicating with the backend
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## [`src/custom_hooks/`](src/custom_hooks/)
+Contains the custom hooks for using with the pages and components
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## [`src/pages/`](src/pages/)
+Contains page component of the frontend. Each page component is a page in the frontend
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## [`src/utils/`](src/utils/)
+Contain the utilities function e.g. drawing the graf by using CytoscapeJS library, formatting date,...

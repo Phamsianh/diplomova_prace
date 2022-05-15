@@ -14,7 +14,6 @@ class UserDependency:
     def __init__(self, token: Optional[str] = Depends(oauth2_scheme), session: Session = Depends(get_session)):
         self.token = token
         self.session = session
-        # self.resource_instance_id = resource_instance_id
 
     def get_current_user(self) -> User:
         credentials_exception = HTTPException(
@@ -33,19 +32,3 @@ class UserDependency:
         if user is None:
             raise credentials_exception
         return user
-
-        # user_name = decode_token(self.token)
-        # user = self.session.query(User).filter(User.user_name == user_name).first()
-        # if not user:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_401_UNAUTHORIZED,
-        #         detail="username not found",
-        #         headers={
-        #             "www-authenticate": "bearer"
-        #         }
-        #     )
-        # return user
-
-
-# def decode_token(token: str):
-#     return token

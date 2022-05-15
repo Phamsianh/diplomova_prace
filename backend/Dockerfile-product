@@ -3,10 +3,10 @@ FROM python:3
 WORKDIR /usr/src/app
 
 COPY requirements.txt ./
+
+# Flag --no-cache-dir use to keep a Docker image as small as possible.
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD [ "uvicorn" , "main:app" , "--reload" , "--host", "0.0.0.0" , "--port", "8000" ]
-
-# CMD [ "uvicorn" , "main:app" , "--host", "0.0.0.0" , "--port", "8000" ]
+CMD [ "uvicorn" , "main:app" , "--host", "0.0.0.0" , "--port", "8000" ]
