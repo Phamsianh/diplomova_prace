@@ -1,4 +1,5 @@
-const domain = `http://localhost/api`
+const domain = `/api`
+// const domain = `http://localhost/api`
 // const domain = 'http://www.localhost:8000'
 
 
