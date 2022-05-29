@@ -43,7 +43,7 @@ const ReadFormPage = () => {
 					<div className="context-menu">
 						{held_positions && phases_data && held_positions.find(hp => {
 							let begin_phase = phases_data.find(p => p.phase_type == 'begin')
-							return hp.id == begin_phase.position_id ? true : false
+							return hp.id == begin_phase?.position_id ? true : false
 						}) &&
 						<div className="option" onClick={initInstance}>
 							<button title="Init Instance">

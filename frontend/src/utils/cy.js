@@ -65,7 +65,7 @@ export function convert_phases(phases_data, instance_data) {
 				position: { x: 650, y: 150 },
 			});
 		}
-	console.log(`converted phases data`, ph);
+	// console.log(`converted phases data`, ph);
 	return ph;
 }
 
@@ -85,7 +85,7 @@ export function convert_transitions(transitions_data, instance_data) {
 				data: transition_data_cy
 			});
 		}
-	console.log(`converted transitions data`, tr);
+	// console.log(`converted transitions data`, tr);
 	return tr;
 }
 
@@ -151,6 +151,6 @@ export function convert_groups(groups_data){
 				})
 			}			
 		}
-	console.log(`converted groups data`, gr);
+	// console.log(`converted groups data`, gr);
 	return gr;
 }

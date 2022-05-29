@@ -2,6 +2,7 @@ from typing import Union, Optional
 
 from controller.BaseController import BaseController
 from exceptions import ORMExceptions as ORMExc
+from ORM.Model import Form, Phase
 
 
 class FormController(BaseController):
@@ -41,6 +42,7 @@ class FormController(BaseController):
 
 * Only 1 begin phase and 1 end phase.
 * Each phase must at least has 1 section, each section must at least has 1 field.
+* Begin phase must be able to reach all phases and all phases must be able to reach end phase.
 
 *Note: public form cannot change to private.*
 
@@ -58,13 +60,19 @@ Constraint when deprecate a form:
 
         if 'public' in req_body:
             if req_body['public'] and not rsc_ins.public:
-                if len(rsc_ins.begin_phases) != 1 or len(rsc_ins.end_phases) != 1:
+                begin_phases = rsc_ins.begin_phases
+                end_phases = rsc_ins.end_phases
+                if len(begin_phases) != 1 or len(end_phases) != 1:
                     raise ORMExc.ORMException("form must have 1 begin phase and 1 end phase")
-                for p in rsc_ins.phases:
+                all_phases = rsc_ins.phases
+                for p in all_phases:
                     for s in p.sections:
                         if not s.fields:
                             raise ORMExc.ORMException("Each phase must at least has 1 section,"
                                                       " and each section must at least has 1 field.")
+                if not self.all_phases_reachable(begin_phases[0], end_phases[0], all_phases):
+                    raise ORMExc.ORMException("begin phase must be able to reach all phases "
+                                              "and all phases must be able to reach end phase.")
             if not req_body['public'] and rsc_ins.public:
                 raise ORMExc.ORMException("form is public, cannot change to private")
 
@@ -72,6 +80,51 @@ Constraint when deprecate a form:
             raise ORMExc.ORMException("form's currently private")
 
         return super().patch_resource_instance(rsc_ins, req_body)
+    
+    def all_phases_reachable(self, begin_phase: Phase, end_phase: Phase, all_phases: list[Phase]):
+        """Determine if begin phase can reach all phases and all phases can reach end phase."""
+        if not self.begin_phase_reachable_all_phases(begin_phase, all_phases) \
+        or not self.end_phase_reachable_all_phases(end_phase, all_phases):
+            return False
+        return True
+
+    def begin_phase_reachable_all_phases(self, begin_phase: Phase, all_phases: list[Phase]):
+        """Determine whether `begin_phase` can reach all phases provided by `all_phases`."""
+        frontier = [begin_phase]
+        next = []
+        reachable_phases = {begin_phase.id: 0}
+        while frontier:
+            for phase in frontier:
+                for next_phase in phase.next_phases:
+                    if next_phase.id not in reachable_phases:
+                        reachable_phases[next_phase.id] = 0
+                        next.append(next_phase)
+            frontier = next
+            next = []
+
+        for phase in all_phases:
+            if phase.id not in reachable_phases:
+                return False
+        return True
+
+    def end_phase_reachable_all_phases(self, end_phase: Phase, all_phases: list[Phase]):
+        """Determine whether all phases provided by `all_phases` can reach to `end_phase`."""
+        frontier = [end_phase]
+        prev = []
+        reachable_phases = {end_phase.id: 0}
+        while frontier:
+            for phase in frontier:
+                for prev_phase in phase.prev_phases:
+                    if prev_phase.id not in reachable_phases:
+                        reachable_phases[prev_phase.id] = 0
+                        prev.append(prev_phase)
+            frontier = prev
+            prev = []
+
+        for phase in all_phases:
+            if phase.id not in reachable_phases:
+                return False
+        return True
 
     def delete_resource_instance(self, rsc_ins):
         """The form can only be deleted if it is private."""

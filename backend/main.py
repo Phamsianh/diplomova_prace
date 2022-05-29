@@ -1,6 +1,5 @@
-import uvicorn
+# import uvicorn
 from fastapi import FastAPI
-from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 
 from app_config import origins, title, description, servers

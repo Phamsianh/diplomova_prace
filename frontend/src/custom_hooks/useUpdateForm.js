@@ -7,6 +7,7 @@ export const useUpdateForm = (setFormData) => {
     const [update_form_component, setUpdateFormComponent] =  useState();
     const [f_data, setFData] = useState();
     const [success_component, setSuccessComponent] = useState();
+    const [fail_component, setFailComponent] = useState();
 
     const { FormCtlr } = useController();
 
@@ -28,11 +29,12 @@ export const useUpdateForm = (setFormData) => {
     }, [updating])
 
 	useEffect(() => {
-        if(!success_component) return
+        if(!success_component && !fail_component) return
         setTimeout(() => {
             setSuccessComponent(null)
+            setFailComponent(null)
         }, 3000)
-    }, [success_component])
+    }, [success_component, fail_component])
 
     async function handleSubmit (e) {
         e.preventDefault();
@@ -41,11 +43,15 @@ export const useUpdateForm = (setFormData) => {
             public: e.target.public.checked,
             obsolete: e.target.obsolete.checked
 		};
-		let data = await FormCtlr.patch_rsc_ins(f_data.id, req_bod);
-        // console.log("updated form data", data);
-        setSuccessComponent(<UpdateFormSuccess clearMessage={clearMessage}/>)
-        setFormData(data);
-        setUpdating(false);
+		try {
+			let data = await FormCtlr.patch_rsc_ins(f_data.id, req_bod);
+			setSuccessComponent(<UpdateFormSuccess clearMessage={clearMessage}/>)
+			setFormData(data);
+			setUpdating(false);
+		} catch (error) {
+			setFailComponent(<UpdateFormFail message={error.detail} clearMessage={clearMessage}/>)
+			setUpdating(false);
+		}
     }
 
     function cancelSubmit (e) {
@@ -56,9 +62,10 @@ export const useUpdateForm = (setFormData) => {
     function clearMessage(e) {
         e.preventDefault();
         setSuccessComponent(null)
+        setFailComponent(null)
     }
 
-	return {update_form_component, setFormToUpdate, updating, success_component};
+	return {update_form_component, setFormToUpdate, updating, success_component, fail_component};
 };
 
 const UpdateForm = ({ old_form_data, handleSubmit, cancelSubmit }) => {
@@ -128,6 +135,15 @@ function UpdateFormSuccess({clearMessage}) {
     return (
         <div>
             <h4>Form is updated successfully</h4>
+            <button onClick={clearMessage}><CancelIcon/></button>
+        </div>
+    )
+}
+
+function UpdateFormFail({message, clearMessage}) {
+    return (
+        <div>
+            <h4>{message}</h4>
             <button onClick={clearMessage}><CancelIcon/></button>
         </div>
     )

@@ -28,7 +28,7 @@ Follow the instruction in section **FOR USING WITH DOCKER** in [`backend/README.
 To run the app, open the terminal in the current directory and run the following command
 
 ```sh
-docker-compose -f docker-compose.product.yml up
+docker-compose up
 ```
 
 In the first time run the app, we must run the migration. Run the following command in the terminal:

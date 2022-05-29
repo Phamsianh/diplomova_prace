@@ -29,10 +29,10 @@ const UpdateFormPage = () => {
 
 	const {read_phases_transitions_component, setReadPhasesTransitions, reading: reading_p_t} = useReadPhasesTransitions();
 
-	const {update_form_component, setFormToUpdate, updating: updating_form, success_component: u_f_success_component} = useUpdateForm(setFormData);
+	const {update_form_component, setFormToUpdate, updating: updating_form, success_component: u_f_success_component, fail_component: u_f_fail_component} = useUpdateForm(setFormData);
 	const {update_phase_component, setPhaseToUpdate, updating: updating_phase, success_component: u_p_success_component} = useUpdatePhase(all_positions_data, setPhasesData);
 	const {update_section_component, setSectionToUpdate, updating: updating_section, success_component: u_s_success_component} = useUpdateSection(all_positions_data, setSectionsData);
-	const {update_field_component, setFieldToUpdate, updating: updating_field, success_component, success_component: u_fi_success_component} = useUpdateField(setFieldsData);
+	const {update_field_component, setFieldToUpdate, updating: updating_field, success_component: u_fi_success_component} = useUpdateField(setFieldsData);
 	const {update_transition_component, setTransitionToUpdate, updating: updating_transition, success_component: u_t_success_component} = useUpdateTransition(setTransitionsData);
 
 	const {create_phase_component, setCreatePhase, creating: creating_phase, success_component: c_p_success_component} = useCreatePhase(all_positions_data, setPhasesData);
@@ -78,21 +78,16 @@ const UpdateFormPage = () => {
 	}, [
 		c_p_success_component, c_s_success_component, c_f_success_component, c_t_success_component,
 		u_f_success_component, u_p_success_component, u_s_success_component, u_fi_success_component, u_t_success_component,
+		d_f_success_component, d_p_success_component, d_s_success_component, d_fi_success_component, d_t_success_component,
 	])
 
 	useEffect(() => {
-		if(
-			c_t_error_component || 
-			d_f_success_component || d_p_success_component || d_s_success_component || d_fi_success_component || d_t_success_component
-			){
+		if(c_t_error_component || u_f_fail_component){
 			document.querySelector(".error")?.classList.add("show-error")
 		}else{
 			document.querySelector(".error")?.classList.remove("show-error")
 		}
-	}, [
-		c_t_error_component,
-		d_f_success_component, d_p_success_component, d_s_success_component, d_fi_success_component, d_t_success_component
-	])
+	}, [ c_t_error_component, u_f_fail_component ])
 
 	return (
 		<div className="update-form-page">
@@ -108,6 +103,12 @@ const UpdateFormPage = () => {
 				{u_fi_success_component}
 				{u_t_success_component}
 
+				{d_f_success_component}
+				{d_p_success_component}
+				{d_s_success_component}
+				{d_fi_success_component}
+				{d_t_success_component}
+
 				{/* <div>
 					<h4>Phase is created successfully</h4>
 					<button><CancelIcon/></button>
@@ -120,12 +121,7 @@ const UpdateFormPage = () => {
 
 			<div className="error">
 				{c_t_error_component}
-
-				{d_f_success_component}
-				{d_p_success_component}
-				{d_s_success_component}
-				{d_fi_success_component}
-				{d_t_success_component}
+				{u_f_fail_component}
 			</div>
 
 			{form_data && <div className="form">

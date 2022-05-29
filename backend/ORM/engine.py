@@ -9,5 +9,5 @@ uri = f'{database}://{user_name}:{password}@{host}:{port}/{database_name}'
 
 engine = create_engine(
     uri, 
-    echo=True
+    # echo=True
 )

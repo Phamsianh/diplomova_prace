@@ -37,7 +37,7 @@ export const useDeleteTransition = (setTransitionsData) => {
 function DeletePhaseSuccess({clearMessage}) {
     return (
         <div>
-            <h4>Phase is deleted successfully</h4>
+            <h4>Transition is deleted successfully</h4>
             <button onClick={clearMessage}><CancelIcon/></button>
         </div>
     )
